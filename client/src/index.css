@@ -1,7 +1,72 @@
 @import "tailwindcss";
 
+:root {
+  --bg: #08080a; --s1: #0f0f12; --s2: #141418; --s3: #1a1a20;
+  --bd: #1f1f28; --bd2: #2a2a35; --bd-h: #35354a;
+  --tx: #e8e8ee; --tx2: #a0a0b0; --mt: #5a5a70; --dm: #3a3a4a;
+  --ac: #818cf8; --ac2: #a78bfa;
+  --ac-bg: rgba(129,140,248,.08); --ac-bd: rgba(129,140,248,.2);
+  --gn: #4ade80; --yw: #fbbf24; --rd: #f87171; --pr: #c084fc;
+  --shadow: 0 2px 8px rgba(0,0,0,.3);
+  --shadow-h: 0 8px 24px rgba(0,0,0,.4);
+  --glass: rgba(15,15,18,.8); --glass-bd: rgba(255,255,255,.06);
+  --r: 14px; --rs: 10px; --rx: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+mark {
+  background: var(--ac-bg);
+  color: var(--ac);
+  border-radius: 2px;
+  padding: 0 2px;
+  border: 1px solid var(--ac-bd);
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,.4); }
+  50% { box-shadow: 0 0 0 4px rgba(74,222,128,0); }
+}
+
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,.5); }
+  50% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+}
+
+@keyframes progressShimmer {
+  0% { opacity: .7; } 50% { opacity: 1; } 100% { opacity: .7; }
+}
+
+/* Color utilities */
+.c-indigo { background: #818cf8; } .c-emerald { background: #34d399; }
+.c-amber { background: #fbbf24; } .c-rose { background: #fb7185; }
+.c-cyan { background: #22d3ee; } .c-violet { background: #a78bfa; }
+.c-orange { background: #fb923c; } .c-teal { background: #2dd4bf; }
+.c-lime { background: #a3e635; } .c-pink { background: #f472b6; }
+.c-sky { background: #38bdf8; } .c-red { background: #f87171; }
+
+.b-indigo { background: rgba(129,140,248,.12); color: #818cf8; }
+.b-emerald { background: rgba(52,211,153,.12); color: #34d399; }
+.b-amber { background: rgba(251,191,36,.12); color: #fbbf24; }
+.b-rose { background: rgba(251,113,133,.12); color: #fb7185; }
+.b-cyan { background: rgba(34,211,238,.12); color: #22d3ee; }
+.b-violet { background: rgba(167,139,250,.12); color: #a78bfa; }
+.b-orange { background: rgba(251,146,60,.12); color: #fb923c; }
+.b-teal { background: rgba(45,212,191,.12); color: #2dd4bf; }
+.b-lime { background: rgba(163,230,53,.12); color: #a3e635; }
+.b-pink { background: rgba(244,114,182,.12); color: #f472b6; }
+.b-sky { background: rgba(56,189,248,.12); color: #38bdf8; }
+.b-red { background: rgba(248,113,113,.12); color: #f87171; }

@@ -8,37 +8,62 @@ export default function DateNavigator({ date, onDateChange }) {
   const today = dayjs().format('YYYY-MM-DD');
   const isToday = date === today;
 
-  const dayOfWeek = current.format('ddd');
-  const display = current.format('YYYY년 MM월 DD일') + ` (${dayOfWeek})`;
+  const dateText = current.format('MM월 DD일');
+  const dateSub = current.format('YYYY년') + ' ' + current.format('dddd');
 
   return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={() => onDateChange(current.subtract(1, 'day').format('YYYY-MM-DD'))}
-        className="px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-100 text-sm"
-      >
-        ◀
-      </button>
-
-      <span className="text-lg font-medium text-gray-800 min-w-[220px] text-center">
-        {display}
-      </span>
-
-      <button
-        onClick={() => onDateChange(current.add(1, 'day').format('YYYY-MM-DD'))}
-        className="px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-100 text-sm"
-      >
-        ▶
-      </button>
-
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <DateBtn onClick={() => onDateChange(current.subtract(1, 'day').format('YYYY-MM-DD'))}>
+        &#8249;
+      </DateBtn>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', color: '#fafafa' }}>
+          {dateText}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--dm)', marginTop: 2 }}>{dateSub}</div>
+      </div>
+      <DateBtn onClick={() => onDateChange(current.add(1, 'day').format('YYYY-MM-DD'))}>
+        &#8250;
+      </DateBtn>
       {!isToday && (
         <button
           onClick={() => onDateChange(today)}
-          className="px-3 py-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 text-sm"
+          style={{
+            padding: '6px 14px', borderRadius: 'var(--rx)', border: 'none',
+            background: 'var(--ac)', color: '#fff', fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+          }}
         >
           오늘
         </button>
       )}
     </div>
+  );
+}
+
+function DateBtn({ onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: 36, height: 36, borderRadius: 'var(--rs)',
+        border: '1px solid var(--bd)', background: 'transparent',
+        color: 'var(--mt)', cursor: 'pointer', fontSize: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all .15s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--s2)';
+        e.currentTarget.style.color = 'var(--tx)';
+        e.currentTarget.style.borderColor = 'var(--bd2)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent';
+        e.currentTarget.style.color = 'var(--mt)';
+        e.currentTarget.style.borderColor = 'var(--bd)';
+      }}
+    >
+      {children}
+    </button>
   );
 }
