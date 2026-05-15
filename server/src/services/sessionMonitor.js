@@ -5,7 +5,7 @@ import { SESSIONS_DIR, PROJECTS_DIR, projectCache, isProcessRunning } from './pr
 import { parseSessionIncremental } from './jsonlParser.js';
 
 const IDLE_THRESHOLD_MS = 120_000;
-const POLL_INTERVAL_MS = 15_000;
+const POLL_INTERVAL_MS = 5_000;
 const DEBOUNCE_MS = 500;
 
 const sseClients = new Set();
@@ -78,7 +78,7 @@ async function handleSessionFile(filePath) {
     startedAt: startedAt || Date.now(),
     firstPrompt: '',
     lastPrompt: '',
-    lastActivity: jsonlPath ? getFileMtime(jsonlPath) : Date.now(),
+    lastActivity: jsonlPath ? getFileMtime(jsonlPath) : (startedAt || getFileMtime(filePath)),
     tokens: { totalInput: 0, totalOutput: 0 },
     toolCallCount: 0,
     model: null,
@@ -194,6 +194,9 @@ async function parseAndUpdate(sessionId) {
 
 function pollSessionStatus() {
   const now = Date.now();
+
+  rescanSessionFiles();
+
   for (const [sessionId, session] of activeSessions) {
     if (session.status === 'completed') continue;
 
@@ -202,7 +205,15 @@ function pollSessionStatus() {
       continue;
     }
 
-    const timeSinceActivity = now - session.lastActivity;
+    if (session.jsonlPath) {
+      const newMtime = getFileMtime(session.jsonlPath);
+      if (newMtime > session.lastActivity) {
+        debouncedParse(sessionId);
+      }
+    }
+
+    const lastAct = session.jsonlPath ? getFileMtime(session.jsonlPath) : session.lastActivity;
+    const timeSinceActivity = now - lastAct;
     const newStatus = timeSinceActivity > IDLE_THRESHOLD_MS ? 'idle' : 'active';
 
     if (session.status !== newStatus) {
@@ -218,6 +229,25 @@ function pollSessionStatus() {
         watchJsonl(sessionId, jsonlPath);
       }
     }
+  }
+}
+
+function rescanSessionFiles() {
+  let files;
+  try { files = fs.readdirSync(SESSIONS_DIR); }
+  catch { return; }
+
+  for (const file of files) {
+    if (!file.endsWith('.json')) continue;
+    const fp = path.join(SESSIONS_DIR, file);
+    let content;
+    try { content = JSON.parse(fs.readFileSync(fp, 'utf-8')); }
+    catch { continue; }
+
+    const { sessionId } = content;
+    if (!sessionId || activeSessions.has(sessionId)) continue;
+
+    handleSessionFile(fp);
   }
 }
 
