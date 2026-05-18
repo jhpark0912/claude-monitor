@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Analytics V2 — Revised Designs</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; color: #e0e0e0; font-family: 'Segoe UI', -apple-system, sans-serif; }
+
+  .nav { display: flex; gap: 0; border-bottom: 2px solid #1a1a2e; background: #0d0d15; position: sticky; top: 0; z-index: 100; }
+  .nav-btn {
+    padding: 14px 24px; font-size: 13px; font-weight: 600; cursor: pointer;
+    background: none; border: none; color: #666; transition: all .2s;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  .nav-btn.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+  .nav-btn:hover { color: #c4b5fd; }
+
+  .option { display: none; padding: 20px; }
+  .option.active { display: block; }
+
+  .option-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+  .option-desc { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.7; max-width: 800px; }
+  .option-desc strong { color: #c4b5fd; }
+  .philosophy { background: #13131f; border: 1px solid #1e1e2e; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: 12px; line-height: 1.7; color: #aaa; max-width: 800px; }
+  .philosophy strong { color: #f59e0b; }
+
+  .mock-frame {
+    background: #111119; border: 1px solid #222; border-radius: 16px;
+    overflow: hidden; max-width: 1200px; margin: 0 auto;
+  }
+  .mock-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid #1a1a2e; background: #0d0d15;
+  }
+  .mock-topbar .logo { font-size: 13px; font-weight: 700; color: #a78bfa; }
+  .mock-topbar .tabs { display: flex; gap: 4px; }
+  .mock-topbar .tab { padding: 5px 12px; font-size: 11px; border-radius: 6px; color: #666; }
+  .mock-topbar .tab.on { background: #1e1b4b; color: #a78bfa; }
+  .mock-topbar .filter { padding: 4px 12px; font-size: 10px; border-radius: 5px; background: #1a1a2e; color: #888; border: 1px solid #333; }
+
+  .card { background: #13131f; border: 1px solid #1e1e2e; border-radius: 12px; padding: 16px; }
+  .card-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .card-title .icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .card-title span { font-size: 13px; font-weight: 600; }
+  .card-title .sub { font-size: 10px; color: #666; font-weight: 400; margin-left: auto; }
+
+  .period-btns { display: flex; gap: 4px; }
+  .period-btn { padding: 3px 10px; font-size: 10px; border-radius: 5px; border: none; cursor: pointer; background: #1a1a2e; color: #888; }
+  .period-btn.on { background: #6d28d9; color: #fff; }
+
+  /* calendar */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-header { font-size: 9px; color: #555; text-align: center; padding: 2px 0; }
+  .cal-cell { height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; position: relative; }
+  .cal-cell.l1 { background: #1a1535; color: #c4b5fd; }
+  .cal-cell.l2 { background: #2d1b69; color: #c4b5fd; }
+  .cal-cell.l3 { background: #4c1d95; color: #e0d5ff; }
+  .cal-cell.l4 { background: #6d28d9; color: #fff; }
+  .cal-cell.today { outline: 2px solid #a78bfa; outline-offset: -2px; }
+  .cal-cell .cost-dot { position: absolute; bottom: 2px; font-size: 7px; color: #f59e0b; }
+
+  .legend { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #555; margin-top: 8px; padding-top: 8px; border-top: 1px solid #1e1e2e; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* donut */
+  .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .donut-center .amount { font-size: 18px; font-weight: 700; color: #fff; }
+  .donut-center .label { font-size: 9px; color: #888; }
+
+  /* daily cost bars */
+  .daily-bar-row { display: flex; align-items: flex-end; gap: 2px; height: 80px; padding: 0 2px; }
+  .daily-bar {
+    flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; position: relative; cursor: pointer;
+    transition: opacity .15s;
+  }
+  .daily-bar:hover { opacity: 0.8; }
+  .daily-bar .bar-tip {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 8px; color: #888; white-space: nowrap; display: none;
+  }
+  .daily-bar:hover .bar-tip { display: block; }
+
+  /* session row */
+  .session-row {
+    display: grid; align-items: center; padding: 8px 12px;
+    background: #0d0d15; border-radius: 8px; margin-bottom: 4px; font-size: 11px;
+    border-left: 3px solid transparent; cursor: pointer; transition: background .15s;
+  }
+  .session-row:hover { background: #161625; }
+  .session-row.anomaly { border-left-color: #f59e0b; background: #1a1510; }
+  .session-row .prompt { color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .session-row .meta { color: #666; font-size: 10px; }
+  .session-row .cost { font-weight: 600; text-align: right; }
+
+  /* anomaly badge */
+  .anomaly-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600;
+  }
+  .anomaly-badge.warn { background: #2d1f0f; color: #f59e0b; }
+  .anomaly-badge.info { background: #0f1a2d; color: #3b82f6; }
+
+  /* stat blocks */
+  .stat-block { text-align: center; padding: 10px; }
+  .stat-val { font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .stat-label { font-size: 10px; color: #666; margin-top: 2px; }
+  .stat-sub { font-size: 10px; color: #555; margin-top: 4px; }
+
+  /* streak */
+  .streak-num { font-size: 28px; font-weight: 800; color: #a78bfa; line-height: 1; }
+  .streak-label { font-size: 11px; color: #888; margin-top: 3px; }
+
+  /* tool bars */
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .bar-label { font-size: 10px; color: #888; width: 36px; text-align: right; }
+  .bar-track { flex: 1; height: 12px; background: #1a1a2e; border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .bar-val { font-size: 10px; color: #aaa; width: 32px; }
+
+  /* trend line placeholder */
+  .trend-area { position: relative; width: 100%; }
+
+  /* pros/cons */
+  .pros-cons { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; max-width: 800px; }
+  .pros-cons h4 { font-size: 12px; margin-bottom: 6px; }
+  .pros-cons ul { padding-left: 16px; line-height: 1.8; color: #aaa; }
+  .pros-cons .pros h4 { color: #10b981; }
+  .pros-cons .cons h4 { color: #f59e0b; }
+
+  .sep { border-top: 1px solid #1e1e2e; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show('a')">A: 이상 감지 중심</button>
+  <button class="nav-btn" onclick="show('b')">B: 비용 저널</button>
+  <button class="nav-btn" onclick="show('c')">C: 세션 탐색기</button>
+  <button class="nav-btn" onclick="show('d')">D: 미니멀 팩트</button>
+</div>
+
+<!-- ==================== OPTION A ==================== -->
+<div id="opt-a" class="option active">
+  <div class="option-title">Option A: 이상 감지 중심</div>
+  <div class="option-desc">
+    입장을 명확히 함: <strong>"비용 증가는 기본적으로 주의 신호"</strong>.<br>
+    평소 패턴 대비 튀는 세션을 자동으로 찾아서 보여줌. 판단은 하되, 원인은 사용자에게 맡김.
+  </div>
+  <div class="philosophy">
+    <strong>설계 원칙:</strong> 비용만 판단 기준으로 삼음. "비용이 평소보다 높았다"는 주의 신호이고, 그게 정당한 비용인지(어려운 작업)
+    아닌지(삽질)는 사용자가 세션을 열어보고 판단. 캐시율, 파일변경 등은 KPI로 올리지 않음.
+  </div>
+
+  <div class="mock-frame">
+    <div class="mock-topbar">
+      <div class="logo">Session Dashboard</div>
+      <div class="tabs"><div class="tab">Daily</div><div class="tab on">Analytics</div><div class="tab">Monitor</div></div>
+      <div class="filter">All Projects ▾</div>
+    </div>
+
+    <div style="padding: 12px 16px; display: grid; grid-template-columns: 300px 1fr; grid-template-rows: 1fr; gap: 12px; height: calc(100vh - 100px); min-height: 600px;">
+      <!-- LEFT -->
+      <div style="display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+        <!-- Calendar with cost dots -->
+        <div class="card" style="flex-shrink: 0;">
+          <div class="card-title">
+            <div class="icon" style="background: #1e1b4b;">📅</div>
+            <span>사용 캘린더</span>
+            <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+              <button style="background: #1a1a2e; border: none; color: #888; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer;">◀</button>
+              <span style="font-size: 11px; color: #888;">2026년 5월</span>
+              <button style="background: #1a1a2e; border: none; color: #888; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer;">▶</button>
+            </div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-header">일</div><div class="cal-header">월</div><div class="cal-header">화</div>
+            <div class="cal-header">수</div><div class="cal-header">목</div><div class="cal-header">금</div><div class="cal-header">토</div>
+            <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-cell l2">1<span class="cost-dot">$1.2</span></div>
+            <div class="cal-cell l3">2<span class="cost-dot">$2.8</span></div>
+            <div class="cal-cell l1">3<span class="cost-dot">$0.6</span></div>
+            <div class="cal-cell">4</div>
+            <div class="cal-cell l4">5<span class="cost-dot">$4.1</span></div>
+            <div class="cal-cell l2">6<span class="cost-dot">$1.5</span></div>
+            <div class="cal-cell l3">7<span class="cost-dot">$3.2</span></div>
+            <div class="cal-cell l2">8<span class="cost-dot">$1.8</span></div>
+            <div class="cal-cell l4">9<span class="cost-dot" style="color:#ef4444;">$7.3</span></div>
+            <div class="cal-cell">10</div>
+            <div class="cal-cell l1">11<span class="cost-dot">$0.9</span></div>
+            <div class="cal-cell l3">12<span class="cost-dot">$2.4</span></div>
+            <div class="cal-cell l4">13<span class="cost-dot">$3.8</span></div>
+            <div class="cal-cell l2">14<span class="cost-dot">$1.6</span></div>
+            <div class="cal-cell l3">15<span class="cost-dot">$2.9</span></div>
+            <div class="cal-cell l2">16<span class="cost-dot">$1.4</span></div>
+            <div class="cal-cell">17</div>
+            <div class="cal-cell today l3">18<span class="cost-dot">$2.1</span></div>
+            <div class="cal-cell">19</div><div class="cal-cell">20</div><div class="cal-cell">21</div>
+            <div class="cal-cell">22</div><div class="cal-cell">23</div><div class="cal-cell">24</div>
+            <div class="cal-cell">25</div><div class="cal-cell">26</div><div class="cal-cell">27</div>
+            <div class="cal-cell">28</div><div class="cal-cell">29</div><div class="cal-cell">30</div><div class="cal-cell">31</div>
+          </div>
+          <div class="legend" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 3px;">
+              적음
+              <span class="legend-dot" style="background: #1a1535;"></span>
+              <span class="legend-dot" style="background: #2d1b69;"></span>
+              <span class="legend-dot" style="background: #4c1d95;"></span>
+              <span class="legend-dot" style="background: #6d28d9;"></span>
+              많음
+            </div>
+            <span>14일 · 42세션</span>
+          </div>
+        </div>
+
+        <!-- Factual Summary -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="stat-block" style="background: #0d0d15; border-radius: 8px;">
+              <div class="stat-val" style="color: #a78bfa;">42</div>
+              <div class="stat-label">세션</div>
+            </div>
+            <div class="stat-block" style="background: #0d0d15; border-radius: 8px;">
+              <div class="stat-val" style="color: #f59e0b;">$47.20</div>
+              <div class="stat-label">총 비용</div>
+            </div>
+            <div class="stat-block" style="background: #0d0d15; border-radius: 8px;">
+              <div class="stat-val" style="color: #ccc;">$1.12</div>
+              <div class="stat-label">세션당 평균</div>
+            </div>
+            <div class="stat-block" style="background: #0d0d15; border-radius: 8px;">
+              <div class="stat-val" style="color: #ccc;">54분</div>
+              <div class="stat-label">평균 세션 시간</div>
+            </div>
+          </div>
+          <div style="font-size: 10px; color: #555; margin-top: 8px; text-align: center;">이번 달 · 수치만 표시, 판단 없음</div>
+        </div>
+
+        <!-- Streak (motivational only) -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+            <div>
+              <div class="streak-num">12일</div>
+              <div class="streak-label">연속 활동 중</div>
+            </div>
+            <div style="text-align: right; font-size: 10px; color: #555;">
+              최장: <strong style="color: #6d28d9;">23일</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tool usage (observation, no judgment) -->
+        <div class="card" style="flex: 1; min-height: 0; overflow: hidden;">
+          <div class="card-title">
+            <div class="icon" style="background: #1a1535;">🔧</div>
+            <span>도구 사용</span>
+            <div class="sub">이번 달</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Read</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 85%; background: #6d28d9;"></div></div>
+            <div class="bar-val">847</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Edit</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 62%; background: #8b5cf6;"></div></div>
+            <div class="bar-val">614</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Bash</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 48%; background: #a78bfa;"></div></div>
+            <div class="bar-val">472</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Grep</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 30%; background: #c4b5fd;"></div></div>
+            <div class="bar-val">298</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Write</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 18%; background: #ddd6fe;"></div></div>
+            <div class="bar-val">176</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+        <!-- Cost with daily bars -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div class="card-title" style="margin-bottom: 0;">
+              <div class="icon" style="background: #1c1917;">💰</div>
+              <span>일별 비용</span>
+            </div>
+            <div class="period-btns">
+              <button class="period-btn">1주</button>
+              <button class="period-btn on">4주</button>
+              <button class="period-btn">3개월</button>
+            </div>
+          </div>
+          <!-- Daily cost bar chart -->
+          <div style="display: flex; align-items: flex-end; gap: 2px; height: 70px; margin-bottom: 4px;">
+            <!-- 28 days of bars, anomaly day highlighted -->
+            <div style="flex:1;height:15%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:35%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:8%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:0%;background:transparent;"></div>
+            <div style="flex:1;height:52%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:20%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:40%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:23%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:92%;background:#f59e0b;border-radius:2px 2px 0 0;position:relative;">
+              <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:8px;color:#f59e0b;white-space:nowrap;">$7.3</div>
+            </div>
+            <div style="flex:1;height:0%;background:transparent;"></div>
+            <div style="flex:1;height:12%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:30%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:48%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:20%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:37%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:18%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+            <div style="flex:1;height:0%;background:transparent;"></div>
+            <div style="flex:1;height:27%;background:#6d28d9;border-radius:2px 2px 0 0;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 9px; color: #444; margin-bottom: 10px;">
+            <span>5/1</span><span>5/5</span><span>5/9</span><span>5/13</span><span>5/18</span>
+          </div>
+          <!-- Model breakdown inline -->
+          <div style="display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid #1e1e2e;">
+            <div style="position: relative; width: 100px; height: 100px; flex-shrink: 0;">
+              <svg viewBox="0 0 120 120" width="100" height="100">
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#1a1a2e" stroke-width="14"/>
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="212 71" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" stroke-width="14" stroke-dasharray="49 234" stroke-dashoffset="-212" transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="donut-center">
+                <div class="amount" style="font-size: 14px;">$47.20</div>
+                <div class="label">총 비용</div>
+              </div>
+            </div>
+            <div style="flex: 1; font-size: 10px;">
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a1a2e;">
+                <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:5px;"></span>Opus</span>
+                <span style="color: #f59e0b; font-weight: 600;">$35.40 (75%)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a1a2e;">
+                <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3b82f6;margin-right:5px;"></span>Sonnet</span>
+                <span style="color: #3b82f6; font-weight: 600;">$8.10 (17%)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:5px;"></span>Haiku</span>
+                <span style="color: #10b981; font-weight: 600;">$3.70 (8%)</span>
+              </div>
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #1e1e2e; color: #888;">
+                캐시 절감: <span style="color: #10b981;">-$18.30</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anomaly Sessions -->
+        <div class="card" style="flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div class="card-title">
+            <div class="icon" style="background: #2d1f0f;">⚡</div>
+            <span>주목할 세션</span>
+            <div class="sub">평소 패턴과 다른 세션</div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+            <!-- Anomaly session 1 -->
+            <div class="session-row anomaly" style="grid-template-columns: 1fr auto;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                  <span class="anomaly-badge warn">비용 평소의 2.8배</span>
+                  <span style="font-size: 10px; color: #555;">5/9 (금)</span>
+                </div>
+                <div class="prompt">session-board 프로젝트 — Analytics 페이지 전체 레이아웃 재설계 + 4개 디자인 시안 작성</div>
+                <div class="meta" style="margin-top: 4px;">
+                  3시간 12분 · Opus · 토큰 380K · Read×84 Edit×32 Write×12
+                </div>
+              </div>
+              <div class="cost" style="color: #f59e0b; font-size: 14px;">$7.30</div>
+            </div>
+
+            <!-- Anomaly session 2 -->
+            <div class="session-row anomaly" style="grid-template-columns: 1fr auto;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                  <span class="anomaly-badge warn">비용 평소의 1.6배</span>
+                  <span style="font-size: 10px; color: #555;">5/5 (월)</span>
+                </div>
+                <div class="prompt">commons 라이브러리 — QueryDSL 리팩토링 + 테스트 5회 실패 후 수정</div>
+                <div class="meta" style="margin-top: 4px;">
+                  2시간 8분 · Opus · 토큰 245K · Bash×38 Edit×24 Read×52
+                </div>
+              </div>
+              <div class="cost" style="color: #f59e0b; font-size: 14px;">$4.10</div>
+            </div>
+
+            <!-- Normal but notable -->
+            <div class="session-row" style="grid-template-columns: 1fr auto; border-left-color: #3b82f6;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                  <span class="anomaly-badge info">시간 평소의 2.1배</span>
+                  <span style="font-size: 10px; color: #555;">5/13 (화)</span>
+                </div>
+                <div class="prompt">session-board — 실시간 모니터링 SSE 구현 + chokidar 파일 감지</div>
+                <div class="meta" style="margin-top: 4px;">
+                  2시간 45분 · Opus · 토큰 210K · Edit×28 Bash×22 Read×45
+                </div>
+              </div>
+              <div class="cost" style="color: #ccc; font-size: 14px;">$3.80</div>
+            </div>
+
+            <div class="sep"></div>
+            <div style="font-size: 10px; color: #555; text-align: center; padding: 4px;">
+              기준: 세션당 비용 또는 시간이 최근 4주 평균의 1.5배 이상
+            </div>
+
+            <!-- Normal sessions (for context) -->
+            <div style="font-size: 11px; color: #666; margin-top: 4px; margin-bottom: 4px;">최근 일반 세션</div>
+
+            <div class="session-row" style="grid-template-columns: 1fr auto;">
+              <div>
+                <div class="prompt" style="color: #888;">session-board — CalendarCard 셀 높이 조정 + overflow 수정</div>
+                <div class="meta">5/18 · 42분 · Opus · 98K</div>
+              </div>
+              <div class="cost" style="color: #888;">$1.20</div>
+            </div>
+            <div class="session-row" style="grid-template-columns: 1fr auto;">
+              <div>
+                <div class="prompt" style="color: #888;">session-board — HeatmapCard 툴팁 위치 버그 수정</div>
+                <div class="meta">5/16 · 28분 · Opus · 72K</div>
+              </div>
+              <div class="cost" style="color: #888;">$0.85</div>
+            </div>
+            <div class="session-row" style="grid-template-columns: 1fr auto;">
+              <div>
+                <div class="prompt" style="color: #888;">commons — API 응답 포맷 통일 리팩토링</div>
+                <div class="meta">5/15 · 35분 · Sonnet · 64K</div>
+              </div>
+              <div class="cost" style="color: #888;">$0.42</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pros-cons">
+    <div class="pros"><h4>장점</h4>
+      <ul>
+        <li>입장이 명확 — "비용 이상은 확인할 가치가 있다"</li>
+        <li>세션 맥락(프롬프트, 도구, 시간)을 같이 보여줘서 사용자가 직접 판단 가능</li>
+        <li>거짓 KPI 없음 — 파일변경, 캐시율 등 제거</li>
+        <li>"1.5배 기준" 명시 — 이상 감지 기준이 투명</li>
+      </ul>
+    </div>
+    <div class="cons"><h4>고려사항</h4>
+      <ul>
+        <li>이상 세션이 없는 달에는 우측이 비어보일 수 있음</li>
+        <li>비용 기준만으로는 "비싸지만 정상"인 세션도 걸림 → 노이즈</li>
+        <li>백엔드에 평균/표준편차 계산 로직 추가 필요</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== OPTION B ==================== -->
+<div id="opt-b" class="option">
+  <div class="option-title">Option B: 비용 저널</div>
+  <div class="option-desc">
+    매일의 지출을 기록하는 가계부 컨셉. 추상적 KPI 대신 <strong>구체적 금액과 내역</strong>만 보여줌.<br>
+    판단도 이상 감지도 없음. 순수한 기록 도구.
+  </div>
+  <div class="philosophy">
+    <strong>설계 원칙:</strong> 대시보드가 사용자보다 똑똑한 척 하지 않음.
+    "여기 기록이 있으니 직접 보세요." 메트릭에 색상(초록=좋음, 빨강=나쁨)을 입히지 않음.
+    모든 숫자는 동일한 회색.
+  </div>
+
+  <div class="mock-frame">
+    <div class="mock-topbar">
+      <div class="logo">Session Dashboard</div>
+      <div class="tabs"><div class="tab">Daily</div><div class="tab on">Analytics</div><div class="tab">Monitor</div></div>
+      <div class="filter">All Projects ▾</div>
+    </div>
+
+    <div style="padding: 12px 16px; display: grid; grid-template-columns: 300px 1fr; grid-template-rows: 1fr; gap: 12px; height: calc(100vh - 100px); min-height: 600px;">
+      <!-- LEFT -->
+      <div style="display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+        <!-- Calendar: cost overlay mode -->
+        <div class="card" style="flex-shrink: 0;">
+          <div class="card-title">
+            <div class="icon" style="background: #1e1b4b;">📅</div>
+            <span>비용 캘린더</span>
+            <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+              <button style="background: #1a1a2e; border: none; color: #888; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer;">◀</button>
+              <span style="font-size: 11px; color: #888;">2026년 5월</span>
+              <button style="background: #1a1a2e; border: none; color: #888; width: 22px; height: 22px; border-radius: 4px; font-size: 10px; cursor: pointer;">▶</button>
+            </div>
+          </div>
+          <!-- Calendar colored by cost intensity instead of session count -->
+          <div class="cal-grid">
+            <div class="cal-header">일</div><div class="cal-header">월</div><div class="cal-header">화</div>
+            <div class="cal-header">수</div><div class="cal-header">목</div><div class="cal-header">금</div><div class="cal-header">토</div>
+            <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-cell" style="background:#1c1508;color:#c9a84c;">1<span class="cost-dot">$1.2</span></div>
+            <div class="cal-cell" style="background:#2d1f0f;color:#e0b84d;">2<span class="cost-dot">$2.8</span></div>
+            <div class="cal-cell" style="background:#141008;color:#a08a3d;">3<span class="cost-dot">$0.6</span></div>
+            <div class="cal-cell">4</div>
+            <div class="cal-cell" style="background:#3d2a0f;color:#f0c84d;">5<span class="cost-dot">$4.1</span></div>
+            <div class="cal-cell" style="background:#1c1508;color:#c9a84c;">6<span class="cost-dot">$1.5</span></div>
+            <div class="cal-cell" style="background:#2d1f0f;color:#e0b84d;">7<span class="cost-dot">$3.2</span></div>
+            <div class="cal-cell" style="background:#1c1508;color:#c9a84c;">8<span class="cost-dot">$1.8</span></div>
+            <div class="cal-cell" style="background:#5c3a0f;color:#fff;">9<span class="cost-dot" style="color:#fff;">$7.3</span></div>
+            <div class="cal-cell">10</div>
+            <div class="cal-cell" style="background:#141008;color:#a08a3d;">11<span class="cost-dot">$0.9</span></div>
+            <div class="cal-cell" style="background:#2d1f0f;color:#e0b84d;">12<span class="cost-dot">$2.4</span></div>
+            <div class="cal-cell" style="background:#3d2a0f;color:#f0c84d;">13<span class="cost-dot">$3.8</span></div>
+            <div class="cal-cell" style="background:#1c1508;color:#c9a84c;">14<span class="cost-dot">$1.6</span></div>
+            <div class="cal-cell" style="background:#2d1f0f;color:#e0b84d;">15<span class="cost-dot">$2.9</span></div>
+            <div class="cal-cell" style="background:#1c1508;color:#c9a84c;">16<span class="cost-dot">$1.4</span></div>
+            <div class="cal-cell">17</div>
+            <div class="cal-cell today" style="background:#2d1f0f;color:#e0b84d;">18<span class="cost-dot">$2.1</span></div>
+            <div class="cal-cell">19</div><div class="cal-cell">20</div><div class="cal-cell">21</div>
+            <div class="cal-cell">22</div><div class="cal-cell">23</div><div class="cal-cell">24</div>
+            <div class="cal-cell">25</div><div class="cal-cell">26</div><div class="cal-cell">27</div>
+            <div class="cal-cell">28</div><div class="cal-cell">29</div><div class="cal-cell">30</div><div class="cal-cell">31</div>
+          </div>
+          <div class="legend" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 3px;">
+              <span class="legend-dot" style="background: #141008;"></span>
+              <span class="legend-dot" style="background: #1c1508;"></span>
+              <span class="legend-dot" style="background: #2d1f0f;"></span>
+              <span class="legend-dot" style="background: #3d2a0f;"></span>
+              <span class="legend-dot" style="background: #5c3a0f;"></span>
+              비용 기준
+            </div>
+            <span>$47.20 / 14일</span>
+          </div>
+        </div>
+
+        <!-- Monthly facts -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="font-size: 11px; color: #666; margin-bottom: 8px;">이번 달 기록</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+            <div style="padding: 8px; background: #0d0d15; border-radius: 6px;">
+              <div style="color: #888;">총 세션</div>
+              <div style="font-size: 16px; font-weight: 600; color: #ccc; margin-top: 2px;">42</div>
+            </div>
+            <div style="padding: 8px; background: #0d0d15; border-radius: 6px;">
+              <div style="color: #888;">총 비용</div>
+              <div style="font-size: 16px; font-weight: 600; color: #ccc; margin-top: 2px;">$47.20</div>
+            </div>
+            <div style="padding: 8px; background: #0d0d15; border-radius: 6px;">
+              <div style="color: #888;">일 평균</div>
+              <div style="font-size: 16px; font-weight: 600; color: #ccc; margin-top: 2px;">$3.37</div>
+            </div>
+            <div style="padding: 8px; background: #0d0d15; border-radius: 6px;">
+              <div style="color: #888;">세션 평균</div>
+              <div style="font-size: 16px; font-weight: 600; color: #ccc; margin-top: 2px;">$1.12</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model split (fact only) -->
+        <div class="card" style="flex: 1; min-height: 0;">
+          <div style="font-size: 11px; color: #666; margin-bottom: 8px;">모델별 비용</div>
+          <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#1a1a2e" stroke-width="12"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="212 71" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" stroke-width="12" stroke-dasharray="49 234" stroke-dashoffset="-212" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="donut-center">
+              <div class="amount" style="font-size: 14px;">$47.20</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; font-size: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Opus</span>
+              <span style="color: #ccc;">$35.40</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#3b82f6;margin-right:4px;"></span>Sonnet</span>
+              <span style="color: #ccc;">$8.10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;margin-right:4px;"></span>Haiku</span>
+              <span style="color: #ccc;">$3.70</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Session ledger -->
+      <div class="card" style="display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div class="card-title" style="margin-bottom: 0;">
+            <div class="icon" style="background: #1a1535;">📋</div>
+            <span>세션 내역</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 10px; color: #666;">정렬:</span>
+            <div class="period-btns">
+              <button class="period-btn on">비용순</button>
+              <button class="period-btn">최신순</button>
+              <button class="period-btn">시간순</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column headers -->
+        <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 6px 12px; font-size: 10px; color: #555; border-bottom: 1px solid #1e1e2e;">
+          <span>날짜</span><span>내용</span><span>모델</span><span>토큰</span><span>시간</span><span style="text-align: right;">비용</span>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto;">
+          <!-- Sorted by cost desc -->
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15; background: #1a1510;">
+            <span style="color: #888;">5/9 금</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Analytics 레이아웃 전체 재설계</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">380K</span>
+            <span style="color: #888;">3h 12m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$7.30</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/5 월</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QueryDSL 리팩토링 + 테스트 수정</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">245K</span>
+            <span style="color: #888;">2h 08m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$4.10</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/13 화</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SSE 실시간 모니터링 구현</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">210K</span>
+            <span style="color: #888;">2h 45m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$3.80</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/7 수</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">CostCard 도넛 차트 + breakdown 구현</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">185K</span>
+            <span style="color: #888;">1h 32m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$3.20</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/15 목</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">캘린더 drilldown 세션 목록 overflow 수정</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">152K</span>
+            <span style="color: #888;">1h 15m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$2.90</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/2 금</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">초기 대시보드 레이아웃 설계</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">140K</span>
+            <span style="color: #888;">1h 05m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$2.80</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/12 월</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">HeatmapCard 툴팁 + 호버 효과</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">120K</span>
+            <span style="color: #888;">52m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$2.40</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/18 일</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">CalendarCard 셀 높이 + 레이아웃 조정</span>
+            <span style="color: #f59e0b; font-size: 10px;">Opus</span>
+            <span style="color: #888;">98K</span>
+            <span style="color: #888;">42m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$1.20</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/16 금</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">HeatmapCard 버그 수정</span>
+            <span style="color: #3b82f6; font-size: 10px;">Opus</span>
+            <span style="color: #888;">72K</span>
+            <span style="color: #888;">28m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$0.85</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 80px 1fr 70px 60px 60px 70px; gap: 8px; padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #0d0d15;">
+            <span style="color: #888;">5/15 목</span>
+            <span style="color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">API 응답 포맷 통일</span>
+            <span style="color: #3b82f6; font-size: 10px;">Sonnet</span>
+            <span style="color: #888;">64K</span>
+            <span style="color: #888;">35m</span>
+            <span style="color: #ccc; text-align: right; font-weight: 600;">$0.42</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pros-cons">
+    <div class="pros"><h4>장점</h4>
+      <ul>
+        <li>거짓말을 하지 않음 — 숫자만 보여주고, 색상 판단 없음</li>
+        <li>비용 캘린더로 "비싼 날"이 직관적으로 보임</li>
+        <li>세션 테이블은 가장 구체적 — 클릭하면 바로 상세로</li>
+        <li>가계부 메타포는 모든 사용자에게 자연스러움</li>
+      </ul>
+    </div>
+    <div class="cons"><h4>고려사항</h4>
+      <ul>
+        <li>시각적으로 단조로움 — 테이블이 많아서 대시보드보다 리포트 느낌</li>
+        <li>능동적으로 인사이트를 주지 않아서 "그래서 뭐?" 반응 가능</li>
+        <li>히트맵/차트 같은 시각적 요소가 없어 Analytics 탭 정체성이 약함</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== OPTION C ==================== -->
+<div id="opt-c" class="option">
+  <div class="option-title">Option C: 세션 탐색기</div>
+  <div class="option-desc">
+    추상 지표 대신 <strong>실제 세션 데이터를 탐색</strong>하는 도구.<br>
+    "가장 비싼 세션", "가장 긴 세션" 등 다양한 렌즈로 세션을 정렬/필터해서 직접 살펴봄.
+  </div>
+  <div class="philosophy">
+    <strong>설계 원칙:</strong> 대시보드가 해석을 하지 않되, 탐색을 도움.
+    다양한 정렬/필터를 제공해서 사용자가 스스로 패턴을 발견하도록 유도.
+    "비싼 세션이 왜 비쌌는지"는 세션을 열어보면 알 수 있음.
+  </div>
+
+  <div class="mock-frame">
+    <div class="mock-topbar">
+      <div class="logo">Session Dashboard</div>
+      <div class="tabs"><div class="tab">Daily</div><div class="tab on">Analytics</div><div class="tab">Monitor</div></div>
+      <div class="filter">All Projects ▾</div>
+    </div>
+
+    <div style="padding: 12px 16px; display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 1fr; gap: 12px; height: calc(100vh - 100px); min-height: 600px;">
+      <!-- LEFT: Filters & Summary -->
+      <div style="display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+        <!-- Period selector -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 8px;">기간</div>
+          <div class="period-btns" style="gap: 4px;">
+            <button class="period-btn">이번 주</button>
+            <button class="period-btn on">이번 달</button>
+            <button class="period-btn">3개월</button>
+            <button class="period-btn">전체</button>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 10px;">요약</div>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">총 세션</span><span style="color: #ccc;">42</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">총 비용</span><span style="color: #ccc;">$47.20</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">총 시간</span><span style="color: #ccc;">38시간</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">세션당 평균 비용</span><span style="color: #ccc;">$1.12</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">세션당 평균 시간</span><span style="color: #ccc;">54분</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">가장 비싼 날</span><span style="color: #ccc;">5/9 ($7.30)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #888;">가장 긴 세션</span><span style="color: #ccc;">3h 12m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lens selectors -->
+        <div class="card" style="flex-shrink: 0;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 8px;">렌즈 (정렬 기준)</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="padding: 8px 10px; background: #1e1b4b; border-radius: 6px; font-size: 11px; color: #a78bfa; cursor: pointer; border: 1px solid #6d28d9;">
+              💰 비용 높은 순
+            </div>
+            <div style="padding: 8px 10px; background: #0d0d15; border-radius: 6px; font-size: 11px; color: #888; cursor: pointer; border: 1px solid transparent;">
+              ⏱️ 시간 긴 순
+            </div>
+            <div style="padding: 8px 10px; background: #0d0d15; border-radius: 6px; font-size: 11px; color: #888; cursor: pointer; border: 1px solid transparent;">
+              🔧 도구 호출 많은 순
+            </div>
+            <div style="padding: 8px 10px; background: #0d0d15; border-radius: 6px; font-size: 11px; color: #888; cursor: pointer; border: 1px solid transparent;">
+              📊 토큰 많은 순
+            </div>
+            <div style="padding: 8px 10px; background: #0d0d15; border-radius: 6px; font-size: 11px; color: #888; cursor: pointer; border: 1px solid transparent;">
+              🕐 최신순
+            </div>
+          </div>
+        </div>
+
+        <!-- Project filter -->
+        <div class="card" style="flex: 1; min-height: 0;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 8px;">프로젝트 필터</div>
+          <div style="display: flex; flex-direction: column; gap: 3px; font-size: 11px;">
+            <div style="padding: 6px 10px; background: #1e1b4b; border-radius: 5px; color: #a78bfa; cursor: pointer; display: flex; justify-content: space-between;">
+              <span>전체</span><span>42세션</span>
+            </div>
+            <div style="padding: 6px 10px; background: #0d0d15; border-radius: 5px; color: #888; cursor: pointer; display: flex; justify-content: space-between;">
+              <span>session-board</span><span>28세션</span>
+            </div>
+            <div style="padding: 6px 10px; background: #0d0d15; border-radius: 5px; color: #888; cursor: pointer; display: flex; justify-content: space-between;">
+              <span>commons</span><span>10세션</span>
+            </div>
+            <div style="padding: 6px 10px; background: #0d0d15; border-radius: 5px; color: #888; cursor: pointer; display: flex; justify-content: space-between;">
+              <span>기타</span><span>4세션</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Session cards -->
+      <div style="display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto;">
+        <!-- Session cards with full detail -->
+        <div class="card" style="padding: 14px; cursor: pointer; transition: border-color .15s;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 10px; color: #888; background: #1a1a2e; padding: 2px 8px; border-radius: 4px;">5/9 금 14:23~17:35</span>
+                <span style="font-size: 10px; color: #f59e0b; background: #2d1f0f; padding: 2px 8px; border-radius: 4px;">Opus</span>
+                <span style="font-size: 10px; color: #a78bfa; background: #1e1b4b; padding: 2px 8px; border-radius: 4px;">session-board</span>
+              </div>
+              <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Analytics 페이지 전체 레이아웃 재설계 + 4개 디자인 시안 작성
+              </div>
+              <div style="display: flex; gap: 12px; font-size: 10px; color: #666;">
+                <span>토큰 380K</span>
+                <span>3시간 12분</span>
+                <span>Read×84 Edit×32 Bash×18 Write×12</span>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: #f59e0b; padding-left: 16px;">$7.30</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 14px; cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 10px; color: #888; background: #1a1a2e; padding: 2px 8px; border-radius: 4px;">5/5 월 10:15~12:23</span>
+                <span style="font-size: 10px; color: #f59e0b; background: #2d1f0f; padding: 2px 8px; border-radius: 4px;">Opus</span>
+                <span style="font-size: 10px; color: #a78bfa; background: #1e1b4b; padding: 2px 8px; border-radius: 4px;">commons</span>
+              </div>
+              <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 6px;">QueryDSL 리팩토링 + 테스트 5회 실패 후 수정</div>
+              <div style="display: flex; gap: 12px; font-size: 10px; color: #666;">
+                <span>토큰 245K</span><span>2시간 08분</span><span>Bash×38 Edit×24 Read×52</span>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: #ccc; padding-left: 16px;">$4.10</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 14px; cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 10px; color: #888; background: #1a1a2e; padding: 2px 8px; border-radius: 4px;">5/13 화 09:40~12:25</span>
+                <span style="font-size: 10px; color: #f59e0b; background: #2d1f0f; padding: 2px 8px; border-radius: 4px;">Opus</span>
+                <span style="font-size: 10px; color: #a78bfa; background: #1e1b4b; padding: 2px 8px; border-radius: 4px;">session-board</span>
+              </div>
+              <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 6px;">실시간 모니터링 SSE 구현 + chokidar 파일 감지</div>
+              <div style="display: flex; gap: 12px; font-size: 10px; color: #666;">
+                <span>토큰 210K</span><span>2시간 45분</span><span>Edit×28 Bash×22 Read×45</span>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: #ccc; padding-left: 16px;">$3.80</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 14px; cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 10px; color: #888; background: #1a1a2e; padding: 2px 8px; border-radius: 4px;">5/7 수 13:10~14:42</span>
+                <span style="font-size: 10px; color: #f59e0b; background: #2d1f0f; padding: 2px 8px; border-radius: 4px;">Opus</span>
+                <span style="font-size: 10px; color: #a78bfa; background: #1e1b4b; padding: 2px 8px; border-radius: 4px;">session-board</span>
+              </div>
+              <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 6px;">CostCard 도넛 차트 + breakdown 테이블 구현</div>
+              <div style="display: flex; gap: 12px; font-size: 10px; color: #666;">
+                <span>토큰 185K</span><span>1시간 32분</span><span>Edit×22 Read×35 Write×8</span>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: #ccc; padding-left: 16px;">$3.20</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 14px; cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 10px; color: #888; background: #1a1a2e; padding: 2px 8px; border-radius: 4px;">5/15 목 15:20~16:05</span>
+                <span style="font-size: 10px; color: #3b82f6; background: #0f1a2d; padding: 2px 8px; border-radius: 4px;">Sonnet</span>
+                <span style="font-size: 10px; color: #a78bfa; background: #1e1b4b; padding: 2px 8px; border-radius: 4px;">commons</span>
+              </div>
+              <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 6px;">API 응답 포맷 통일 리팩토링</div>
+              <div style="display: flex; gap: 12px; font-size: 10px; color: #666;">
+                <span>토큰 64K</span><span>35분</span><span>Edit×12 Read×18 Grep×8</span>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: #ccc; padding-left: 16px;">$0.42</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pros-cons">
+    <div class="pros"><h4>장점</h4>
+      <ul>
+        <li>가장 구체적 — 추상 지표가 아닌 실제 세션 데이터</li>
+        <li>렌즈 전환으로 다양한 관점 탐색 가능</li>
+        <li>프로젝트 필터 + 정렬 = 강력한 탐색 도구</li>
+        <li>Daily 페이지의 "날짜 기준 뷰"와 보완 관계 (이쪽은 "지표 기준 뷰")</li>
+      </ul>
+    </div>
+    <div class="cons"><h4>고려사항</h4>
+      <ul>
+        <li>캘린더 없음 — 시각적 활동 패턴 파악 약함</li>
+        <li>Daily 페이지와 기능이 일부 겹침</li>
+        <li>"Analytics"라기보다 "Explorer" — 탭 이름 변경 필요할 수 있음</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== OPTION D ==================== -->
+<div id="opt-d" class="option">
+  <div class="option-title">Option D: 미니멀 팩트</div>
+  <div class="option-desc">
+    캘린더 + 비용 두 가지만. <strong>나머지는 드릴다운에서</strong>.<br>
+    Overview는 최소한의 사실만 보여주고, 세부 정보는 클릭 시 제공.
+  </div>
+  <div class="philosophy">
+    <strong>설계 원칙:</strong> Analytics 페이지가 모든 걸 보여줄 필요 없음.
+    Overview는 "이번 달 상태"를 5초 안에 파악하는 용도. 그 이상은 드릴다운.
+    가장 적은 정보로 가장 빠른 상태 파악.
+  </div>
+
+  <div class="mock-frame">
+    <div class="mock-topbar">
+      <div class="logo">Session Dashboard</div>
+      <div class="tabs"><div class="tab">Daily</div><div class="tab on">Analytics</div><div class="tab">Monitor</div></div>
+      <div class="filter">All Projects ▾</div>
+    </div>
+
+    <div style="padding: 16px 20px; display: grid; grid-template-columns: 320px 1fr; gap: 16px; height: calc(100vh - 100px); min-height: 500px; max-width: 1000px; margin: 0 auto;">
+      <!-- LEFT: Calendar only -->
+      <div class="card" style="display: flex; flex-direction: column;">
+        <div class="card-title">
+          <div class="icon" style="background: #1e1b4b;">📅</div>
+          <span>사용 캘린더</span>
+          <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+            <button style="background: #1a1a2e; border: none; color: #888; width: 24px; height: 24px; border-radius: 4px; font-size: 10px; cursor: pointer;">◀</button>
+            <span style="font-size: 12px; color: #888;">2026년 5월</span>
+            <button style="background: #1a1a2e; border: none; color: #888; width: 24px; height: 24px; border-radius: 4px; font-size: 10px; cursor: pointer;">▶</button>
+          </div>
+        </div>
+        <div class="cal-grid" style="gap: 4px;">
+          <div class="cal-header">일</div><div class="cal-header">월</div><div class="cal-header">화</div>
+          <div class="cal-header">수</div><div class="cal-header">목</div><div class="cal-header">금</div><div class="cal-header">토</div>
+          <div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+          <div class="cal-cell l2" style="height:36px;">1</div>
+          <div class="cal-cell l3" style="height:36px;">2</div>
+          <div class="cal-cell l1" style="height:36px;">3</div>
+          <div class="cal-cell" style="height:36px;">4</div>
+          <div class="cal-cell l4" style="height:36px;">5</div>
+          <div class="cal-cell l2" style="height:36px;">6</div>
+          <div class="cal-cell l3" style="height:36px;">7</div>
+          <div class="cal-cell l2" style="height:36px;">8</div>
+          <div class="cal-cell l4" style="height:36px;">9</div>
+          <div class="cal-cell" style="height:36px;">10</div>
+          <div class="cal-cell l1" style="height:36px;">11</div>
+          <div class="cal-cell l3" style="height:36px;">12</div>
+          <div class="cal-cell l4" style="height:36px;">13</div>
+          <div class="cal-cell l2" style="height:36px;">14</div>
+          <div class="cal-cell l3" style="height:36px;">15</div>
+          <div class="cal-cell l2" style="height:36px;">16</div>
+          <div class="cal-cell" style="height:36px;">17</div>
+          <div class="cal-cell today l3" style="height:36px;">18</div>
+          <div class="cal-cell" style="height:36px;">19</div><div class="cal-cell" style="height:36px;">20</div><div class="cal-cell" style="height:36px;">21</div>
+          <div class="cal-cell" style="height:36px;">22</div><div class="cal-cell" style="height:36px;">23</div><div class="cal-cell" style="height:36px;">24</div>
+          <div class="cal-cell" style="height:36px;">25</div><div class="cal-cell" style="height:36px;">26</div><div class="cal-cell" style="height:36px;">27</div>
+          <div class="cal-cell" style="height:36px;">28</div><div class="cal-cell" style="height:36px;">29</div><div class="cal-cell" style="height:36px;">30</div><div class="cal-cell" style="height:36px;">31</div>
+        </div>
+        <div class="legend" style="justify-content: space-between; margin-top: 12px;">
+          <div style="display: flex; align-items: center; gap: 3px;">적음
+            <span class="legend-dot" style="background: #1a1535;"></span>
+            <span class="legend-dot" style="background: #2d1b69;"></span>
+            <span class="legend-dot" style="background: #4c1d95;"></span>
+            <span class="legend-dot" style="background: #6d28d9;"></span>
+            많음
+          </div>
+          <span>14일 · 42세션</span>
+        </div>
+
+        <div style="flex: 1;"></div>
+
+        <!-- Bottom summary -->
+        <div style="border-top: 1px solid #1e1e2e; padding-top: 12px; margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 28px; font-weight: 800; color: #a78bfa; line-height: 1;">12일</div>
+              <div style="font-size: 11px; color: #888; margin-top: 2px;">연속 활동</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: #555;">최장 <strong style="color: #6d28d9;">23일</strong></div>
+              <div style="font-size: 11px; color: #555; margin-top: 2px;">활동률 78%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Cost only, clean -->
+      <div class="card" style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div class="card-title" style="margin-bottom: 0;">
+            <div class="icon" style="background: #1c1917;">💰</div>
+            <span>비용</span>
+          </div>
+          <div class="period-btns">
+            <button class="period-btn">1주</button>
+            <button class="period-btn on">이번 달</button>
+            <button class="period-btn">3개월</button>
+          </div>
+        </div>
+
+        <!-- Big number -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 42px; font-weight: 800; color: #fff; line-height: 1;">$47.20</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">42세션 · 일평균 $3.37</div>
+        </div>
+
+        <!-- Daily bars -->
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; align-items: flex-end; gap: 3px; height: 100px;">
+            <div style="flex:1;height:15%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:35%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:8%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:0%;"></div>
+            <div style="flex:1;height:52%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:20%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:40%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:23%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:92%;background:#f59e0b;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:0%;"></div>
+            <div style="flex:1;height:12%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:30%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:48%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:20%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:37%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:18%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+            <div style="flex:1;height:0%;"></div>
+            <div style="flex:1;height:27%;background:#6d28d9;border-radius:3px 3px 0 0;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 9px; color: #444; margin-top: 4px;">
+            <span>5/1</span><span>5/5</span><span>5/9</span><span>5/13</span><span>5/18</span>
+          </div>
+        </div>
+
+        <!-- Model breakdown -->
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 20px; align-items: center; padding-top: 16px; border-top: 1px solid #1e1e2e;">
+          <div style="position: relative; width: 130px; height: 130px;">
+            <svg viewBox="0 0 120 120" width="130" height="130">
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#1a1a2e" stroke-width="14"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="212 71" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" stroke-width="14" stroke-dasharray="49 234" stroke-dashoffset="-212" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="donut-center">
+              <div style="font-size: 12px; color: #888;">모델별</div>
+            </div>
+          </div>
+          <div style="font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a2e;">
+              <span style="color: #ccc;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:6px;"></span>Opus</span>
+              <span style="color: #ccc; font-weight: 600;">$35.40</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a2e;">
+              <span style="color: #ccc;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:6px;"></span>Sonnet</span>
+              <span style="color: #ccc; font-weight: 600;">$8.10</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="color: #ccc;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;"></span>Haiku</span>
+              <span style="color: #ccc; font-weight: 600;">$3.70</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex: 1;"></div>
+
+        <!-- Cache info (reference only, no judgment) -->
+        <div style="border-top: 1px solid #1e1e2e; padding-top: 12px; margin-top: 12px; font-size: 11px; color: #888;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>캐시 절감액</span>
+            <span style="color: #ccc;">-$18.30</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+            <span>캐시 없었을 경우 비용</span>
+            <span style="color: #ccc;">$65.50</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pros-cons">
+    <div class="pros"><h4>장점</h4>
+      <ul>
+        <li>5초 안에 상태 파악 — 정보 과부하 없음</li>
+        <li>거짓 지표 가능성 제로 — 캘린더 + 비용만</li>
+        <li>넓은 여백이 오히려 고급스러움</li>
+        <li>드릴다운에 세부 정보를 넣으면 깊이도 확보</li>
+      </ul>
+    </div>
+    <div class="cons"><h4>고려사항</h4>
+      <ul>
+        <li>"Analytics" 탭치고 정보가 너무 적다는 인상</li>
+        <li>도구 사용, 시간대 패턴 등 완전히 누락</li>
+        <li>미니멀이 지나치면 "만들다 만 것" 같아 보일 수 있음</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.option').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('opt-' + id).classList.add('active');
+  const map = {a:0,b:1,c:2,d:3};
+  document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

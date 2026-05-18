@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - 비용 대시보드 디자인 비교 (3안)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 8px; color: #fff; }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 48px; }
+
+        .option-wrap {
+            max-width: 1200px;
+            margin: 0 auto 72px;
+            border: 1px solid #1e1e2e;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111118;
+        }
+        .option-header {
+            padding: 20px 28px;
+            background: #16161f;
+            border-bottom: 1px solid #1e1e2e;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .badge {
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 700; color: #fff;
+        }
+        .badge-a { background: #6366f1; }
+        .badge-b { background: #10b981; }
+        .badge-c { background: #f59e0b; }
+        .option-name { font-size: 18px; font-weight: 600; color: #fff; }
+        .option-desc {
+            padding: 14px 28px; font-size: 12px; color: #888;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .option-desc strong { color: #ccc; }
+        .mockup { padding: 32px; }
+
+        .pros-cons {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            padding: 16px 28px 24px; border-top: 1px solid #1e1e2e;
+        }
+        .pros, .cons { font-size: 12px; line-height: 2; }
+        .pros li::marker { color: #10b981; }
+        .cons li::marker { color: #f43f5e; }
+        .pros strong { color: #10b981; font-size: 11px; }
+        .cons strong { color: #f43f5e; font-size: 11px; }
+
+        /* Shared */
+        .bento-card {
+            background: #16161f;
+            border: 1px solid #222233;
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 14px; font-weight: 600; color: #ddd;
+        }
+        .card-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; background: #451a03;
+        }
+        .period-selector {
+            display: flex; gap: 4px;
+        }
+        .period-btn {
+            padding: 5px 12px; border-radius: 6px;
+            font-size: 11px; background: #222233;
+            color: #888; border: none; cursor: pointer;
+        }
+        .period-btn.active { background: #f59e0b; color: #000; }
+
+        /* ========== OPTION A: Summary Cards + Line Trend ========== */
+        .cost-a-top {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .cost-a-card {
+            background: #0f0f18;
+            border: 1px solid #1e1e2e;
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .cost-a-card .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+        .cost-a-card .value { font-size: 24px; font-weight: 700; color: #fff; }
+        .cost-a-card .change {
+            font-size: 11px; margin-top: 4px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .cost-a-card .change.up { color: #f43f5e; }
+        .cost-a-card .change.down { color: #10b981; }
+        .cost-a-chart {
+            background: #0f0f18;
+            border: 1px solid #1e1e2e;
+            border-radius: 10px;
+            padding: 20px;
+            height: 200px;
+            position: relative;
+        }
+        .chart-y-axis {
+            position: absolute; left: 12px; top: 20px; bottom: 40px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            font-size: 9px; color: #444;
+        }
+        .chart-area {
+            margin-left: 36px;
+            height: 140px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            border-bottom: 1px solid #1e1e2e;
+            padding-bottom: 1px;
+        }
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .chart-bar-stack {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border-radius: 3px 3px 0 0;
+            overflow: hidden;
+        }
+        .chart-bar-stack .seg {
+            width: 100%;
+            min-height: 0;
+        }
+        .seg-opus { background: #6366f1; }
+        .seg-sonnet { background: #10b981; }
+        .seg-haiku { background: #f59e0b; }
+        .chart-x-labels {
+            margin-left: 36px;
+            display: flex;
+            margin-top: 6px;
+        }
+        .chart-x-labels span {
+            flex: 1; text-align: center;
+            font-size: 9px; color: #555;
+        }
+        .cost-a-legend {
+            display: flex; gap: 16px; margin-top: 14px;
+            justify-content: center;
+        }
+        .cost-a-legend .leg {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: #888;
+        }
+        .cost-a-legend .dot { width: 8px; height: 8px; border-radius: 2px; }
+
+        /* ========== OPTION B: Donut + Breakdown Table ========== */
+        .cost-b-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 24px;
+            align-items: center;
+        }
+        .donut-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .donut-svg { width: 180px; height: 180px; }
+        .donut-center {
+            font-size: 11px; color: #888;
+            text-align: center;
+        }
+        .donut-center .total {
+            font-size: 28px; font-weight: 700; color: #fff;
+            display: block; margin-bottom: 2px;
+        }
+        .breakdown-table {
+            width: 100%;
+        }
+        .breakdown-table .row {
+            display: grid;
+            grid-template-columns: 12px 1fr 80px 60px 80px;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #1a1a2a;
+            font-size: 12px;
+        }
+        .breakdown-table .row.header {
+            font-size: 10px; color: #555;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 1px solid #222233;
+            padding: 8px 0;
+        }
+        .breakdown-table .row .model-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .breakdown-table .row .model-name { color: #ccc; font-weight: 500; }
+        .breakdown-table .row .tokens { color: #888; }
+        .breakdown-table .row .pct { color: #888; }
+        .breakdown-table .row .cost { color: #fff; font-weight: 600; }
+        .cache-section {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #1e1e2e;
+        }
+        .cache-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .cache-header .label { font-size: 12px; color: #aaa; }
+        .cache-header .saved { font-size: 12px; color: #10b981; font-weight: 600; }
+        .cache-bar-outer {
+            height: 10px; background: #0f0f18;
+            border-radius: 5px; overflow: hidden;
+            border: 1px solid #1e1e2e;
+        }
+        .cache-bar-inner {
+            height: 100%; border-radius: 5px;
+            background: linear-gradient(90deg, #10b981, #6ee7b7);
+        }
+        .cache-detail {
+            display: flex; justify-content: space-between;
+            margin-top: 8px; font-size: 11px; color: #666;
+        }
+
+        /* ========== OPTION C: Billing Statement Style ========== */
+        .billing-c {
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .billing-summary {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e1b4b, #0f0f18);
+            border-radius: 12px;
+            border: 1px solid #2d2b5e;
+        }
+        .billing-summary .period-label {
+            font-size: 12px; color: #a78bfa; margin-bottom: 4px;
+        }
+        .billing-summary .total-cost {
+            font-size: 36px; font-weight: 800; color: #fff;
+        }
+        .billing-summary .vs-last {
+            font-size: 12px; color: #888; margin-top: 4px;
+        }
+        .billing-summary .vs-last .diff { color: #f43f5e; }
+        .billing-summary .daily-avg {
+            text-align: right;
+        }
+        .billing-summary .daily-avg .val {
+            font-size: 20px; font-weight: 700; color: #fff;
+        }
+        .billing-summary .daily-avg .lbl {
+            font-size: 11px; color: #888;
+        }
+        .billing-items {
+            background: #0f0f18;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .billing-item {
+            display: grid;
+            grid-template-columns: 1fr 100px 80px 90px;
+            gap: 8px;
+            padding: 14px 20px;
+            align-items: center;
+            border-bottom: 1px solid #1a1a2a;
+            font-size: 12px;
+        }
+        .billing-item.header {
+            background: #16161f;
+            font-size: 10px; color: #555;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 10px 20px;
+        }
+        .billing-item .name {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .billing-item .name .icon-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+        .billing-item .name .model-label { color: #ccc; font-weight: 500; }
+        .billing-item .name .model-sub { color: #666; font-size: 10px; margin-left: 4px; }
+        .billing-item .usage { color: #888; }
+        .billing-item .rate { color: #666; }
+        .billing-item .amount { color: #fff; font-weight: 600; text-align: right; }
+        .billing-item.total-row {
+            background: #16161f;
+            border-bottom: none;
+        }
+        .billing-item.total-row .name { color: #aaa; font-weight: 600; }
+        .billing-item.total-row .amount { color: #f59e0b; font-size: 14px; }
+        .billing-item.savings-row {
+            border-bottom: none;
+        }
+        .billing-item.savings-row .name { color: #10b981; }
+        .billing-item.savings-row .amount { color: #10b981; }
+
+        .billing-insight {
+            background: #0f0f18;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 16px 20px;
+        }
+        .billing-insight .insight-title {
+            font-size: 11px; color: #f59e0b; font-weight: 600;
+            margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .insight-items {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .insight-item {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: #aaa;
+        }
+        .insight-item .bullet {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #f59e0b; flex-shrink: 0;
+        }
+
+        /* Recommendation */
+        .rec-flow {
+            display: flex; align-items: center; justify-content: center;
+            gap: 24px; flex-wrap: wrap; padding: 40px;
+            text-align: center; color: #aaa; font-size: 13px;
+        }
+        .rec-box {
+            padding: 16px 24px; background: #16161f;
+            border-radius: 12px;
+        }
+        .rec-box .rec-label {
+            font-size: 11px; margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>비용 대시보드 — 3가지 디자인 비교</h1>
+    <p class="subtitle">동일 데이터 (모델별 토큰 소비 + 비용 추정 + 캐시 적중률), 표현 방식만 다름</p>
+
+    <!-- ==================== OPTION A ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-a">A</span>
+            <span class="option-name">트렌드 중심 (Summary Cards + Stacked Bar)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 상단 KPI 카드 3개 (총비용, 일평균, 캐시 절감) + 일별 스택 바 차트.
+            <strong>초점:</strong> "추이"가 핵심. 비용이 올라가고 있는지, 내려가고 있는지 시계열 변화 파악.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">💰</span> 비용 추이
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">1개월</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="cost-a-top">
+                    <div class="cost-a-card">
+                        <div class="label">이번 달 총비용</div>
+                        <div class="value">$28.4</div>
+                        <div class="change up">▲ 12% vs 지난 달</div>
+                    </div>
+                    <div class="cost-a-card">
+                        <div class="label">일 평균</div>
+                        <div class="value">$1.58</div>
+                        <div class="change down">▼ 5% vs 지난 주</div>
+                    </div>
+                    <div class="cost-a-card">
+                        <div class="label">캐시 절감액</div>
+                        <div class="value" style="color:#10b981">-$8.2</div>
+                        <div class="change" style="color:#888">적중률 73%</div>
+                    </div>
+                </div>
+                <div class="cost-a-chart">
+                    <div class="chart-y-axis">
+                        <span>$5</span><span>$4</span><span>$3</span><span>$2</span><span>$1</span><span>$0</span>
+                    </div>
+                    <div class="chart-area">
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:20px"></div><div class="seg seg-sonnet" style="height:8px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:45px"></div><div class="seg seg-sonnet" style="height:12px"></div><div class="seg seg-haiku" style="height:4px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:30px"></div><div class="seg seg-sonnet" style="height:10px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:65px"></div><div class="seg seg-sonnet" style="height:15px"></div><div class="seg seg-haiku" style="height:6px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:40px"></div><div class="seg seg-sonnet" style="height:12px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:10px"></div><div class="seg seg-sonnet" style="height:5px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack" style="height:0"></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:55px"></div><div class="seg seg-sonnet" style="height:18px"></div><div class="seg seg-haiku" style="height:5px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:80px"></div><div class="seg seg-sonnet" style="height:14px"></div><div class="seg seg-haiku" style="height:8px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:48px"></div><div class="seg seg-sonnet" style="height:10px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:35px"></div><div class="seg seg-sonnet" style="height:12px"></div><div class="seg seg-haiku" style="height:4px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:60px"></div><div class="seg seg-sonnet" style="height:16px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:42px"></div><div class="seg seg-sonnet" style="height:10px"></div><div class="seg seg-haiku" style="height:3px"></div></div></div>
+                        <div class="chart-bar-group"><div class="chart-bar-stack"><div class="seg seg-opus" style="height:25px"></div><div class="seg seg-sonnet" style="height:8px"></div></div></div>
+                    </div>
+                    <div class="chart-x-labels">
+                        <span>5/5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+                        <span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+                        <span>15</span><span>16</span><span>17</span><span>18</span>
+                    </div>
+                </div>
+                <div class="cost-a-legend">
+                    <div class="leg"><span class="dot" style="background:#6366f1"></span> Opus ($15/M in · $75/M out)</div>
+                    <div class="leg"><span class="dot" style="background:#10b981"></span> Sonnet ($3/M in · $15/M out)</div>
+                    <div class="leg"><span class="dot" style="background:#f59e0b"></span> Haiku ($0.25/M in · $1.25/M out)</div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>비용 "추이"가 핵심 — 올라가는지 내려가는지 즉시 파악</li>
+                <li>KPI 카드로 핵심 수치 3초 내 인지</li>
+                <li>모델별 비율 변화를 일별로 추적 가능</li>
+                <li>전월 대비 변화량 표시로 경고 역할</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>정확한 금액은 바에서 읽기 어려움</li>
+                <li>캐시 적중률 상세가 부족 (숫자만)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION B ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-b">B</span>
+            <span class="option-name">비율 중심 (Donut + Breakdown Table)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 도넛 차트로 모델별 비율 + 우측 테이블로 상세 내역.
+            하단에 캐시 적중률 바.
+            <strong>초점:</strong> "어디에 돈을 쓰고 있는지" 비율 구조 분석. 최적화 포인트 발견.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">💰</span> 비용 구성
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">1개월</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="cost-b-layout">
+                    <div class="donut-area">
+                        <svg class="donut-svg" viewBox="0 0 200 200">
+                            <!-- Opus: 62% -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#222233" stroke-width="24"/>
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#6366f1" stroke-width="24"
+                                stroke-dasharray="312 502" stroke-dashoffset="0"
+                                transform="rotate(-90 100 100)" stroke-linecap="round"/>
+                            <!-- Sonnet: 25% -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#10b981" stroke-width="24"
+                                stroke-dasharray="126 502" stroke-dashoffset="-312"
+                                transform="rotate(-90 100 100)" stroke-linecap="round"/>
+                            <!-- Haiku: 13% -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#f59e0b" stroke-width="24"
+                                stroke-dasharray="65 502" stroke-dashoffset="-438"
+                                transform="rotate(-90 100 100)" stroke-linecap="round"/>
+                            <!-- Center text -->
+                            <text x="100" y="92" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">$28.4</text>
+                            <text x="100" y="112" text-anchor="middle" fill="#888" font-size="10">이번 달 합계</text>
+                        </svg>
+                    </div>
+                    <div class="breakdown-table">
+                        <div class="row header">
+                            <span></span><span>모델</span><span>토큰</span><span>비율</span><span>금액</span>
+                        </div>
+                        <div class="row">
+                            <span class="model-dot" style="background:#6366f1"></span>
+                            <span class="model-name">Opus</span>
+                            <span class="tokens">1.2M</span>
+                            <span class="pct">62%</span>
+                            <span class="cost">$17.6</span>
+                        </div>
+                        <div class="row">
+                            <span class="model-dot" style="background:#10b981"></span>
+                            <span class="model-name">Sonnet</span>
+                            <span class="tokens">2.1M</span>
+                            <span class="pct">25%</span>
+                            <span class="cost">$7.1</span>
+                        </div>
+                        <div class="row">
+                            <span class="model-dot" style="background:#f59e0b"></span>
+                            <span class="model-name">Haiku</span>
+                            <span class="tokens">4.8M</span>
+                            <span class="pct">13%</span>
+                            <span class="cost">$3.7</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cache-section">
+                    <div class="cache-header">
+                        <span class="label">캐시 적중률 — 재활용으로 절감된 비용</span>
+                        <span class="saved">-$8.2 절감 (73%)</span>
+                    </div>
+                    <div class="cache-bar-outer">
+                        <div class="cache-bar-inner" style="width:73%"></div>
+                    </div>
+                    <div class="cache-detail">
+                        <span>cache_read: 5.4M tokens</span>
+                        <span>cache_creation: 1.8M tokens</span>
+                        <span>uncached: 0.9M tokens</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>모델별 비용 비율이 직관적 (도넛)</li>
+                <li>테이블로 정확한 수치까지 확인 가능</li>
+                <li>캐시 적중률을 상세하게 설명 (3분류)</li>
+                <li>벤토 카드 크기에 잘 맞음 (가로 레이아웃)</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>시간에 따른 변화(추이)를 볼 수 없음</li>
+                <li>전월 대비 비교 정보 부족</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION C ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-c">C</span>
+            <span class="option-name">청구서 스타일 (Billing Statement)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 실제 청구서/인보이스 형식. 상단 총액 + 항목별 사용량/단가/금액.
+            하단에 절감 내역과 최적화 인사이트.
+            <strong>초점:</strong> "정확히 어디에 얼마를 지불하는지" 회계 관점. 비용 정당화와 최적화 근거 제공.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">💰</span> 비용 명세
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">1개월</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="billing-c">
+                    <div class="billing-summary">
+                        <div>
+                            <div class="period-label">2026년 5월 1일 ~ 18일</div>
+                            <div class="total-cost">$28.40</div>
+                            <div class="vs-last">전월 동기간: $25.30 · <span class="diff">+$3.10 (↑12%)</span></div>
+                        </div>
+                        <div class="daily-avg">
+                            <div class="val">$1.58</div>
+                            <div class="lbl">일 평균</div>
+                        </div>
+                    </div>
+
+                    <div class="billing-items">
+                        <div class="billing-item header">
+                            <span>항목</span><span>사용량</span><span>단가</span><span>금액</span>
+                        </div>
+                        <div class="billing-item">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#6366f1"></span>
+                                <span class="model-label">Opus</span>
+                                <span class="model-sub">input</span>
+                            </div>
+                            <div class="usage">820K tok</div>
+                            <div class="rate">$15/M</div>
+                            <div class="amount">$12.30</div>
+                        </div>
+                        <div class="billing-item">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#6366f1"></span>
+                                <span class="model-label">Opus</span>
+                                <span class="model-sub">output</span>
+                            </div>
+                            <div class="usage">71K tok</div>
+                            <div class="rate">$75/M</div>
+                            <div class="amount">$5.30</div>
+                        </div>
+                        <div class="billing-item">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#10b981"></span>
+                                <span class="model-label">Sonnet</span>
+                                <span class="model-sub">input</span>
+                            </div>
+                            <div class="usage">1.6M tok</div>
+                            <div class="rate">$3/M</div>
+                            <div class="amount">$4.80</div>
+                        </div>
+                        <div class="billing-item">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#10b981"></span>
+                                <span class="model-label">Sonnet</span>
+                                <span class="model-sub">output</span>
+                            </div>
+                            <div class="usage">150K tok</div>
+                            <div class="rate">$15/M</div>
+                            <div class="amount">$2.25</div>
+                        </div>
+                        <div class="billing-item">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#f59e0b"></span>
+                                <span class="model-label">Haiku</span>
+                                <span class="model-sub">in+out</span>
+                            </div>
+                            <div class="usage">4.8M tok</div>
+                            <div class="rate">혼합</div>
+                            <div class="amount">$3.75</div>
+                        </div>
+                        <div class="billing-item savings-row">
+                            <div class="name">
+                                <span class="icon-dot" style="background:#10b981"></span>
+                                <span class="model-label" style="color:#10b981">캐시 절감</span>
+                                <span class="model-sub" style="color:#059669">73% 적중</span>
+                            </div>
+                            <div class="usage" style="color:#10b981">5.4M tok</div>
+                            <div class="rate" style="color:#10b981">90% 할인</div>
+                            <div class="amount" style="color:#10b981">-$8.20</div>
+                        </div>
+                        <div class="billing-item total-row">
+                            <div class="name">실 지불 추정</div>
+                            <div class="usage"></div>
+                            <div class="rate"></div>
+                            <div class="amount">$28.40</div>
+                        </div>
+                    </div>
+
+                    <div class="billing-insight">
+                        <div class="insight-title">💡 최적화 인사이트</div>
+                        <div class="insight-items">
+                            <div class="insight-item">
+                                <span class="bullet"></span>
+                                Opus output이 전체 비용의 19%를 차지 — 긴 응답 요청 시 Sonnet 전환 고려
+                            </div>
+                            <div class="insight-item">
+                                <span class="bullet"></span>
+                                5/9, 5/13에 일 비용 $4+ 발생 — 대형 리팩토링 세션이 원인
+                            </div>
+                            <div class="insight-item">
+                                <span class="bullet"></span>
+                                캐시 적중률 73% — 세션을 자주 재시작하면 하락, 유지 권장
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>input/output 분리로 정확한 비용 구조 파악</li>
+                <li>캐시 절감을 "할인 항목"으로 명확히 표현</li>
+                <li>인사이트 섹션이 실행 가능한 조언 제공</li>
+                <li>익숙한 청구서 형식 — 이해 즉시</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>시각적 임팩트 낮음 (텍스트 중심)</li>
+                <li>시간 추이를 볼 수 없음</li>
+                <li>벤토 카드에 넣기엔 세로 길이가 김</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== Recommendation ==================== -->
+    <section class="option-wrap" style="border-color:#f59e0b">
+        <div class="option-header" style="background:#451a03">
+            <span class="badge" style="background:#fff;color:#f59e0b">★</span>
+            <span class="option-name">추천: B (도넛) 벤토 + C (청구서) 드릴다운</span>
+        </div>
+        <div class="option-desc">
+            <strong>제안:</strong> 벤토 카드에서는 <strong>B (도넛 + 캐시 바)</strong>로 비율과 절감을 한눈에.
+            드릴다운에서는 <strong>C (청구서 스타일)</strong>로 정확한 내역 + 인사이트 제공.
+            A(트렌드 차트)는 드릴다운 하단에 보조 차트로 추가하면 완벽.
+        </div>
+        <div class="rec-flow">
+            <div class="rec-box" style="border:2px solid #f59e0b">
+                <div class="rec-label" style="color:#f59e0b">벤토 카드</div>
+                B — 도넛 + 캐시 적중률 바
+            </div>
+            <span style="font-size:20px">→ 클릭 →</span>
+            <div class="rec-box" style="border:2px solid #6366f1">
+                <div class="rec-label" style="color:#6366f1">드릴다운 상세</div>
+                C — 청구서 + 인사이트
+            </div>
+            <span style="font-size:20px">+</span>
+            <div class="rec-box" style="border:1px solid #333">
+                <div class="rec-label" style="color:#888">드릴다운 보조</div>
+                A — 일별 트렌드 차트
+            </div>
+        </div>
+    </section>
+</body>
+</html>

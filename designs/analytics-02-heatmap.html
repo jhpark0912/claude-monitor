@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - 시간대 히트맵 디자인 비교 (3안)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 8px; color: #fff; }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 48px; }
+
+        .option-wrap {
+            max-width: 1200px;
+            margin: 0 auto 72px;
+            border: 1px solid #1e1e2e;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111118;
+        }
+        .option-header {
+            padding: 20px 28px;
+            background: #16161f;
+            border-bottom: 1px solid #1e1e2e;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .badge {
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 700; color: #fff;
+        }
+        .badge-a { background: #6366f1; }
+        .badge-b { background: #10b981; }
+        .badge-c { background: #f59e0b; }
+        .option-name { font-size: 18px; font-weight: 600; color: #fff; }
+        .option-desc {
+            padding: 14px 28px; font-size: 12px; color: #888;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .option-desc strong { color: #ccc; }
+        .mockup { padding: 32px; }
+
+        .pros-cons {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            padding: 16px 28px 24px; border-top: 1px solid #1e1e2e;
+        }
+        .pros, .cons { font-size: 12px; line-height: 2; }
+        .pros li::marker { color: #10b981; }
+        .cons li::marker { color: #f43f5e; }
+        .pros strong { color: #10b981; font-size: 11px; }
+        .cons strong { color: #f43f5e; font-size: 11px; }
+
+        /* Shared: Card Shell */
+        .bento-card {
+            background: #16161f;
+            border: 1px solid #222233;
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 14px; font-weight: 600; color: #ddd;
+        }
+        .card-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; background: #0a3622;
+        }
+        .period-selector {
+            display: flex; gap: 4px;
+        }
+        .period-btn {
+            padding: 5px 12px; border-radius: 6px;
+            font-size: 11px; background: #222233;
+            color: #888; border: none; cursor: pointer;
+        }
+        .period-btn.active { background: #10b981; color: #fff; }
+
+        /* ========== OPTION A: Classic Matrix ========== */
+        .matrix-a {
+            display: grid;
+            grid-template-columns: 36px repeat(24, 1fr);
+            gap: 2px;
+        }
+        .matrix-a .row-label {
+            font-size: 11px; color: #666;
+            display: flex; align-items: center;
+            justify-content: flex-end; padding-right: 6px;
+        }
+        .matrix-a .col-labels {
+            display: contents;
+        }
+        .matrix-a .col-label {
+            font-size: 9px; color: #555;
+            text-align: center; padding-bottom: 4px;
+        }
+        .matrix-a .cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: #0f0f18;
+            cursor: pointer;
+            transition: all 0.12s;
+            position: relative;
+        }
+        .matrix-a .cell:hover { transform: scale(1.3); z-index: 2; }
+        .matrix-a .cell.h1 { background: #064e3b; }
+        .matrix-a .cell.h2 { background: #059669; }
+        .matrix-a .cell.h3 { background: #34d399; }
+        .matrix-a .cell.h4 { background: #6ee7b7; }
+        .matrix-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 16px; padding-top: 12px; border-top: 1px solid #1e1e2e;
+        }
+        .matrix-legend {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 10px; color: #666;
+        }
+        .matrix-legend .box { width: 10px; height: 10px; border-radius: 2px; }
+        .matrix-stat { font-size: 11px; color: #888; }
+        .matrix-stat strong { color: #6ee7b7; }
+
+        /* ========== OPTION B: Radial Clock ========== */
+        .clock-b {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+        .clock-svg {
+            width: 320px; height: 320px;
+        }
+        .clock-info {
+            display: flex; flex-direction: column; gap: 16px;
+            min-width: 180px;
+        }
+        .clock-stat-card {
+            background: #0f0f18;
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid #1e1e2e;
+        }
+        .clock-stat-card .label {
+            font-size: 11px; color: #888; margin-bottom: 4px;
+        }
+        .clock-stat-card .value {
+            font-size: 20px; font-weight: 700; color: #fff;
+        }
+        .clock-stat-card .sub {
+            font-size: 11px; color: #666; margin-top: 2px;
+        }
+        .peak-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #064e3b; color: #6ee7b7;
+            padding: 3px 8px; border-radius: 4px; font-size: 10px;
+        }
+
+        /* ========== OPTION C: Bar Breakdown ========== */
+        .bar-c-wrapper {
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .bar-c-header {
+            display: grid;
+            grid-template-columns: 36px 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .bar-c-header .axis {
+            display: flex; justify-content: space-between;
+            font-size: 9px; color: #444;
+        }
+        .bar-c-row {
+            display: grid;
+            grid-template-columns: 36px 1fr 48px;
+            gap: 8px;
+            align-items: center;
+            height: 22px;
+        }
+        .bar-c-row .hour-label {
+            font-size: 10px; color: #666; text-align: right;
+        }
+        .bar-c-row .hour-label.peak { color: #6ee7b7; font-weight: 600; }
+        .bar-c-row .bar-track {
+            height: 14px; background: #0f0f18;
+            border-radius: 3px; overflow: hidden;
+            position: relative;
+        }
+        .bar-c-row .bar-fill {
+            height: 100%; border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .bar-c-row .bar-fill.morning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .bar-c-row .bar-fill.afternoon { background: linear-gradient(90deg, #10b981, #34d399); }
+        .bar-c-row .bar-fill.evening { background: linear-gradient(90deg, #6366f1, #818cf8); }
+        .bar-c-row .bar-fill.night { background: linear-gradient(90deg, #475569, #64748b); }
+        .bar-c-row .count {
+            font-size: 10px; color: #666; text-align: right;
+        }
+        .bar-c-row .count.has { color: #aaa; }
+        .time-zone-legend {
+            display: flex; gap: 16px; margin-top: 14px;
+            padding-top: 12px; border-top: 1px solid #1e1e2e;
+        }
+        .time-zone-legend .tz-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: #888;
+        }
+        .time-zone-legend .tz-dot {
+            width: 8px; height: 8px; border-radius: 2px;
+        }
+        .time-summary {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 10px; margin-top: 16px;
+        }
+        .time-summary .ts-card {
+            background: #0f0f18;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #1e1e2e;
+        }
+        .time-summary .ts-card .ts-value {
+            font-size: 16px; font-weight: 700; color: #fff;
+        }
+        .time-summary .ts-card .ts-label {
+            font-size: 10px; color: #666; margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>시간대 히트맵 — 3가지 디자인 비교</h1>
+    <p class="subtitle">동일한 데이터 (요일 × 시간 활동량), 시각화 방식만 다름</p>
+
+    <!-- ==================== OPTION A ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-a">A</span>
+            <span class="option-name">클래식 매트릭스 (요일 × 시간 그리드)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 7행(요일) × 24열(시간) 그리드. 셀 색상 강도로 활동량 표현.
+            <strong>초점:</strong> "어떤 요일 몇 시에 가장 많이 쓰는지" 한눈에 패턴 파악. GitHub 히트맵의 시간 확장 버전.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">🕐</span> 시간대 활동 패턴
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">4주</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="matrix-a">
+                    <!-- Column labels (hours) -->
+                    <div class="col-label"></div>
+                    <div class="col-label">0</div><div class="col-label">1</div><div class="col-label">2</div>
+                    <div class="col-label">3</div><div class="col-label">4</div><div class="col-label">5</div>
+                    <div class="col-label">6</div><div class="col-label">7</div><div class="col-label">8</div>
+                    <div class="col-label">9</div><div class="col-label">10</div><div class="col-label">11</div>
+                    <div class="col-label">12</div><div class="col-label">13</div><div class="col-label">14</div>
+                    <div class="col-label">15</div><div class="col-label">16</div><div class="col-label">17</div>
+                    <div class="col-label">18</div><div class="col-label">19</div><div class="col-label">20</div>
+                    <div class="col-label">21</div><div class="col-label">22</div><div class="col-label">23</div>
+                    <!-- Monday -->
+                    <div class="row-label">월</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell h1"></div>
+                    <div class="cell h2"></div><div class="cell h3"></div><div class="cell h4"></div>
+                    <div class="cell h3"></div><div class="cell h2"></div><div class="cell h3"></div>
+                    <div class="cell h4"></div><div class="cell h3"></div><div class="cell h2"></div>
+                    <div class="cell h1"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <!-- Tuesday -->
+                    <div class="row-label">화</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell h1"></div><div class="cell h2"></div>
+                    <div class="cell h3"></div><div class="cell h4"></div><div class="cell h3"></div>
+                    <div class="cell h2"></div><div class="cell h3"></div><div class="cell h4"></div>
+                    <div class="cell h3"></div><div class="cell h2"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell h1"></div>
+                    <div class="cell h2"></div><div class="cell h1"></div><div class="cell"></div>
+                    <!-- Wednesday -->
+                    <div class="row-label">수</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell h1"></div>
+                    <div class="cell h3"></div><div class="cell h4"></div><div class="cell h4"></div>
+                    <div class="cell h3"></div><div class="cell h2"></div><div class="cell h2"></div>
+                    <div class="cell h3"></div><div class="cell h4"></div><div class="cell h3"></div>
+                    <div class="cell h2"></div><div class="cell h1"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <!-- Thursday -->
+                    <div class="row-label">목</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell h1"></div><div class="cell h2"></div><div class="cell h3"></div>
+                    <div class="cell h4"></div><div class="cell h3"></div><div class="cell h2"></div>
+                    <div class="cell h1"></div><div class="cell h2"></div><div class="cell h3"></div>
+                    <div class="cell h4"></div><div class="cell h3"></div><div class="cell h2"></div>
+                    <div class="cell h1"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <!-- Friday -->
+                    <div class="row-label">금</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell h1"></div><div class="cell h2"></div>
+                    <div class="cell h3"></div><div class="cell h3"></div><div class="cell h4"></div>
+                    <div class="cell h3"></div><div class="cell h2"></div><div class="cell h3"></div>
+                    <div class="cell h3"></div><div class="cell h2"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <!-- Saturday -->
+                    <div class="row-label">토</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell h1"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell h1"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <!-- Sunday -->
+                    <div class="row-label">일</div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell h1"></div>
+                    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                </div>
+                <div class="matrix-footer">
+                    <div class="matrix-legend">
+                        적음
+                        <span class="box" style="background:#064e3b"></span>
+                        <span class="box" style="background:#059669"></span>
+                        <span class="box" style="background:#34d399"></span>
+                        <span class="box" style="background:#6ee7b7"></span>
+                        많음
+                    </div>
+                    <div class="matrix-stat">
+                        피크 타임: <strong>화 10시, 수 10~11시</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>요일 × 시간 교차 패턴이 한눈에 드러남</li>
+                <li>GitHub 히트맵과 동일한 멘탈 모델</li>
+                <li>구현 단순 (7×24 = 168셀 렌더링)</li>
+                <li>주말 vs 평일 활동 차이 즉시 파악</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>정확한 수치는 호버해야 확인 가능</li>
+                <li>단일 지표만 표현 (색상 하나)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION B ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-b">B</span>
+            <span class="option-name">래디얼 클록 (24시간 원형 차트)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 시계 모양 원형 차트. 12시 방향 = 0시, 시계 방향으로 24시간.
+            반지름 방향으로 7개 링(요일별). <strong>초점:</strong> "하루 중 어느 시간대에 집중하는지" 시계처럼 직관적 파악.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">🕐</span> 활동 시계
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">4주</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="clock-b">
+                    <svg class="clock-svg" viewBox="0 0 400 400">
+                        <!-- Background circles -->
+                        <circle cx="200" cy="200" r="180" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+                        <circle cx="200" cy="200" r="140" fill="none" stroke="#1e1e2e" stroke-width="0.5"/>
+                        <circle cx="200" cy="200" r="100" fill="none" stroke="#1e1e2e" stroke-width="0.5"/>
+                        <circle cx="200" cy="200" r="60" fill="none" stroke="#1e1e2e" stroke-width="0.5"/>
+
+                        <!-- Hour labels -->
+                        <text x="200" y="18" text-anchor="middle" fill="#555" font-size="9">0</text>
+                        <text x="290" y="42" text-anchor="middle" fill="#555" font-size="9">3</text>
+                        <text x="385" y="204" text-anchor="middle" fill="#555" font-size="9">6</text>
+                        <text x="290" y="372" text-anchor="middle" fill="#555" font-size="9">9</text>
+                        <text x="200" y="395" text-anchor="middle" fill="#555" font-size="9">12</text>
+                        <text x="110" y="372" text-anchor="middle" fill="#555" font-size="9">15</text>
+                        <text x="18" y="204" text-anchor="middle" fill="#555" font-size="9">18</text>
+                        <text x="110" y="42" text-anchor="middle" fill="#555" font-size="9">21</text>
+
+                        <!-- Activity arcs (simplified representation) -->
+                        <!-- Morning peak (8-12) -->
+                        <path d="M 200 200 L 350 200 A 150 150 0 0 1 200 350 Z" fill="#064e3b" opacity="0.3"/>
+                        <!-- Afternoon (13-17) -->
+                        <path d="M 200 200 L 200 350 A 150 150 0 0 1 50 200 Z" fill="#059669" opacity="0.4"/>
+                        <!-- Peak hours highlighted -->
+                        <path d="M 200 200 L 330 120 A 150 150 0 0 1 370 200 Z" fill="#34d399" opacity="0.6"/>
+                        <path d="M 200 200 L 200 350 A 150 150 0 0 1 120 330 Z" fill="#34d399" opacity="0.5"/>
+
+                        <!-- Center label -->
+                        <circle cx="200" cy="200" r="40" fill="#16161f"/>
+                        <text x="200" y="195" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">9~17</text>
+                        <text x="200" y="212" text-anchor="middle" fill="#888" font-size="9">집중 시간대</text>
+
+                        <!-- Peak indicators -->
+                        <circle cx="340" cy="160" r="6" fill="#6ee7b7"/>
+                        <circle cx="160" cy="340" r="5" fill="#34d399"/>
+                    </svg>
+                    <div class="clock-info">
+                        <div class="clock-stat-card">
+                            <div class="label">피크 시간</div>
+                            <div class="value">10:00 ~ 11:00</div>
+                            <div class="sub"><span class="peak-badge">최다 활동</span> 평균 4.2세션/일</div>
+                        </div>
+                        <div class="clock-stat-card">
+                            <div class="label">평균 시작 시간</div>
+                            <div class="value">08:42</div>
+                            <div class="sub">첫 세션 시작 평균</div>
+                        </div>
+                        <div class="clock-stat-card">
+                            <div class="label">평균 종료 시간</div>
+                            <div class="value">18:15</div>
+                            <div class="sub">마지막 세션 종료 평균</div>
+                        </div>
+                        <div class="clock-stat-card">
+                            <div class="label">야간 활동</div>
+                            <div class="value">12%</div>
+                            <div class="sub">21시 이후 세션 비율</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>시계 메타포로 "하루 중 언제"를 직관 표현</li>
+                <li>우측 요약 통계가 핵심 인사이트를 텍스트로 제공</li>
+                <li>시각적으로 임팩트 있고 대시보드에 포인트 역할</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>요일별 차이를 보기 어려움 (집계 데이터)</li>
+                <li>정확한 비교가 어려움 (면적 vs 각도 인지 차이)</li>
+                <li>구현 복잡도 높음 (SVG path 계산)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION C ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-c">C</span>
+            <span class="option-name">시간대별 수평 바 (Hourly Bar Chart)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 0시~23시를 세로로 나열, 각 시간대의 세션 수를 수평 바로 표현.
+            시간대를 4구간(새벽/오전/오후/야간)으로 색상 구분.
+            <strong>초점:</strong> "정확히 몇 시에 몇 개 세션이 있었는지" 수치 중심 분석.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">🕐</span> 시간대별 활동량
+                    </div>
+                    <div class="period-selector">
+                        <button class="period-btn">1주</button>
+                        <button class="period-btn active">4주</button>
+                        <button class="period-btn">3개월</button>
+                    </div>
+                </div>
+                <div class="bar-c-wrapper">
+                    <div class="bar-c-header">
+                        <span></span>
+                        <div class="axis"><span>0 세션</span><span>50</span><span>100</span></div>
+                    </div>
+                    <div class="bar-c-row"><div class="hour-label">0시</div><div class="bar-track"><div class="bar-fill night" style="width:2%"></div></div><div class="count">1</div></div>
+                    <div class="bar-c-row"><div class="hour-label">1시</div><div class="bar-track"><div class="bar-fill night" style="width:0%"></div></div><div class="count">0</div></div>
+                    <div class="bar-c-row"><div class="hour-label">2시</div><div class="bar-track"><div class="bar-fill night" style="width:0%"></div></div><div class="count">0</div></div>
+                    <div class="bar-c-row"><div class="hour-label">3시</div><div class="bar-track"><div class="bar-fill night" style="width:0%"></div></div><div class="count">0</div></div>
+                    <div class="bar-c-row"><div class="hour-label">4시</div><div class="bar-track"><div class="bar-fill night" style="width:0%"></div></div><div class="count">0</div></div>
+                    <div class="bar-c-row"><div class="hour-label">5시</div><div class="bar-track"><div class="bar-fill night" style="width:0%"></div></div><div class="count">0</div></div>
+                    <div class="bar-c-row"><div class="hour-label">6시</div><div class="bar-track"><div class="bar-fill morning" style="width:3%"></div></div><div class="count">2</div></div>
+                    <div class="bar-c-row"><div class="hour-label">7시</div><div class="bar-track"><div class="bar-fill morning" style="width:8%"></div></div><div class="count has">5</div></div>
+                    <div class="bar-c-row"><div class="hour-label">8시</div><div class="bar-track"><div class="bar-fill morning" style="width:28%"></div></div><div class="count has">18</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">9시</div><div class="bar-track"><div class="bar-fill morning" style="width:62%"></div></div><div class="count has">42</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">10시</div><div class="bar-track"><div class="bar-fill morning" style="width:88%"></div></div><div class="count has">58</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">11시</div><div class="bar-track"><div class="bar-fill morning" style="width:82%"></div></div><div class="count has">54</div></div>
+                    <div class="bar-c-row"><div class="hour-label">12시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:35%"></div></div><div class="count has">23</div></div>
+                    <div class="bar-c-row"><div class="hour-label">13시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:45%"></div></div><div class="count has">30</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">14시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:72%"></div></div><div class="count has">48</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">15시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:78%"></div></div><div class="count has">52</div></div>
+                    <div class="bar-c-row"><div class="hour-label peak">16시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:70%"></div></div><div class="count has">46</div></div>
+                    <div class="bar-c-row"><div class="hour-label">17시</div><div class="bar-track"><div class="bar-fill afternoon" style="width:48%"></div></div><div class="count has">32</div></div>
+                    <div class="bar-c-row"><div class="hour-label">18시</div><div class="bar-track"><div class="bar-fill evening" style="width:25%"></div></div><div class="count has">16</div></div>
+                    <div class="bar-c-row"><div class="hour-label">19시</div><div class="bar-track"><div class="bar-fill evening" style="width:12%"></div></div><div class="count has">8</div></div>
+                    <div class="bar-c-row"><div class="hour-label">20시</div><div class="bar-track"><div class="bar-fill evening" style="width:8%"></div></div><div class="count has">5</div></div>
+                    <div class="bar-c-row"><div class="hour-label">21시</div><div class="bar-track"><div class="bar-fill evening" style="width:15%"></div></div><div class="count has">10</div></div>
+                    <div class="bar-c-row"><div class="hour-label">22시</div><div class="bar-track"><div class="bar-fill evening" style="width:10%"></div></div><div class="count has">6</div></div>
+                    <div class="bar-c-row"><div class="hour-label">23시</div><div class="bar-track"><div class="bar-fill evening" style="width:3%"></div></div><div class="count">2</div></div>
+                </div>
+                <div class="time-zone-legend">
+                    <div class="tz-item"><span class="tz-dot" style="background:#f59e0b"></span> 오전 (6~12)</div>
+                    <div class="tz-item"><span class="tz-dot" style="background:#10b981"></span> 오후 (12~18)</div>
+                    <div class="tz-item"><span class="tz-dot" style="background:#6366f1"></span> 저녁 (18~24)</div>
+                    <div class="tz-item"><span class="tz-dot" style="background:#64748b"></span> 새벽 (0~6)</div>
+                </div>
+                <div class="time-summary">
+                    <div class="ts-card">
+                        <div class="ts-value" style="color:#f59e0b">172</div>
+                        <div class="ts-label">오전 세션</div>
+                    </div>
+                    <div class="ts-card">
+                        <div class="ts-value" style="color:#10b981">231</div>
+                        <div class="ts-label">오후 세션</div>
+                    </div>
+                    <div class="ts-card">
+                        <div class="ts-value" style="color:#6366f1">47</div>
+                        <div class="ts-label">저녁 세션</div>
+                    </div>
+                    <div class="ts-card">
+                        <div class="ts-value" style="color:#64748b">3</div>
+                        <div class="ts-label">새벽 세션</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>정확한 수치가 바로 보임 (우측 카운트)</li>
+                <li>시간대 4구간 색상으로 패턴 즉시 인지</li>
+                <li>하단 요약으로 "오전형/오후형" 인사이트 명확</li>
+                <li>구현 단순 (24개 div 렌더링)</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>요일별 분리 없음 — 전체 합산만 표현</li>
+                <li>세로 길이가 길어 벤토 카드에 맞추려면 축약 필요</li>
+                <li>매트릭스 대비 정보 밀도 낮음 (1차원)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== Recommendation ==================== -->
+    <section class="option-wrap" style="border-color:#10b981">
+        <div class="option-header" style="background:#042f2e">
+            <span class="badge" style="background:#fff;color:#10b981">★</span>
+            <span class="option-name">추천: A (매트릭스) 기본 + C (바) 드릴다운</span>
+        </div>
+        <div class="option-desc">
+            <strong>제안:</strong> 벤토 카드에서는 <strong>A (7×24 매트릭스)</strong>로 패턴을 한눈에 보여주고,
+            클릭 시 <strong>C (시간대별 바)</strong>로 정확한 수치와 구간별 요약을 제공.
+            B(래디얼)는 시각적으로 인상적이나, 요일 구분이 빠져서 인사이트 손실.
+        </div>
+        <div class="mockup" style="text-align:center;padding:40px;color:#aaa;font-size:13px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
+                <div style="padding:16px 24px;background:#16161f;border-radius:12px;border:2px solid #10b981">
+                    <div style="font-size:11px;color:#10b981;margin-bottom:4px">벤토 카드</div>
+                    A — 요일×시간 매트릭스
+                </div>
+                <span style="font-size:20px">→ 클릭 →</span>
+                <div style="padding:16px 24px;background:#16161f;border-radius:12px;border:2px solid #f59e0b">
+                    <div style="font-size:11px;color:#f59e0b;margin-bottom:4px">드릴다운 상세</div>
+                    C — 시간대별 바 + 구간 요약
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

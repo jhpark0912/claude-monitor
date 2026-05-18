@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - 캘린더 뷰 디자인 비교 (3안)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 8px; color: #fff; }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 48px; }
+
+        .option-wrap {
+            max-width: 1200px;
+            margin: 0 auto 72px;
+            border: 1px solid #1e1e2e;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111118;
+        }
+        .option-header {
+            padding: 20px 28px;
+            background: #16161f;
+            border-bottom: 1px solid #1e1e2e;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .badge-a { background: #6366f1; }
+        .badge-b { background: #10b981; }
+        .badge-c { background: #f59e0b; }
+        .option-name { font-size: 18px; font-weight: 600; color: #fff; }
+        .option-desc {
+            padding: 14px 28px;
+            font-size: 12px;
+            color: #888;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .option-desc strong { color: #ccc; }
+        .mockup { padding: 32px; }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px 28px 24px;
+            border-top: 1px solid #1e1e2e;
+        }
+        .pros, .cons { font-size: 12px; line-height: 2; }
+        .pros li::marker { color: #10b981; }
+        .cons li::marker { color: #f43f5e; }
+        .pros strong { color: #10b981; font-size: 11px; }
+        .cons strong { color: #f43f5e; font-size: 11px; }
+
+        /* ========== Shared: Bento Card Shell ========== */
+        .bento-card {
+            background: #16161f;
+            border: 1px solid #222233;
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ddd;
+        }
+        .card-icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            background: #1e1b4b;
+        }
+        .month-nav {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .month-nav button {
+            background: #222233; border: none; color: #888;
+            width: 28px; height: 28px; border-radius: 6px;
+            cursor: pointer; font-size: 12px;
+        }
+        .month-nav span {
+            font-size: 13px; color: #aaa;
+            min-width: 80px; text-align: center;
+        }
+        .calendar-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 16px; padding-top: 12px;
+            border-top: 1px solid #1e1e2e;
+        }
+        .legend {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 10px; color: #666;
+        }
+        .legend-box { width: 10px; height: 10px; border-radius: 3px; }
+        .calendar-stat { font-size: 11px; color: #888; }
+        .calendar-stat strong { color: #a78bfa; }
+
+        /* ========== OPTION A: Grid + Intensity ========== */
+        .cal-grid-a {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .cal-grid-a .dh {
+            font-size: 10px; color: #555;
+            text-align: center; padding: 6px 0; font-weight: 500;
+        }
+        .cal-grid-a .cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-size: 11px; color: #555;
+            cursor: pointer; transition: all 0.15s;
+            background: #0f0f18;
+            position: relative;
+        }
+        .cal-grid-a .cell:hover { background: #1e1e2e; }
+        .cal-grid-a .cell.empty { background: transparent; cursor: default; }
+        .cal-grid-a .cell.i1 { background: #1a1535; color: #a78bfa; }
+        .cal-grid-a .cell.i2 { background: #2d1b69; color: #c4b5fd; }
+        .cal-grid-a .cell.i3 { background: #4c1d95; color: #e9d5ff; }
+        .cal-grid-a .cell.i4 { background: #6d28d9; color: #f5f3ff; }
+        .cal-grid-a .cell.today { outline: 2px solid #6366f1; outline-offset: -2px; }
+        .cal-grid-a .cell .dots {
+            position: absolute; bottom: 4px;
+            display: flex; gap: 2px;
+        }
+        .cal-grid-a .cell .dots span {
+            width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: 0.7;
+        }
+
+        /* ========== OPTION B: Ring Chart per Day ========== */
+        .cal-grid-b {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .cal-grid-b .dh {
+            font-size: 10px; color: #555;
+            text-align: center; padding: 6px 0; font-weight: 500;
+        }
+        .cal-grid-b .cell {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: #555;
+            cursor: pointer; transition: all 0.15s;
+            position: relative;
+        }
+        .cal-grid-b .cell.empty { cursor: default; }
+        .cal-grid-b .cell.has-data {
+            color: #ccc;
+        }
+        .cal-grid-b .cell.today { box-shadow: 0 0 0 2px #6366f1; }
+        .cal-grid-b .ring {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+        }
+        .cal-grid-b .ring svg {
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+        .cal-grid-b .ring circle {
+            fill: none;
+            stroke-width: 3;
+        }
+        .cal-grid-b .ring .bg { stroke: #1e1e2e; }
+        .cal-grid-b .ring .fill-token { stroke: #6366f1; }
+        .cal-grid-b .ring .fill-tool { stroke: #10b981; }
+        .day-detail-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%; transform: translateX(-50%);
+            background: #222233;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            display: none;
+            z-index: 10;
+            color: #ccc;
+        }
+        .cal-grid-b .cell:hover .day-detail-tooltip { display: block; }
+        .tooltip-row { display: flex; gap: 12px; margin-top: 4px; }
+        .tooltip-row span { color: #888; }
+        .tooltip-row .t-purple { color: #a78bfa; }
+        .tooltip-row .t-green { color: #6ee7b7; }
+
+        /* ========== OPTION C: Bar Timeline ========== */
+        .cal-timeline-c {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 32px 1fr 60px;
+            gap: 8px;
+            align-items: center;
+            height: 28px;
+        }
+        .timeline-row .day-num {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+        }
+        .timeline-row .day-num.active { color: #a78bfa; font-weight: 600; }
+        .timeline-row .day-num.today-num { color: #6366f1; font-weight: 700; }
+        .timeline-row .bar-track {
+            height: 18px;
+            background: #0f0f18;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        .timeline-row .bar-segment {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .timeline-row .bar-segment.opus { background: #6366f1; }
+        .timeline-row .bar-segment.sonnet { background: #10b981; }
+        .timeline-row .bar-segment.haiku { background: #f59e0b; }
+        .timeline-row .day-stat {
+            font-size: 10px;
+            color: #666;
+            text-align: right;
+        }
+        .timeline-row .day-stat.has { color: #aaa; }
+        .timeline-weekday {
+            display: grid;
+            grid-template-columns: 32px 1fr 60px;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1a1a2a;
+        }
+        .timeline-weekday span {
+            font-size: 9px;
+            color: #444;
+            text-transform: uppercase;
+        }
+        .timeline-weekday .axis {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #444;
+        }
+        .timeline-legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #1e1e2e;
+        }
+        .timeline-legend .leg-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: #888;
+        }
+        .timeline-legend .leg-dot {
+            width: 8px; height: 8px; border-radius: 2px;
+        }
+
+        /* Drilldown */
+        .drilldown-panel {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #1e1e2e;
+        }
+        .drilldown-title {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .session-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .session-card {
+            padding: 14px 16px;
+            background: #0f0f18;
+            border-radius: 10px;
+            border: 1px solid #1e1e2e;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .session-card:hover { border-color: #6366f1; }
+        .session-card .project { font-size: 11px; color: #6366f1; font-weight: 500; margin-bottom: 3px; }
+        .session-card .prompt { font-size: 12px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .session-card .meta {
+            display: flex; gap: 14px; margin-top: 6px;
+            font-size: 11px; color: #666;
+        }
+        .session-card .meta .tk { color: #f59e0b; }
+        .session-card .meta .tl { color: #10b981; }
+    </style>
+</head>
+<body>
+    <h1>캘린더 뷰 — 3가지 디자인 비교</h1>
+    <p class="subtitle">동일한 벤토 카드 + 드릴다운 구조, 정보 시각화 방식만 다름</p>
+
+    <!-- ==================== OPTION A ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-a">A</span>
+            <span class="option-name">색상 강도 그리드 (GitHub Grass 변형)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 세션 수에 따라 셀 배경색 강도 변화. 하단 dot으로 세션 개수 힌트.
+            <strong>초점:</strong> "언제 얼마나 썼는지"를 색상으로 직관 파악. 가장 클래식한 형태.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">📅</span> 사용 캘린더
+                    </div>
+                    <div class="month-nav">
+                        <button>◀</button><span>2026년 5월</span><button>▶</button>
+                    </div>
+                </div>
+                <div class="cal-grid-a">
+                    <div class="dh">일</div><div class="dh">월</div><div class="dh">화</div>
+                    <div class="dh">수</div><div class="dh">목</div><div class="dh">금</div><div class="dh">토</div>
+                    <div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
+                    <div class="cell i2">1<div class="dots"><span></span><span></span></div></div>
+                    <div class="cell i3">2<div class="dots"><span></span><span></span><span></span></div></div>
+                    <div class="cell">3</div>
+                    <div class="cell">4</div>
+                    <div class="cell i4">5<div class="dots"><span></span><span></span><span></span><span></span></div></div>
+                    <div class="cell i2">6<div class="dots"><span></span><span></span></div></div>
+                    <div class="cell i3">7<div class="dots"><span></span><span></span><span></span></div></div>
+                    <div class="cell i2">8<div class="dots"><span></span><span></span></div></div>
+                    <div class="cell i4">9<div class="dots"><span></span><span></span><span></span><span></span></div></div>
+                    <div class="cell">10</div>
+                    <div class="cell">11</div>
+                    <div class="cell i3">12<div class="dots"><span></span><span></span><span></span></div></div>
+                    <div class="cell i4">13<div class="dots"><span></span><span></span><span></span><span></span></div></div>
+                    <div class="cell i2">14<div class="dots"><span></span><span></span></div></div>
+                    <div class="cell i3">15<div class="dots"><span></span><span></span><span></span></div></div>
+                    <div class="cell i1">16<div class="dots"><span></span></div></div>
+                    <div class="cell">17</div>
+                    <div class="cell today i2">18<div class="dots"><span></span><span></span></div></div>
+                    <div class="cell">19</div><div class="cell">20</div><div class="cell">21</div>
+                    <div class="cell">22</div><div class="cell">23</div><div class="cell">24</div>
+                    <div class="cell">25</div><div class="cell">26</div><div class="cell">27</div>
+                    <div class="cell">28</div><div class="cell">29</div><div class="cell">30</div><div class="cell">31</div>
+                </div>
+                <div class="calendar-footer">
+                    <div class="legend">
+                        적음
+                        <span class="legend-box" style="background:#1a1535"></span>
+                        <span class="legend-box" style="background:#2d1b69"></span>
+                        <span class="legend-box" style="background:#4c1d95"></span>
+                        <span class="legend-box" style="background:#6d28d9"></span>
+                        많음
+                    </div>
+                    <div class="calendar-stat">이번 달 <strong>14일</strong> 활동 · <strong>47</strong>세션</div>
+                </div>
+
+                <!-- Drilldown Preview -->
+                <div class="drilldown-panel">
+                    <div class="drilldown-title">📋 5월 15일 (목) — 세션 3개</div>
+                    <div class="session-list">
+                        <div class="session-card">
+                            <div class="project">05.session_board</div>
+                            <div class="prompt">Analytics 페이지 디자인 옵션 만들어줘</div>
+                            <div class="meta">
+                                <span>14:23~15:01</span>
+                                <span class="tk">128K tokens</span>
+                                <span class="tl">Edit×12</span>
+                            </div>
+                        </div>
+                        <div class="session-card">
+                            <div class="project">02.spring/api-gateway</div>
+                            <div class="prompt">JWT 토큰 갱신 로직 버그 수정</div>
+                            <div class="meta">
+                                <span>11:05~11:42</span>
+                                <span class="tk">89K tokens</span>
+                                <span class="tl">Edit×8 Bash×5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>GitHub 잔디와 동일한 멘탈 모델 — 즉시 이해 가능</li>
+                <li>구현이 단순하고 반응형 처리 쉬움</li>
+                <li>날짜별 비교가 색상만으로 가능</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>세션 수 외 정보(토큰, 비용)를 볼 수 없음</li>
+                <li>색상 차이가 4단계라 미세한 차이 표현 불가</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION B ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-b">B</span>
+            <span class="option-name">링 차트 캘린더 (Multi-metric Ring)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 각 날짜가 원형이며, 바깥 링 = 토큰 소비율, 안쪽 링 = 도구 활용률.
+            <strong>초점:</strong> "양"뿐 아니라 "무엇을 했는지"까지 날짜별로 한눈에 비교. Apple Watch 활동 링 스타일.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">📅</span> 활동 링 캘린더
+                    </div>
+                    <div class="month-nav">
+                        <button>◀</button><span>2026년 5월</span><button>▶</button>
+                    </div>
+                </div>
+                <div class="cal-grid-b">
+                    <div class="dh">일</div><div class="dh">월</div><div class="dh">화</div>
+                    <div class="dh">수</div><div class="dh">목</div><div class="dh">금</div><div class="dh">토</div>
+                    <div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
+                    <!-- Day 1 -->
+                    <div class="cell has-data">1
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="40 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="30 100"/>
+                        </svg></div>
+                        <div class="day-detail-tooltip">
+                            <div>5/1 (목)</div>
+                            <div class="tooltip-row">
+                                <span class="t-purple">●128K tok</span>
+                                <span class="t-green">●15 tools</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Day 2 -->
+                    <div class="cell has-data">2
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="72 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="55 100"/>
+                        </svg></div>
+                    </div>
+                    <div class="cell">3</div>
+                    <div class="cell">4</div>
+                    <!-- Day 5 -->
+                    <div class="cell has-data">5
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="95 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="80 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 6 -->
+                    <div class="cell has-data">6
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="35 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="45 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 7 -->
+                    <div class="cell has-data">7
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="60 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="50 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 8 -->
+                    <div class="cell has-data">8
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="42 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="35 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 9 -->
+                    <div class="cell has-data">9
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="88 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="72 100"/>
+                        </svg></div>
+                    </div>
+                    <div class="cell">10</div>
+                    <div class="cell">11</div>
+                    <!-- Day 12 -->
+                    <div class="cell has-data">12
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="65 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="48 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 13 -->
+                    <div class="cell has-data">13
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="92 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="70 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 14 -->
+                    <div class="cell has-data">14
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="38 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="28 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 15 -->
+                    <div class="cell has-data today">15
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="70 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="60 100"/>
+                        </svg></div>
+                    </div>
+                    <!-- Day 16 -->
+                    <div class="cell has-data">16
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="20 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="15 100"/>
+                        </svg></div>
+                    </div>
+                    <div class="cell">17</div>
+                    <div class="cell has-data">18
+                        <div class="ring"><svg viewBox="0 0 36 36">
+                            <circle class="bg" cx="18" cy="18" r="15.9"/>
+                            <circle class="fill-token" cx="18" cy="18" r="15.9" stroke-dasharray="45 100"/>
+                            <circle class="bg" cx="18" cy="18" r="12"/>
+                            <circle class="fill-tool" cx="18" cy="18" r="12" stroke-dasharray="38 100"/>
+                        </svg></div>
+                    </div>
+                    <div class="cell">19</div><div class="cell">20</div><div class="cell">21</div>
+                    <div class="cell">22</div><div class="cell">23</div><div class="cell">24</div>
+                    <div class="cell">25</div><div class="cell">26</div><div class="cell">27</div>
+                    <div class="cell">28</div><div class="cell">29</div><div class="cell">30</div><div class="cell">31</div>
+                </div>
+                <div class="calendar-footer">
+                    <div class="legend">
+                        <span class="legend-box" style="background:#6366f1"></span> 토큰 소비
+                        &nbsp;&nbsp;
+                        <span class="legend-box" style="background:#10b981"></span> 도구 호출
+                    </div>
+                    <div class="calendar-stat">호버로 상세 확인 · 클릭으로 세션 목록</div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>2개 지표를 동시에 보여줌 (토큰 + 도구)</li>
+                <li>시각적으로 독특하고 주목도 높음</li>
+                <li>호버 시 상세 수치 제공 — 클릭 없이도 정보 확인</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>링 차트가 작아서 정확한 수치 비교 어려움</li>
+                <li>구현 복잡도 높음 (SVG 계산)</li>
+                <li>처음 보는 사용자에게 학습 곡선 존재</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== OPTION C ==================== -->
+    <section class="option-wrap">
+        <div class="option-header">
+            <span class="badge badge-c">C</span>
+            <span class="option-name">바 타임라인 (Stacked Bar per Day)</span>
+        </div>
+        <div class="option-desc">
+            <strong>표현:</strong> 날짜를 세로로 나열, 각 날짜에 모델별 토큰 사용량을 스택 바로 표시.
+            <strong>초점:</strong> "어떤 모델을 얼마나 썼는지" + 비용 구조가 일별로 명확히 드러남. 비용 최적화 관점에 적합.
+        </div>
+        <div class="mockup">
+            <div class="bento-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">📅</span> 일별 사용량
+                    </div>
+                    <div class="month-nav">
+                        <button>◀</button><span>2026년 5월</span><button>▶</button>
+                    </div>
+                </div>
+                <div class="cal-timeline-c">
+                    <div class="timeline-weekday">
+                        <span></span>
+                        <div class="axis"><span>0</span><span>200K</span><span>400K</span><span>600K tok</span></div>
+                        <span style="text-align:right">비용</span>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">1 목</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:35%"></div>
+                            <div class="bar-segment sonnet" style="width:15%"></div>
+                        </div>
+                        <div class="day-stat has">$1.2</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">2 금</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:55%"></div>
+                            <div class="bar-segment sonnet" style="width:20%"></div>
+                            <div class="bar-segment haiku" style="width:5%"></div>
+                        </div>
+                        <div class="day-stat has">$2.8</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num">3 토</div>
+                        <div class="bar-track"></div>
+                        <div class="day-stat">—</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num">4 일</div>
+                        <div class="bar-track"></div>
+                        <div class="day-stat">—</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">5 월</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:72%"></div>
+                            <div class="bar-segment sonnet" style="width:18%"></div>
+                            <div class="bar-segment haiku" style="width:8%"></div>
+                        </div>
+                        <div class="day-stat has">$4.1</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">6 화</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:25%"></div>
+                            <div class="bar-segment sonnet" style="width:20%"></div>
+                        </div>
+                        <div class="day-stat has">$1.0</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">7 수</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:48%"></div>
+                            <div class="bar-segment sonnet" style="width:22%"></div>
+                            <div class="bar-segment haiku" style="width:10%"></div>
+                        </div>
+                        <div class="day-stat has">$2.3</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">8 목</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:30%"></div>
+                            <div class="bar-segment sonnet" style="width:12%"></div>
+                        </div>
+                        <div class="day-stat has">$0.9</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">9 금</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:80%"></div>
+                            <div class="bar-segment sonnet" style="width:12%"></div>
+                            <div class="bar-segment haiku" style="width:6%"></div>
+                        </div>
+                        <div class="day-stat has">$4.5</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num">10 토</div>
+                        <div class="bar-track"></div>
+                        <div class="day-stat">—</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num">11 일</div>
+                        <div class="bar-track"></div>
+                        <div class="day-stat">—</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">12 월</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:52%"></div>
+                            <div class="bar-segment sonnet" style="width:25%"></div>
+                        </div>
+                        <div class="day-stat has">$2.6</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">13 화</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:68%"></div>
+                            <div class="bar-segment sonnet" style="width:20%"></div>
+                            <div class="bar-segment haiku" style="width:10%"></div>
+                        </div>
+                        <div class="day-stat has">$3.8</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">14 수</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:28%"></div>
+                            <div class="bar-segment sonnet" style="width:15%"></div>
+                        </div>
+                        <div class="day-stat has">$0.8</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">15 목</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:55%"></div>
+                            <div class="bar-segment sonnet" style="width:18%"></div>
+                            <div class="bar-segment haiku" style="width:7%"></div>
+                        </div>
+                        <div class="day-stat has">$2.4</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num active">16 금</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:15%"></div>
+                            <div class="bar-segment sonnet" style="width:8%"></div>
+                        </div>
+                        <div class="day-stat has">$0.5</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num">17 토</div>
+                        <div class="bar-track"></div>
+                        <div class="day-stat">—</div>
+                    </div>
+                    <div class="timeline-row">
+                        <div class="day-num today-num active">18 일</div>
+                        <div class="bar-track">
+                            <div class="bar-segment opus" style="width:32%"></div>
+                            <div class="bar-segment sonnet" style="width:14%"></div>
+                        </div>
+                        <div class="day-stat has">$1.1</div>
+                    </div>
+                </div>
+                <div class="timeline-legend">
+                    <div class="leg-item"><span class="leg-dot" style="background:#6366f1"></span> Opus</div>
+                    <div class="leg-item"><span class="leg-dot" style="background:#10b981"></span> Sonnet</div>
+                    <div class="leg-item"><span class="leg-dot" style="background:#f59e0b"></span> Haiku</div>
+                    <div style="margin-left:auto;font-size:11px;color:#888">
+                        월 합계: <strong style="color:#fff">$28.0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>모델별 사용 비율 + 비용을 동시에 확인</li>
+                <li>일별 비교가 정렬되어 매우 직관적</li>
+                <li>비용 최적화 인사이트 (Opus 과다 사용일 등) 즉시 파악</li>
+                <li>주말 미사용 패턴이 자연스럽게 드러남</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>전통적 캘린더 형태가 아니라 "달력"으로 인식 어려움</li>
+                <li>세로 스크롤 필요 (31일 전부 표시 시)</li>
+                <li>세션 개수 정보가 직접 보이지 않음</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ==================== Recommendation ==================== -->
+    <section class="option-wrap" style="border-color:#6366f1">
+        <div class="option-header" style="background:#1e1b4b">
+            <span class="badge" style="background:#fff;color:#6366f1">★</span>
+            <span class="option-name">추천: A + C 조합</span>
+        </div>
+        <div class="option-desc">
+            <strong>제안:</strong> 벤토 요약은 <strong>A (색상 강도 그리드)</strong>로 빠르게 "언제 썼는지" 파악.
+            드릴다운에서 <strong>C (바 타임라인)</strong>을 함께 보여줘 "그날 뭘 얼마나 썼는지" 상세 확인.
+            B(링)는 시각적으로 흥미롭지만 실용성 대비 구현 비용이 높음.
+        </div>
+        <div class="mockup" style="text-align:center;padding:40px;color:#aaa;font-size:13px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
+                <div style="padding:16px 24px;background:#16161f;border-radius:12px;border:2px solid #6366f1">
+                    <div style="font-size:11px;color:#6366f1;margin-bottom:4px">벤토 카드</div>
+                    A — 색상 그리드 캘린더
+                </div>
+                <span style="font-size:20px">→ 클릭 →</span>
+                <div style="padding:16px 24px;background:#16161f;border-radius:12px;border:2px solid #10b981">
+                    <div style="font-size:11px;color:#10b981;margin-bottom:4px">드릴다운 상세</div>
+                    C — 바 타임라인 + 세션 목록
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

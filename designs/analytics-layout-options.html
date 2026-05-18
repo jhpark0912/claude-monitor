@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Page - Design Options</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 60px;
+            font-size: 14px;
+        }
+        .option-section {
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+        .option-header {
+            padding: 24px 32px;
+            background: #222;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .option-badge {
+            background: #6366f1;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .option-badge.green { background: #10b981; }
+        .option-badge.amber { background: #f59e0b; }
+        .option-badge.rose { background: #f43f5e; }
+        .option-title { font-size: 20px; font-weight: 600; }
+        .option-desc {
+            padding: 16px 32px;
+            color: #999;
+            font-size: 13px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .option-desc strong { color: #ccc; }
+        .mockup {
+            padding: 32px;
+        }
+
+        /* ====== OPTION A: Tab Navigation ====== */
+        .tabs-nav {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 24px;
+        }
+        .tab-item {
+            padding: 12px 24px;
+            font-size: 14px;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-item.active {
+            color: #6366f1;
+            border-bottom-color: #6366f1;
+        }
+        .tab-content-a {
+            display: grid;
+            gap: 20px;
+        }
+        .calendar-grid-a {
+            background: #222;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .calendar-grid-a .label { font-size: 14px; color: #aaa; margin-bottom: 16px; }
+        .grass-row {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 3px;
+        }
+        .grass-cell {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: #1a1a2e;
+        }
+        .grass-cell.l1 { background: #2d1b69; }
+        .grass-cell.l2 { background: #5b21b6; }
+        .grass-cell.l3 { background: #7c3aed; }
+        .grass-cell.l4 { background: #a78bfa; }
+
+        /* ====== OPTION B: Single Scroll Dashboard ====== */
+        .dashboard-b {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .section-title-b {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .card-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        .stat-card {
+            background: #222;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+        .heatmap-b {
+            background: #222;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 40px repeat(24, 1fr);
+            gap: 2px;
+            font-size: 10px;
+        }
+        .heatmap-grid .day-label {
+            display: flex;
+            align-items: center;
+            color: #888;
+            font-size: 11px;
+        }
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: #1a1a2e;
+        }
+        .heatmap-cell.h1 { background: #064e3b; }
+        .heatmap-cell.h2 { background: #059669; }
+        .heatmap-cell.h3 { background: #34d399; }
+        .heatmap-cell.h4 { background: #6ee7b7; }
+        .cost-chart-b {
+            background: #222;
+            border-radius: 12px;
+            padding: 24px;
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            position: relative;
+        }
+        .cost-bar {
+            flex: 1;
+            background: linear-gradient(to top, #6366f1, #818cf8);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            position: relative;
+        }
+        .cost-bar .day-lbl {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #666;
+        }
+
+        /* ====== OPTION C: Bento Grid ====== */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 16px;
+        }
+        .bento-card {
+            background: #222;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #2a2a2a;
+        }
+        .bento-card.span-full {
+            grid-column: 1 / -1;
+        }
+        .bento-card .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #aaa;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bento-card .card-title .icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        .icon-purple { background: #4c1d95; color: #a78bfa; }
+        .icon-green { background: #064e3b; color: #6ee7b7; }
+        .icon-amber { background: #451a03; color: #fbbf24; }
+        .icon-rose { background: #4c0519; color: #fb7185; }
+
+        /* Calendar mini in bento */
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .mini-calendar .day-header {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            padding: 4px;
+        }
+        .mini-calendar .cal-cell {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .mini-calendar .cal-cell.has-data { background: #2d1b69; color: #c4b5fd; }
+        .mini-calendar .cal-cell.active { background: #6366f1; color: #fff; }
+
+        /* cost donut */
+        .donut-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .donut {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(#6366f1 0% 62%, #10b981 62% 85%, #f59e0b 85% 100%);
+            position: relative;
+        }
+        .donut::after {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border-radius: 50%;
+            background: #222;
+        }
+        .donut-legend {
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .cache-bar-wrapper {
+            margin-top: 12px;
+        }
+        .cache-bar-bg {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .cache-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #10b981, #6ee7b7);
+        }
+        .cache-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        /* ====== OPTION D: Left Sidebar + Main ====== */
+        .layout-d {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 20px;
+            min-height: 500px;
+        }
+        .sidebar-d {
+            background: #222;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .sidebar-d .nav-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #aaa;
+            cursor: pointer;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-d .nav-item.active {
+            background: #6366f1;
+            color: #fff;
+        }
+        .sidebar-d .nav-item .nav-icon {
+            width: 18px;
+            text-align: center;
+        }
+        .main-d {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-d .panel {
+            background: #222;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .time-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .time-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #333;
+            color: #aaa;
+            border: none;
+            cursor: pointer;
+        }
+        .time-btn.active { background: #6366f1; color: #fff; }
+        .sparkline {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 60px;
+        }
+        .spark-bar {
+            flex: 1;
+            background: #4c1d95;
+            border-radius: 2px;
+            min-height: 4px;
+        }
+
+        /* Pros/Cons */
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px 32px 24px;
+        }
+        .pros, .cons {
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .pros li::marker { color: #10b981; }
+        .cons li::marker { color: #f43f5e; }
+        .pros strong { color: #10b981; }
+        .cons strong { color: #f43f5e; }
+    </style>
+</head>
+<body>
+    <h1>Analytics Page — Layout Options</h1>
+    <p class="subtitle">Claude Code Session Dashboard / 3가지 기능: 캘린더뷰 · 시간대 히트맵 · 비용 대시보드</p>
+
+    <!-- ===================== OPTION A ===================== -->
+    <section class="option-section">
+        <div class="option-header">
+            <span class="option-badge">A</span>
+            <span class="option-title">탭 분리형 (Tab Navigation)</span>
+        </div>
+        <div class="option-desc">
+            <strong>컨셉:</strong> 상단 탭으로 3가지 뷰를 완전히 분리. 각 탭이 독립된 전체 화면을 차지하여 데이터에 집중.
+            한 번에 하나의 관점만 보여줌.
+        </div>
+        <div class="mockup">
+            <div class="tabs-nav">
+                <div class="tab-item active">📅 캘린더</div>
+                <div class="tab-item">🕐 시간대 히트맵</div>
+                <div class="tab-item">💰 비용 분석</div>
+            </div>
+            <div class="tab-content-a">
+                <div class="calendar-grid-a">
+                    <div class="label">2026년 사용 현황</div>
+                    <div class="grass-row">
+                        <div class="grass-cell"></div><div class="grass-cell l1"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l3"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l1"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l3"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l2"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l3"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l1"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l2"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l4"></div><div class="grass-cell l1"></div>
+                    </div>
+                    <div class="grass-row">
+                        <div class="grass-cell l2"></div><div class="grass-cell"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l1"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l2"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l3"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l1"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l2"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l2"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l3"></div><div class="grass-cell l4"></div>
+                    </div>
+                    <div class="grass-row">
+                        <div class="grass-cell l1"></div><div class="grass-cell l3"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l4"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l1"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l2"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l3"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l4"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l3"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l1"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l2"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l1"></div><div class="grass-cell l2"></div>
+                    </div>
+                    <div class="grass-row">
+                        <div class="grass-cell l4"></div><div class="grass-cell l2"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l3"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l1"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell"></div><div class="grass-cell l3"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l2"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell"></div><div class="grass-cell l3"></div><div class="grass-cell l4"></div>
+                        <div class="grass-cell l2"></div><div class="grass-cell l1"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell l2"></div>
+                        <div class="grass-cell l1"></div><div class="grass-cell l3"></div><div class="grass-cell"></div>
+                        <div class="grass-cell l4"></div><div class="grass-cell l2"></div><div class="grass-cell l1"></div>
+                        <div class="grass-cell l3"></div><div class="grass-cell l4"></div><div class="grass-cell"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>각 분석에 화면 전체를 사용 — 데이터 밀도 높음</li>
+                <li>구현 단순, 각 탭이 독립 컴포넌트</li>
+                <li>모바일에서도 자연스럽게 동작</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>탭 전환 필요 — 비교 분석이 어려움</li>
+                <li>전체적인 "한눈에 파악"이 불가</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ===================== OPTION B ===================== -->
+    <section class="option-section">
+        <div class="option-header">
+            <span class="option-badge green">B</span>
+            <span class="option-title">단일 스크롤 대시보드 (Vertical Stack)</span>
+        </div>
+        <div class="option-desc">
+            <strong>컨셉:</strong> 모든 위젯을 세로로 쌓아 스크롤로 탐색. 상단 요약 카드 → 히트맵 → 캘린더 → 비용 차트 순서.
+            Grafana/Datadog 스타일의 모니터링 대시보드 느낌.
+        </div>
+        <div class="mockup">
+            <div class="dashboard-b">
+                <div>
+                    <div class="section-title-b">이번 주 요약</div>
+                    <div class="card-row">
+                        <div class="stat-card">
+                            <div class="value">47</div>
+                            <div class="label">총 세션</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value">2.4M</div>
+                            <div class="label">토큰 소비</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value">$18.7</div>
+                            <div class="label">예상 비용</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="section-title-b">시간대별 활동 (요일 × 시간)</div>
+                    <div class="heatmap-b">
+                        <div class="heatmap-grid">
+                            <div class="day-label">월</div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                            <div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h1"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+
+                            <div class="day-label">화</div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                            <div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell"></div>
+
+                            <div class="day-label">수</div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h4"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+
+                            <div class="day-label">목</div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell h1"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h1"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h1"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+
+                            <div class="day-label">금</div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell h2"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div>
+                            <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                            <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="section-title-b">일별 비용 추이 (최근 14일)</div>
+                    <div class="cost-chart-b">
+                        <div class="cost-bar" style="height:45%"><span class="day-lbl">5/5</span></div>
+                        <div class="cost-bar" style="height:62%"><span class="day-lbl">6</span></div>
+                        <div class="cost-bar" style="height:38%"><span class="day-lbl">7</span></div>
+                        <div class="cost-bar" style="height:80%"><span class="day-lbl">8</span></div>
+                        <div class="cost-bar" style="height:55%"><span class="day-lbl">9</span></div>
+                        <div class="cost-bar" style="height:25%"><span class="day-lbl">10</span></div>
+                        <div class="cost-bar" style="height:15%"><span class="day-lbl">11</span></div>
+                        <div class="cost-bar" style="height:70%"><span class="day-lbl">12</span></div>
+                        <div class="cost-bar" style="height:90%"><span class="day-lbl">13</span></div>
+                        <div class="cost-bar" style="height:60%"><span class="day-lbl">14</span></div>
+                        <div class="cost-bar" style="height:48%"><span class="day-lbl">15</span></div>
+                        <div class="cost-bar" style="height:72%"><span class="day-lbl">16</span></div>
+                        <div class="cost-bar" style="height:55%"><span class="day-lbl">17</span></div>
+                        <div class="cost-bar" style="height:35%"><span class="day-lbl">18</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>한 페이지에서 모든 지표를 볼 수 있음</li>
+                <li>위에서 아래로 자연스러운 정보 흐름</li>
+                <li>섹션 추가/삭제가 쉬움 (확장성)</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>스크롤 깊이가 깊어질 수 있음</li>
+                <li>위쪽 캘린더와 아래쪽 비용 간 시각적 연결이 약함</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ===================== OPTION C ===================== -->
+    <section class="option-section">
+        <div class="option-header">
+            <span class="option-badge amber">C</span>
+            <span class="option-title">벤토 그리드 (Bento Layout)</span>
+        </div>
+        <div class="option-desc">
+            <strong>컨셉:</strong> 다양한 크기의 카드를 그리드로 배치. 중요한 위젯은 크게, 보조 지표는 작게.
+            Apple 위젯/Notion 대시보드 스타일. 한 화면에 모든 정보를 밀도 있게 배치.
+        </div>
+        <div class="mockup">
+            <div class="bento-grid">
+                <!-- Calendar (large) -->
+                <div class="bento-card">
+                    <div class="card-title">
+                        <span class="icon icon-purple">📅</span> 사용 캘린더 — 2026년 5월
+                    </div>
+                    <div class="mini-calendar">
+                        <div class="day-header">일</div><div class="day-header">월</div>
+                        <div class="day-header">화</div><div class="day-header">수</div>
+                        <div class="day-header">목</div><div class="day-header">금</div>
+                        <div class="day-header">토</div>
+                        <div class="cal-cell"></div><div class="cal-cell"></div>
+                        <div class="cal-cell"></div><div class="cal-cell"></div>
+                        <div class="cal-cell has-data">1</div><div class="cal-cell has-data">2</div>
+                        <div class="cal-cell">3</div>
+                        <div class="cal-cell">4</div><div class="cal-cell has-data">5</div>
+                        <div class="cal-cell has-data">6</div><div class="cal-cell has-data">7</div>
+                        <div class="cal-cell has-data">8</div><div class="cal-cell has-data">9</div>
+                        <div class="cal-cell">10</div>
+                        <div class="cal-cell">11</div><div class="cal-cell has-data">12</div>
+                        <div class="cal-cell has-data">13</div><div class="cal-cell has-data">14</div>
+                        <div class="cal-cell active">15</div><div class="cal-cell has-data">16</div>
+                        <div class="cal-cell">17</div>
+                        <div class="cal-cell active">18</div><div class="cal-cell">19</div>
+                        <div class="cal-cell">20</div><div class="cal-cell">21</div>
+                        <div class="cal-cell">22</div><div class="cal-cell">23</div>
+                        <div class="cal-cell">24</div>
+                        <div class="cal-cell">25</div><div class="cal-cell">26</div>
+                        <div class="cal-cell">27</div><div class="cal-cell">28</div>
+                        <div class="cal-cell">29</div><div class="cal-cell">30</div>
+                        <div class="cal-cell">31</div>
+                    </div>
+                </div>
+
+                <!-- Cost summary (small) -->
+                <div class="bento-card">
+                    <div class="card-title">
+                        <span class="icon icon-amber">💰</span> 비용 구성
+                    </div>
+                    <div class="donut-wrapper">
+                        <div class="donut"></div>
+                        <div class="donut-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#6366f1"></span>
+                                <span>Opus — $11.6</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#10b981"></span>
+                                <span>Sonnet — $4.3</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#f59e0b"></span>
+                                <span>Haiku — $2.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cache-bar-wrapper">
+                        <div style="font-size:11px;color:#aaa;margin-bottom:6px">캐시 적중률</div>
+                        <div class="cache-bar-bg">
+                            <div class="cache-bar-fill" style="width:73%"></div>
+                        </div>
+                        <div class="cache-label">
+                            <span>73% 캐시 재활용</span>
+                            <span>-$5.2 절감</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap (full width) -->
+                <div class="bento-card span-full">
+                    <div class="card-title">
+                        <span class="icon icon-green">🕐</span> 시간대 활동 히트맵
+                    </div>
+                    <div class="heatmap-grid">
+                        <div class="day-label">월</div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                        <div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div>
+                        <div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div>
+                        <div class="heatmap-cell h1"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="day-label">화</div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell h2"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div>
+                        <div class="heatmap-cell h2"></div><div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                        <div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell"></div>
+                        <div class="day-label">수</div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell h1"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h4"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h2"></div><div class="heatmap-cell h2"></div>
+                        <div class="heatmap-cell h3"></div><div class="heatmap-cell h4"></div><div class="heatmap-cell h3"></div>
+                        <div class="heatmap-cell h2"></div><div class="heatmap-cell h1"></div><div class="heatmap-cell"></div>
+                        <div class="heatmap-cell"></div><div class="heatmap-cell"></div><div class="heatmap-cell"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>한 화면에 모든 정보 — 한눈에 파악 가능</li>
+                <li>시각적으로 세련됨 (모던 대시보드 트렌드)</li>
+                <li>위젯 크기로 정보 중요도 표현</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>좁은 화면에서 레이아웃 깨짐 (반응형 처리 필요)</li>
+                <li>그리드 비율 조정에 디자인 감각 필요</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ===================== OPTION D ===================== -->
+    <section class="option-section">
+        <div class="option-header">
+            <span class="option-badge rose">D</span>
+            <span class="option-title">사이드바 + 메인 패널 (Sidebar Navigation)</span>
+        </div>
+        <div class="option-desc">
+            <strong>컨셉:</strong> 왼쪽 사이드바에 분석 카테고리를 두고, 오른쪽 메인 영역에 선택된 분석을 표시.
+            기존 Daily/Monitor와 동일한 네비게이션 패턴을 Analytics 내부에서 반복. 확장성 극대화.
+        </div>
+        <div class="mockup">
+            <div class="layout-d">
+                <div class="sidebar-d">
+                    <div class="nav-item active">
+                        <span class="nav-icon">📅</span> 캘린더
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">🕐</span> 시간대 분석
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">💰</span> 비용 추이
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📊</span> 캐시 효율
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">🔧</span> 툴 사용 통계
+                    </div>
+                </div>
+                <div class="main-d">
+                    <div class="panel">
+                        <div class="time-selector">
+                            <button class="time-btn">1주</button>
+                            <button class="time-btn active">1개월</button>
+                            <button class="time-btn">3개월</button>
+                            <button class="time-btn">전체</button>
+                        </div>
+                        <div class="mini-calendar">
+                            <div class="day-header">일</div><div class="day-header">월</div>
+                            <div class="day-header">화</div><div class="day-header">수</div>
+                            <div class="day-header">목</div><div class="day-header">금</div>
+                            <div class="day-header">토</div>
+                            <div class="cal-cell"></div><div class="cal-cell"></div>
+                            <div class="cal-cell"></div><div class="cal-cell"></div>
+                            <div class="cal-cell has-data">1</div><div class="cal-cell has-data">2</div>
+                            <div class="cal-cell">3</div>
+                            <div class="cal-cell">4</div><div class="cal-cell has-data">5</div>
+                            <div class="cal-cell has-data">6</div><div class="cal-cell has-data">7</div>
+                            <div class="cal-cell has-data">8</div><div class="cal-cell has-data">9</div>
+                            <div class="cal-cell">10</div>
+                            <div class="cal-cell">11</div><div class="cal-cell has-data">12</div>
+                            <div class="cal-cell has-data">13</div><div class="cal-cell has-data">14</div>
+                            <div class="cal-cell active">15</div><div class="cal-cell has-data">16</div>
+                            <div class="cal-cell">17</div>
+                            <div class="cal-cell active">18</div><div class="cal-cell">19</div>
+                            <div class="cal-cell">20</div><div class="cal-cell">21</div>
+                            <div class="cal-cell">22</div><div class="cal-cell">23</div>
+                            <div class="cal-cell">24</div>
+                            <div class="cal-cell">25</div><div class="cal-cell">26</div>
+                            <div class="cal-cell">27</div><div class="cal-cell">28</div>
+                            <div class="cal-cell">29</div><div class="cal-cell">30</div>
+                            <div class="cal-cell">31</div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div style="font-size:12px;color:#888;margin-bottom:12px">5월 15일 — 세션 5개 · 토큰 342K · 예상비용 $2.1</div>
+                        <div class="sparkline">
+                            <div class="spark-bar" style="height:30%"></div>
+                            <div class="spark-bar" style="height:65%"></div>
+                            <div class="spark-bar" style="height:45%"></div>
+                            <div class="spark-bar" style="height:80%"></div>
+                            <div class="spark-bar" style="height:20%"></div>
+                            <div class="spark-bar" style="height:55%"></div>
+                            <div class="spark-bar" style="height:90%"></div>
+                            <div class="spark-bar" style="height:40%"></div>
+                            <div class="spark-bar" style="height:70%"></div>
+                            <div class="spark-bar" style="height:35%"></div>
+                            <div class="spark-bar" style="height:60%"></div>
+                            <div class="spark-bar" style="height:25%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pros-cons">
+            <ul class="pros"><strong>장점</strong>
+                <li>분석 항목 추가가 매우 쉬움 (nav-item 하나만 추가)</li>
+                <li>깊은 분석도 공간 부족 없음</li>
+                <li>좌측 네비가 현재 위치를 명확히 보여줌</li>
+            </ul>
+            <ul class="cons"><strong>단점</strong>
+                <li>화면 분할로 메인 영역이 좁아짐</li>
+                <li>기존 앱 상단 네비와 이중 네비 구조가 됨</li>
+                <li>모바일에서 사이드바 처리 추가 작업 필요</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Recommendation -->
+    <section class="option-section" style="border-color: #6366f1;">
+        <div class="option-header" style="background: #1e1b4b;">
+            <span class="option-badge" style="background:#fff;color:#6366f1">★</span>
+            <span class="option-title">추천 조합: C (벤토) + A (탭) 하이브리드</span>
+        </div>
+        <div class="option-desc">
+            <strong>제안:</strong> 기본 뷰는 <strong>벤토 그리드(C)</strong>로 한눈에 요약을 보여주되,
+            각 카드를 클릭하면 <strong>전체화면 상세(A 스타일)</strong>로 확장.
+            요약 → 상세의 자연스러운 드릴다운. 모바일에서는 세로 스택(B)으로 폴백.
+        </div>
+        <div class="mockup" style="text-align:center; padding:40px; color:#aaa; font-size: 14px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
+                <div style="padding:16px 24px; background:#222; border-radius:12px; border:1px solid #6366f1;">
+                    벤토 요약 (Overview)
+                </div>
+                <span style="font-size:24px;">→</span>
+                <div style="padding:16px 24px; background:#222; border-radius:12px; border:1px solid #444;">
+                    카드 클릭 시 상세 (Drill-down)
+                </div>
+            </div>
+            <p style="margin-top:16px; font-size:12px; color:#666;">캘린더 클릭 → Daily 페이지 연동 / 비용 클릭 → 상세 비용 차트</p>
+        </div>
+    </section>
+</body>
+</html>

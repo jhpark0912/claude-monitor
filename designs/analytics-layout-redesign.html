@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Layout Options — 레이아웃 비교</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #07070b;
+    color: #e0e0e8;
+    padding: 24px 32px;
+    line-height: 1.5;
+  }
+
+  /* ── Page header ── */
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .page-header p { font-size: 13px; color: #888; }
+
+  /* ── Option container ── */
+  .option-container {
+    border: 1px solid #222233;
+    border-radius: 14px;
+    background: #0d0d14;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .option-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #1a1a28;
+    background: #101018;
+  }
+  .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    font-weight: 800; font-size: 15px; color: #fff; flex-shrink: 0;
+  }
+  .badge-a { background: #6366f1; }
+  .badge-b { background: #10b981; }
+  .badge-c { background: #f59e0b; }
+  .badge-d { background: #ec4899; }
+  .option-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .option-desc { font-size: 12px; color: #999; margin-left: auto; }
+  .rec-badge {
+    background: #6366f1; color: #fff; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+  }
+
+  .option-body { padding: 16px 20px; }
+
+  /* ── Pros / Cons ── */
+  .proscons {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    padding: 12px 20px 16px; border-top: 1px solid #1a1a28;
+  }
+  .proscons h4 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .proscons .pros h4 { color: #10b981; }
+  .proscons .cons h4 { color: #f87171; }
+  .proscons ul { list-style: none; padding: 0; }
+  .proscons li { font-size: 11.5px; color: #aaa; padding: 2px 0; }
+  .proscons li::before { margin-right: 6px; }
+  .pros li::before { content: "✓"; color: #10b981; font-weight: 700; }
+  .cons li::before { content: "✗"; color: #f87171; font-weight: 700; }
+
+  /* ── Mock card shared ── */
+  .mock-card {
+    background: #16161f;
+    border: 1px solid #222233;
+    border-radius: 12px;
+    padding: 14px;
+    overflow: hidden;
+  }
+  .mock-card-title {
+    font-size: 13px; font-weight: 700; color: #ccc; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .period-sel {
+    display: flex; gap: 4px;
+  }
+  .period-sel span {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    background: #1e1e2e; color: #888; cursor: pointer;
+  }
+  .period-sel span.active { background: #6366f1; color: #fff; }
+
+  /* ── Calendar mock ── */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cal-nav span { font-size: 13px; font-weight: 600; color: #ddd; }
+  .cal-nav button { background: none; border: none; color: #888; font-size: 14px; cursor: pointer; padding: 2px 6px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-head { font-size: 9px; color: #666; text-align: center; padding: 2px 0; }
+  .cal-cell {
+    aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #555; position: relative;
+  }
+  .cal-cell.empty { visibility: hidden; }
+  .cal-cell.lv1 { background: #2d1b69; color: #c4b5fd; }
+  .cal-cell.lv2 { background: #4c1d95; color: #ddd6fe; }
+  .cal-cell.lv3 { background: #6d28d9; color: #ede9fe; }
+  .cal-cell.today { outline: 2px solid #a78bfa; outline-offset: -1px; }
+  .cal-cell .dot { position: absolute; bottom: 2px; width: 3px; height: 3px; border-radius: 50%; background: #a78bfa; }
+  .cal-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 10px; color: #777; }
+  .cal-legend { display: flex; align-items: center; gap: 3px; }
+  .cal-legend .swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── Heatmap mock ── */
+  .hm-grid { display: grid; gap: 2px; }
+  .hm-grid.horizontal { grid-template-columns: auto repeat(24, 1fr); }
+  .hm-grid.vertical { grid-template-columns: auto repeat(7, 1fr); }
+  .hm-label { font-size: 8px; color: #666; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; }
+  .hm-col-label { font-size: 7px; color: #555; text-align: center; }
+  .hm-cell { border-radius: 2px; background: #111118; aspect-ratio: 1; min-width: 0; }
+  .hm-cell.g1 { background: #064e3b; }
+  .hm-cell.g2 { background: #047857; }
+  .hm-cell.g3 { background: #10b981; }
+  .hm-cell.g4 { background: #34d399; }
+  .hm-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 10px; color: #777; }
+  .hm-legend { display: flex; align-items: center; gap: 3px; }
+  .hm-legend .swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── Cost / Donut mock ── */
+  .cost-body { display: flex; gap: 14px; align-items: flex-start; }
+  .donut-wrap { flex-shrink: 0; position: relative; width: 90px; height: 90px; }
+  .donut-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: #fff;
+  }
+  .donut-center small { font-size: 9px; color: #888; font-weight: 400; }
+  .cost-table { flex: 1; min-width: 0; }
+  .cost-table table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+  .cost-table th { text-align: left; color: #666; font-weight: 600; padding: 3px 4px; border-bottom: 1px solid #222233; }
+  .cost-table td { padding: 4px; color: #ccc; }
+  .cost-table td:last-child { text-align: right; }
+  .cost-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .cache-bar-wrap { margin-top: 8px; }
+  .cache-label { font-size: 10px; color: #888; margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .cache-bar { height: 6px; border-radius: 3px; background: #1e1e2e; overflow: hidden; }
+  .cache-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #a78bfa); }
+
+  /* ── KPI cards ── */
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+  .kpi-card {
+    background: #16161f; border: 1px solid #222233; border-radius: 10px;
+    padding: 12px 14px; text-align: center;
+  }
+  .kpi-card .kpi-label { font-size: 10px; color: #888; margin-bottom: 2px; }
+  .kpi-card .kpi-value { font-size: 20px; font-weight: 800; color: #fff; }
+  .kpi-card .kpi-sub { font-size: 9px; color: #666; margin-top: 2px; }
+  .kpi-card.accent { border-color: #6366f144; }
+
+  /* ── Layout grids for each option ── */
+  .layout-a { display: grid; grid-template-columns: 300px 1fr; gap: 10px; }
+  .layout-a .right { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+
+  .layout-b { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+  .layout-b .bottom { display: grid; grid-template-columns: 300px 1fr; gap: 10px; }
+
+  .layout-c { display: grid; grid-template-columns: 300px 1fr 1fr; gap: 10px; }
+
+  .layout-d .main-row { display: grid; grid-template-columns: 300px 1fr; gap: 10px; }
+
+  /* ── Compact variants ── */
+  .compact .cal-cell { font-size: 9px; }
+  .heatmap-compact .hm-cell { min-height: 14px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Analytics 페이지 레이아웃 비교</h1>
+  <p>4가지 레이아웃 옵션 — 1200×750 뷰포트 기준 · 다크 테마 · Bento 카드</p>
+</div>
+
+<!-- ════════════════════════════════════════ OPTION A ════════════════════════════════════════ -->
+<div class="option-container">
+  <div class="option-header">
+    <span class="badge badge-a">A</span>
+    <span class="option-title">Left Sidebar Calendar</span>
+    <span class="option-desc">캘린더 좌측 고정, 비용+히트맵 우측 상/하 분할</span>
+    <span class="rec-badge">추천</span>
+  </div>
+  <div class="option-body">
+    <div class="layout-a">
+      <!-- Calendar -->
+      <div class="mock-card compact" style="min-width:300px;max-width:300px;">
+        <div class="mock-card-title">활동 캘린더</div>
+        <div id="calA"></div>
+      </div>
+      <!-- Right -->
+      <div class="right">
+        <!-- Cost -->
+        <div class="mock-card">
+          <div class="mock-card-title">비용 구성 <div class="period-sel"><span>1주</span><span class="active">1개월</span><span>3개월</span></div></div>
+          <div id="costA"></div>
+        </div>
+        <!-- Heatmap -->
+        <div class="mock-card">
+          <div class="mock-card-title">활동 히트맵 <div class="period-sel"><span>1주</span><span class="active">4주</span><span>3개월</span></div></div>
+          <div id="hmA"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pros">
+      <h4>장점</h4>
+      <ul>
+        <li>캘린더가 고정 너비로 깔끔하게 표시</li>
+        <li>히트맵이 충분한 가로 공간 확보</li>
+        <li>대시보드의 전형적 패턴으로 직관적</li>
+        <li>세 카드 모두 한 화면에 균형 있게 배치</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>단점</h4>
+      <ul>
+        <li>비용 카드 세로 공간이 제한적</li>
+        <li>좁은 화면에서 우측 영역 압축</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ OPTION B ════════════════════════════════════════ -->
+<div class="option-container">
+  <div class="option-header">
+    <span class="badge badge-b">B</span>
+    <span class="option-title">Top Heatmap, Bottom Split</span>
+    <span class="option-desc">히트맵 상단 전체 너비, 캘린더+비용 하단 분할</span>
+  </div>
+  <div class="option-body">
+    <div class="layout-b">
+      <!-- Heatmap top -->
+      <div class="mock-card heatmap-compact">
+        <div class="mock-card-title">활동 히트맵 <div class="period-sel"><span>1주</span><span class="active">4주</span><span>3개월</span></div></div>
+        <div id="hmB"></div>
+      </div>
+      <!-- Bottom row -->
+      <div class="bottom">
+        <div class="mock-card compact" style="min-width:300px;max-width:300px;">
+          <div class="mock-card-title">활동 캘린더</div>
+          <div id="calB"></div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-title">비용 구성 <div class="period-sel"><span>1주</span><span class="active">1개월</span><span>3개월</span></div></div>
+          <div id="costB"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pros">
+      <h4>장점</h4>
+      <ul>
+        <li>히트맵이 전체 너비를 사용하여 24시간이 넓게 표시</li>
+        <li>비용 카드가 넉넉한 공간 확보</li>
+        <li>시각적 위계가 명확 (히트맵 → 상세)</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>단점</h4>
+      <ul>
+        <li>히트맵 세로 높이가 압축되어 셀이 작아짐</li>
+        <li>세로 스크롤 가능성 (컨텐츠 높이 합산)</li>
+        <li>캘린더와 비용이 하단에 밀려 시선 분산</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ OPTION C ════════════════════════════════════════ -->
+<div class="option-container">
+  <div class="option-header">
+    <span class="badge badge-c">C</span>
+    <span class="option-title">3-Column Equal</span>
+    <span class="option-desc">캘린더(300px) + 비용(1fr) + 히트맵 세로형(1fr)</span>
+  </div>
+  <div class="option-body">
+    <div class="layout-c">
+      <div class="mock-card compact" style="min-width:300px;max-width:300px;">
+        <div class="mock-card-title">활동 캘린더</div>
+        <div id="calC"></div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-title">비용 구성 <div class="period-sel"><span>1주</span><span class="active">1개월</span><span>3개월</span></div></div>
+        <div id="costC"></div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-title">활동 히트맵 (세로형) <div class="period-sel"><span>1주</span><span class="active">4주</span><span>3개월</span></div></div>
+        <div id="hmC"></div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pros">
+      <h4>장점</h4>
+      <ul>
+        <li>모든 정보를 한 행에 균등 배치</li>
+        <li>세로형 히트맵이 시간대 비교에 용이</li>
+        <li>뷰포트 높이를 최대 활용</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>단점</h4>
+      <ul>
+        <li>히트맵 세로형이 일반적이지 않아 학습 비용</li>
+        <li>비용 카드가 좁아 테이블 가독성 저하</li>
+        <li>1200px 미만에서 심하게 압축</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ OPTION D ════════════════════════════════════════ -->
+<div class="option-container">
+  <div class="option-header">
+    <span class="badge badge-d">D</span>
+    <span class="option-title">Dashboard KPI Strip</span>
+    <span class="option-desc">상단 KPI 요약 + 캘린더 좌측 + 히트맵 우측 (비용 카드 통합)</span>
+  </div>
+  <div class="option-body">
+    <div class="layout-d">
+      <div class="kpi-strip">
+        <div class="kpi-card accent">
+          <div class="kpi-label">총 세션</div>
+          <div class="kpi-value">142</div>
+          <div class="kpi-sub">이번 달 +23%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">총 비용</div>
+          <div class="kpi-value">$263</div>
+          <div class="kpi-sub">Opus 95% · Sonnet 5%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">캐시 절감</div>
+          <div class="kpi-value">91%</div>
+          <div class="kpi-sub">hit rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">피크 타임</div>
+          <div class="kpi-value">목 8시</div>
+          <div class="kpi-sub">가장 활발한 시간</div>
+        </div>
+      </div>
+      <div class="main-row">
+        <div class="mock-card compact" style="min-width:300px;max-width:300px;">
+          <div class="mock-card-title">활동 캘린더</div>
+          <div id="calD"></div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-title">활동 히트맵 <div class="period-sel"><span>1주</span><span class="active">4주</span><span>3개월</span></div></div>
+          <div id="hmD"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pros">
+      <h4>장점</h4>
+      <ul>
+        <li>핵심 수치를 즉시 파악 가능 (KPI 우선)</li>
+        <li>히트맵이 넓은 가로 공간 확보</li>
+        <li>비용 정보가 KPI에 압축되어 깔끔</li>
+        <li>카드 수가 줄어 시각적 복잡도 감소</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>단점</h4>
+      <ul>
+        <li>비용 상세 (모델별 토큰/비율)를 보려면 드릴다운 필요</li>
+        <li>KPI 카드가 추가되어 세로 공간 소모</li>
+        <li>도넛 차트의 시각적 매력 상실</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Mock Data ──
+const MAY2026 = {
+  year: 2026, month: 5, startDay: 5, // Friday (0=Sun)
+  days: 31,
+  active: { 4:2, 6:3, 7:1, 8:2, 11:3, 14:2, 15:3, 18:1 },
+  today: 18
+};
+const WEEKDAYS = ['일','월','화','수','목','금','토'];
+const DAYS_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const HOURS = Array.from({length:24}, (_,i) => i);
+
+// Heatmap data: [dayIndex(0=Mon)][hour] = intensity 0-4
+const HM_DATA = (() => {
+  const d = Array.from({length:7}, () => Array(24).fill(0));
+  // Mon-Fri, 8-17 with varying intensity
+  for (let day = 0; day < 5; day++) {
+    for (let h = 8; h <= 17; h++) {
+      const base = (day === 3 && h === 8) ? 4 : // Thu 8am peak
+        (h >= 9 && h <= 11) ? 3 :
+        (h >= 14 && h <= 16) ? 2 : 1;
+      d[day][h] = Math.min(4, base + (Math.abs(day - 2) < 2 ? 1 : 0));
+    }
+    // some evening work
+    if (day < 3) d[day][20] = 1;
+  }
+  d[5][10] = 1; d[5][11] = 1; // Sat light
+  return d;
+})();
+
+// ── Render Calendar ──
+function renderCalendar(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const m = MAY2026;
+  let html = `<div class="cal-nav"><button>&#9664;</button><span>2026년 5월</span><button>&#9654;</button></div>`;
+  html += `<div class="cal-grid">`;
+  WEEKDAYS.forEach(d => html += `<div class="cal-head">${d}</div>`);
+  // Empty cells before day 1
+  for (let i = 0; i < m.startDay; i++) html += `<div class="cal-cell empty"></div>`;
+  for (let d = 1; d <= m.days; d++) {
+    const lv = m.active[d] || 0;
+    const cls = ['cal-cell'];
+    if (lv === 1) cls.push('lv1');
+    if (lv === 2) cls.push('lv2');
+    if (lv >= 3) cls.push('lv3');
+    if (d === m.today) cls.push('today');
+    const dot = lv > 0 ? '<span class="dot"></span>' : '';
+    html += `<div class="${cls.join(' ')}">${d}${dot}</div>`;
+  }
+  html += `</div>`;
+  html += `<div class="cal-footer">
+    <div class="cal-legend">
+      <span style="color:#555;font-size:9px">적음</span>
+      <div class="swatch" style="background:#1e1e2e"></div>
+      <div class="swatch" style="background:#2d1b69"></div>
+      <div class="swatch" style="background:#4c1d95"></div>
+      <div class="swatch" style="background:#6d28d9"></div>
+      <span style="color:#555;font-size:9px">많음</span>
+    </div>
+    <span>8일 활동</span>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Render Heatmap (horizontal) ──
+function renderHeatmapH(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const gClass = ['', 'g1', 'g2', 'g3', 'g4'];
+  let html = `<div class="hm-grid horizontal" style="grid-template-rows: auto repeat(7, 1fr);">`;
+  // Hour headers
+  html += `<div></div>`;
+  HOURS.forEach(h => html += `<div class="hm-col-label">${h}</div>`);
+  // Rows
+  DAYS_EN.forEach((day, di) => {
+    html += `<div class="hm-label">${day}</div>`;
+    HOURS.forEach(h => {
+      html += `<div class="hm-cell ${gClass[HM_DATA[di][h]]}"></div>`;
+    });
+  });
+  html += `</div>`;
+  html += `<div class="hm-footer">
+    <div class="hm-legend">
+      <span style="color:#555;font-size:9px">적음</span>
+      <div class="swatch" style="background:#111118"></div>
+      <div class="swatch" style="background:#064e3b"></div>
+      <div class="swatch" style="background:#047857"></div>
+      <div class="swatch" style="background:#10b981"></div>
+      <div class="swatch" style="background:#34d399"></div>
+      <span style="color:#555;font-size:9px">많음</span>
+    </div>
+    <span>피크: 목 8시</span>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Render Heatmap (vertical: 24 rows × 7 cols) ──
+function renderHeatmapV(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const gClass = ['', 'g1', 'g2', 'g3', 'g4'];
+  let html = `<div class="hm-grid vertical" style="grid-template-rows: auto repeat(24, 1fr);">`;
+  // Day headers
+  html += `<div></div>`;
+  DAYS_EN.forEach(d => html += `<div class="hm-col-label">${d}</div>`);
+  // Rows = hours
+  HOURS.forEach(h => {
+    html += `<div class="hm-label">${h}시</div>`;
+    for (let di = 0; di < 7; di++) {
+      html += `<div class="hm-cell ${gClass[HM_DATA[di][h]]}" style="aspect-ratio:auto;min-height:10px;"></div>`;
+    }
+  });
+  html += `</div>`;
+  html += `<div class="hm-footer">
+    <div class="hm-legend">
+      <span style="color:#555;font-size:9px">적음</span>
+      <div class="swatch" style="background:#111118"></div>
+      <div class="swatch" style="background:#064e3b"></div>
+      <div class="swatch" style="background:#10b981"></div>
+      <div class="swatch" style="background:#34d399"></div>
+      <span style="color:#555;font-size:9px">많음</span>
+    </div>
+    <span>피크: 목 8시</span>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Render Cost card ──
+function renderCost(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  // SVG donut
+  const r = 36, cx = 45, cy = 45, circ = 2 * Math.PI * r;
+  const opusPct = 0.95, sonnetPct = 0.049, haikuPct = 0.001;
+  const opusLen = circ * opusPct, sonnetLen = circ * sonnetPct;
+  const donutSvg = `<svg viewBox="0 0 90 90" width="90" height="90">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e1e2e" stroke-width="8"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#6366f1" stroke-width="8"
+      stroke-dasharray="${opusLen} ${circ}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#10b981" stroke-width="8"
+      stroke-dasharray="${sonnetLen} ${circ}" stroke-dashoffset="${-opusLen}" transform="rotate(-90 ${cx} ${cy})"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f59e0b" stroke-width="8"
+      stroke-dasharray="${circ * haikuPct} ${circ}" stroke-dashoffset="${-(opusLen + sonnetLen)}" transform="rotate(-90 ${cx} ${cy})"/>
+  </svg>`;
+
+  let html = `<div class="cost-body">
+    <div class="donut-wrap">${donutSvg}<div class="donut-center">$263<small>이번 달</small></div></div>
+    <div class="cost-table">
+      <table>
+        <tr><th>모델</th><th>토큰</th><th>비율</th><th>비용</th></tr>
+        <tr><td><span class="cost-dot" style="background:#6366f1"></span>Opus</td><td>2.1M</td><td>95.1%</td><td style="text-align:right">$250.00</td></tr>
+        <tr><td><span class="cost-dot" style="background:#10b981"></span>Sonnet</td><td>180K</td><td>4.9%</td><td style="text-align:right">$12.80</td></tr>
+        <tr><td><span class="cost-dot" style="background:#f59e0b"></span>Haiku</td><td>3.2K</td><td>0.1%</td><td style="text-align:right">$0.00</td></tr>
+      </table>
+      <div class="cache-bar-wrap">
+        <div class="cache-label"><span>캐시 히트율</span><span>91%</span></div>
+        <div class="cache-bar"><div class="cache-fill" style="width:91%"></div></div>
+      </div>
+    </div>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Render Cost card (compact for option C) ──
+function renderCostCompact(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const r = 32, cx = 40, cy = 40, circ = 2 * Math.PI * r;
+  const opusLen = circ * 0.95, sonnetLen = circ * 0.049;
+  const donutSvg = `<svg viewBox="0 0 80 80" width="80" height="80">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e1e2e" stroke-width="7"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#6366f1" stroke-width="7"
+      stroke-dasharray="${opusLen} ${circ}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#10b981" stroke-width="7"
+      stroke-dasharray="${sonnetLen} ${circ}" stroke-dashoffset="${-opusLen}" transform="rotate(-90 ${cx} ${cy})"/>
+  </svg>`;
+
+  let html = `<div style="text-align:center;margin-bottom:8px;">
+    <div style="display:inline-block;position:relative;width:80px;height:80px;">
+      ${donutSvg}
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;">$263<small style="font-size:8px;color:#888;font-weight:400;">이번 달</small></div>
+    </div>
+  </div>
+  <div class="cost-table">
+    <table>
+      <tr><th>모델</th><th>비율</th><th>비용</th></tr>
+      <tr><td><span class="cost-dot" style="background:#6366f1"></span>Opus</td><td>95%</td><td style="text-align:right">$250</td></tr>
+      <tr><td><span class="cost-dot" style="background:#10b981"></span>Sonnet</td><td>5%</td><td style="text-align:right">$13</td></tr>
+      <tr><td><span class="cost-dot" style="background:#f59e0b"></span>Haiku</td><td>&lt;1%</td><td style="text-align:right">$0</td></tr>
+    </table>
+    <div class="cache-bar-wrap">
+      <div class="cache-label"><span>캐시</span><span>91%</span></div>
+      <div class="cache-bar"><div class="cache-fill" style="width:91%"></div></div>
+    </div>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Initialize all ──
+document.addEventListener('DOMContentLoaded', () => {
+  // Option A
+  renderCalendar('calA');
+  renderCost('costA');
+  renderHeatmapH('hmA');
+
+  // Option B
+  renderCalendar('calB');
+  renderCost('costB');
+  renderHeatmapH('hmB');
+
+  // Option C
+  renderCalendar('calC');
+  renderCostCompact('costC');
+  renderHeatmapV('hmC');
+
+  // Option D
+  renderCalendar('calD');
+  renderHeatmapH('hmD');
+});
+</script>
+</body>
+</html>
