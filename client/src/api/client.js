@@ -18,6 +18,26 @@ export function fetchDates(project = 'all') {
   return fetchJson(`/daily/dates?project=${project}`);
 }
 
+export function fetchAnalyticsCalendar(month, project = 'all') {
+  return fetchJson(`/analytics/calendar?month=${month}&project=${project}`);
+}
+
+export function fetchAnalyticsHeatmap(weeks = 4, project = 'all') {
+  return fetchJson(`/analytics/heatmap?weeks=${weeks}&project=${project}`);
+}
+
+export function fetchAnalyticsCost(period = '4w', project = 'all') {
+  return fetchJson(`/analytics/cost?period=${period}&project=${project}`);
+}
+
+export function fetchAnalyticsYearly(project = 'all') {
+  return fetchJson(`/analytics/yearly?project=${project}`);
+}
+
+export function fetchAnalyticsAnomalies(month, project = 'all') {
+  return fetchJson(`/analytics/anomalies?month=${month}&project=${project}`);
+}
+
 export function createMonitorStream(onEvent) {
   const eventSource = new EventSource(`${API_BASE}/monitor/stream`);
 

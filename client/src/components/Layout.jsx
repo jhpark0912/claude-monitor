@@ -18,6 +18,7 @@ export default function Layout({ children }) {
 
   const isDaily = location.pathname.startsWith('/daily');
   const isMonitor = location.pathname === '/monitor';
+  const isAnalytics = location.pathname === '/analytics';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -50,12 +51,17 @@ export default function Layout({ children }) {
           <NavTab active={isMonitor} onClick={() => navigate('/monitor')}>
             모니터링
           </NavTab>
+          <NavTab active={isAnalytics} onClick={() => navigate('/analytics')}>
+            분석
+          </NavTab>
         </nav>
 
-        <ProjectFilter value={project} onChange={setProject} />
+        <div style={{ visibility: (isMonitor || isAnalytics) ? 'hidden' : 'visible' }}>
+          <ProjectFilter value={project} onChange={setProject} />
+        </div>
       </header>
 
-      <main style={{ marginTop: 52, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 52px)' }}>
+      <main style={{ marginTop: 52, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 52px)', overflow: 'hidden' }}>
         {typeof children === 'function' ? children({ project }) : children}
       </main>
     </div>
