@@ -5,6 +5,7 @@ import sessionsRouter from './routes/sessions.js';
 import dailyRouter from './routes/daily.js';
 import monitorRouter from './routes/monitor.js';
 import analyticsRouter from './routes/analytics.js';
+import daybookRouter from './routes/daybook.js';
 import { buildDateIndex } from './services/projectScanner.js';
 import { initWatcher } from './services/sessionMonitor.js';
 
@@ -19,6 +20,7 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/daily', dailyRouter);
 app.use('/api/monitor', monitorRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/daybook', daybookRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

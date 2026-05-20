@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daybook Design v2 — Direction Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#08080a;--s1:#0f0f12;--s2:#141418;--s3:#1a1a20;
+    --bd:#1f1f28;--bd2:#2a2a35;--bd-h:#35354a;
+    --tx:#e8e8ee;--tx2:#a0a0b0;--mt:#5a5a70;--dm:#3a3a4a;
+    --ac:#818cf8;--ac2:#a78bfa;
+    --ac-bg:rgba(129,140,248,.08);--ac-bd:rgba(129,140,248,.2);
+    --gn:#4ade80;--yw:#fbbf24;--rd:#f87171;--pr:#c084fc;
+    --cy:#22d3ee;--or:#fb923c;
+    --glass:rgba(15,15,18,.8);--glass-bd:rgba(255,255,255,.06);
+    --r:14px;--rs:10px;--rx:6px;
+    --shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;line-height:1.5;}
+  code,.mono{font-family:'JetBrains Mono',monospace;}
+
+  /* Top nav */
+  .top-nav{position:sticky;top:0;z-index:100;background:var(--glass);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-bd);padding:10px 32px;display:flex;align-items:center;gap:12px;}
+  .top-nav h1{font-size:14px;font-weight:700;color:var(--tx);}
+  .nav-tabs{display:flex;gap:2px;margin-left:auto;background:var(--s2);padding:3px;border-radius:var(--rs);border:1px solid var(--bd);}
+  .nav-tab{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;color:var(--mt);cursor:pointer;border:none;background:none;transition:all .15s;white-space:nowrap;}
+  .nav-tab:hover{color:var(--tx2);}
+  .nav-tab.active{color:var(--tx);background:var(--s3);box-shadow:var(--shadow);}
+
+  /* Section */
+  .proposal{padding:48px 32px;border-bottom:2px solid var(--bd);max-width:1400px;margin:0 auto;}
+  .p-badge{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--bg);padding:3px 10px;border-radius:4px;text-transform:uppercase;display:inline-block;margin-bottom:8px;}
+  .p-title{font-size:22px;font-weight:700;color:var(--tx);margin-bottom:6px;}
+  .p-sub{font-size:13px;color:var(--tx2);margin-bottom:6px;max-width:700px;line-height:1.7;}
+  .p-verdict{font-size:12px;color:var(--ac2);margin-bottom:28px;padding:10px 14px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.15);border-radius:var(--rs);max-width:700px;}
+
+  /* Shared */
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
+  .card:hover{border-color:var(--bd-h);}
+  .stat-box{background:var(--s2);border-radius:var(--rs);padding:10px 14px;border:1px solid var(--bd);}
+  .stat-val{font-size:16px;font-weight:700;color:var(--tx);}
+  .stat-sm{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--rx);font-size:10px;font-weight:600;}
+  .b-feat{background:rgba(129,140,248,.12);color:#818cf8;}
+  .b-fix{background:rgba(74,222,128,.12);color:#4ade80;}
+  .b-style{background:rgba(251,191,36,.12);color:#fbbf24;}
+  .b-refactor{background:rgba(192,132,252,.12);color:#c084fc;}
+  .b-docs{background:rgba(34,211,238,.12);color:#22d3ee;}
+  .b-chore{background:rgba(160,160,176,.12);color:#a0a0b0;}
+
+  .commit-hash{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ac);background:var(--ac-bg);padding:1px 5px;border-radius:3px;}
+  .file-line{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px;}
+  .file-path{color:var(--tx2);font-family:'JetBrains Mono',monospace;font-size:10px;}
+  .file-add{color:var(--gn);font-family:'JetBrains Mono',monospace;font-size:10px;}
+  .file-del{color:var(--rd);font-family:'JetBrains Mono',monospace;font-size:10px;}
+  .file-new{font-size:9px;font-weight:600;color:var(--gn);background:rgba(74,222,128,.12);padding:1px 4px;border-radius:3px;}
+  .file-mod{font-size:9px;font-weight:600;color:var(--yw);background:rgba(251,191,36,.12);padding:1px 4px;border-radius:3px;}
+
+  .sec-title{font-size:11px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .sec-title .cnt{font-size:10px;color:var(--ac);background:var(--ac-bg);padding:1px 6px;border-radius:4px;}
+
+  .copy-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--rx);font-size:10px;font-weight:500;color:var(--tx2);background:var(--s2);border:1px solid var(--bd);cursor:pointer;transition:all .15s;}
+  .copy-btn:hover{color:var(--tx);border-color:var(--bd2);}
+
+  .view-sw{display:inline-flex;gap:2px;padding:3px;background:var(--s2);border-radius:var(--rs);border:1px solid var(--bd);}
+  .v-btn{padding:5px 14px;border-radius:7px;font-size:11px;font-weight:600;color:var(--mt);cursor:pointer;border:none;background:none;}
+  .v-btn.on{color:var(--tx);background:var(--s3);box-shadow:var(--shadow);}
+
+  .memo-area{width:100%;min-height:52px;padding:10px 12px;border-radius:var(--rs);background:var(--s2);border:1px solid var(--bd);color:var(--tx);font-size:12px;font-family:inherit;resize:vertical;outline:none;transition:border-color .15s;}
+  .memo-area:focus{border-color:var(--ac);}
+  .memo-area::placeholder{color:var(--dm);}
+
+  .nav-arrow{background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:26px;height:26px;border-radius:var(--rx);cursor:pointer;font-size:11px;display:inline-flex;align-items:center;justify-content:center;}
+
+  /* Tab mockup header */
+  .mock-header{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-bd);border-radius:var(--r) var(--r) 0 0;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:0;}
+  .mock-tab{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;color:var(--mt);cursor:pointer;}
+  .mock-tab.active{color:var(--ac);background:var(--ac-bg);}
+  .mock-body{border:1px solid var(--bd);border-top:none;border-radius:0 0 var(--r) var(--r);padding:20px;background:var(--s1);}
+
+  .memo-inline{font-size:11px;color:var(--ac2);font-style:italic;padding-left:8px;border-left:2px solid var(--ac-bd);margin-top:4px;}
+
+  /* Diff bar */
+  .diff-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px;width:100px;}
+  .diff-bar .add{background:var(--gn);border-radius:2px;}
+  .diff-bar .del{background:var(--rd);border-radius:2px;}
+  .diff-bar .neutral{background:var(--dm);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <h1>Daybook Design v2</h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="go('#dir-a')">A. Changelog</button>
+    <button class="nav-tab" onclick="go('#dir-b')">B. Hybrid</button>
+    <button class="nav-tab" onclick="go('#dir-c')">C. Report</button>
+    <button class="nav-tab" onclick="go('#tab-q')">Tab Structure</button>
+  </div>
+</nav>
+<script>
+function go(s){document.querySelector(s)?.scrollIntoView({behavior:'smooth',block:'start'});}
+</script>
+
+
+<!-- ============================================================ -->
+<!--  DIRECTION A : Changelog (성과 중심, 커밋 타입별 그룹핑)        -->
+<!-- ============================================================ -->
+<section class="proposal" id="dir-a">
+  <div class="p-badge" style="background:var(--ac);">Direction A</div>
+  <div class="p-title">Changelog View</div>
+  <div class="p-sub">
+    커밋 메시지의 타입(feat/fix/style/refactor)으로 자동 그룹핑하고,
+    각 커밋의 diff stat(변경 파일, 추가/삭제 라인)을 보여줌.
+    <strong>"오늘 뭘 만들었고 뭘 고쳤는가"</strong>가 한 눈에 보이는 구조.
+  </div>
+  <div class="p-verdict">
+    <strong>핵심 가치:</strong> 나중에 이 날을 다시 봤을 때 "아, 이날 분석 페이지 만들었구나" 즉시 파악 가능.
+    세션 데이터는 부가 정보로만 표시.
+  </div>
+
+  <!-- Daily view -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <div class="view-sw">
+      <button class="v-btn on">Daily</button>
+      <button class="v-btn">Weekly</button>
+      <button class="v-btn">Monthly</button>
+    </div>
+    <button class="nav-arrow">&#9664;</button>
+    <span style="font-size:13px;font-weight:600;color:var(--tx);">2026-05-19 (Mon)</span>
+    <button class="nav-arrow">&#9654;</button>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <span style="font-size:10px;color:var(--dm);">4 sessions &middot; 75K tokens &middot; $1.20</span>
+      <div class="copy-btn">&#128203; MD</div>
+    </div>
+  </div>
+
+  <!-- Feature group -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <span style="font-size:15px;">&#10024;</span>
+      <span style="font-size:14px;font-weight:700;color:var(--tx);">Features</span>
+      <span class="badge b-feat">3 commits</span>
+    </div>
+
+    <!-- Commit 1 -->
+    <div style="margin-bottom:16px;padding-left:12px;border-left:2px solid var(--ac);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="commit-hash">bec1c3e</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);">캘린더/히트맵/비용/이상치 뷰 추가</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:11px;color:var(--mt);">4 files changed</span>
+        <span class="file-add">+320</span>
+        <span class="file-del">-12</span>
+        <div class="diff-bar">
+          <div class="add" style="flex:320;"></div>
+          <div class="del" style="flex:12;"></div>
+        </div>
+        <div class="dot" style="background:var(--ac);width:6px;height:6px;"></div>
+        <span style="font-size:10px;color:var(--mt);">session-board</span>
+      </div>
+      <div style="padding-left:4px;">
+        <div class="file-line">
+          <span class="file-new">NEW</span>
+          <span class="file-path">client/src/pages/AnalyticsPage.jsx</span>
+          <span class="file-add" style="margin-left:auto;">+180</span>
+        </div>
+        <div class="file-line">
+          <span class="file-new">NEW</span>
+          <span class="file-path">server/src/routes/analytics.js</span>
+          <span class="file-add" style="margin-left:auto;">+85</span>
+        </div>
+        <div class="file-line">
+          <span class="file-new">NEW</span>
+          <span class="file-path">server/src/services/analyticsService.js</span>
+          <span class="file-add" style="margin-left:auto;">+55</span>
+        </div>
+        <div class="file-line">
+          <span class="file-mod">MOD</span>
+          <span class="file-path">client/src/components/Layout.jsx</span>
+          <span class="file-add" style="margin-left:auto;">+3</span>
+          <span class="file-del">-2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commit 2 -->
+    <div style="margin-bottom:16px;padding-left:12px;border-left:2px solid var(--ac);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="commit-hash">83ca52f</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);">CLI 세션 활성 추적 및 활동 힌트 표시</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:11px;color:var(--mt);">3 files changed</span>
+        <span class="file-add">+150</span>
+        <span class="file-del">-8</span>
+        <div class="diff-bar">
+          <div class="add" style="flex:150;"></div>
+          <div class="del" style="flex:8;"></div>
+        </div>
+      </div>
+      <div style="padding-left:4px;">
+        <div class="file-line">
+          <span class="file-mod">MOD</span>
+          <span class="file-path">server/src/services/sessionMonitor.js</span>
+          <span class="file-add" style="margin-left:auto;">+95</span>
+          <span class="file-del">-5</span>
+        </div>
+        <div class="file-line">
+          <span class="file-mod">MOD</span>
+          <span class="file-path">client/src/pages/MonitorPage.jsx</span>
+          <span class="file-add" style="margin-left:auto;">+45</span>
+          <span class="file-del">-3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commit 3 (collapsed) -->
+    <div style="padding-left:12px;border-left:2px solid var(--ac);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="commit-hash">80d7b33</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);">분석 페이지 디자인 시안 및 프로토타입</span>
+        <span style="font-size:10px;color:var(--mt);margin-left:auto;">2 files &middot; +45 -0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style group -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <span style="font-size:15px;">&#127912;</span>
+      <span style="font-size:14px;font-weight:700;color:var(--tx);">Style</span>
+      <span class="badge b-style">1 commit</span>
+    </div>
+    <div style="padding-left:12px;border-left:2px solid var(--yw);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="commit-hash">a4c54ad</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);">Midnight Studio dark theme</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:11px;color:var(--mt);">12 files changed</span>
+        <span class="file-add">+280</span>
+        <span class="file-del">-195</span>
+        <div class="diff-bar">
+          <div class="add" style="flex:280;"></div>
+          <div class="del" style="flex:195;"></div>
+        </div>
+      </div>
+      <div style="padding-left:4px;">
+        <div class="file-line">
+          <span class="file-mod">MOD</span>
+          <span class="file-path">client/src/index.css</span>
+          <span class="file-add" style="margin-left:auto;">+120</span>
+          <span class="file-del">-85</span>
+        </div>
+        <div class="file-line" style="color:var(--dm);font-size:10px;padding-left:2px;">
+          ... and 11 more files
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fix group -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <span style="font-size:15px;">&#128027;</span>
+      <span style="font-size:14px;font-weight:700;color:var(--tx);">Fixes</span>
+      <span class="badge b-fix">1 commit</span>
+    </div>
+    <div style="padding-left:12px;border-left:2px solid var(--gn);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="commit-hash">77c4235</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);">실시간 모니터링 세션 감지 오류 수정</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:11px;color:var(--mt);">2 files changed</span>
+        <span class="file-add">+15</span>
+        <span class="file-del">-8</span>
+        <div class="diff-bar">
+          <div class="add" style="flex:15;"></div>
+          <div class="del" style="flex:8;"></div>
+        </div>
+        <div class="dot" style="background:var(--ac);width:6px;height:6px;"></div>
+        <span style="font-size:10px;color:var(--mt);">session-board</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memo -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="sec-title">&#128221; Memo</div>
+    <textarea class="memo-area" placeholder="Enter notes...">recharts에 heatmap 컴포넌트가 없어서 SVG + d3-scale로 직접 구현. 인터랙션 요구 커지면 d3 전환 필요.</textarea>
+  </div>
+
+  <!-- Weekly preview -->
+  <div style="margin-top:36px;padding-top:24px;border-top:1px dashed var(--bd);">
+    <div style="font-size:11px;color:var(--dm);margin-bottom:16px;">&#8595; Same Direction — Weekly View</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="view-sw"><button class="v-btn">Daily</button><button class="v-btn on">Weekly</button><button class="v-btn">Monthly</button></div>
+      <button class="nav-arrow">&#9664;</button>
+      <span style="font-size:13px;font-weight:600;color:var(--tx);">W20 &middot; 5/12 ~ 5/18</span>
+      <button class="nav-arrow">&#9654;</button>
+      <div class="copy-btn" style="margin-left:auto;">&#128203; MD</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val">15</div><div class="stat-sm">Commits</div></div>
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val" style="color:var(--ac);">8</div><div class="stat-sm">Features</div></div>
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val" style="color:var(--gn);">4</div><div class="stat-sm">Fixes</div></div>
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val" style="color:var(--yw);">2</div><div class="stat-sm">Style</div></div>
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val" style="color:var(--pr);">1</div><div class="stat-sm">Refactor</div></div>
+      <div class="stat-box" style="flex:1;text-align:center;"><div class="stat-val">+1,250</div><div class="stat-sm">Lines Added</div></div>
+    </div>
+
+    <!-- Day-by-day changelog -->
+    <div class="card" style="margin-bottom:8px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="min-width:36px;text-align:center;">
+          <div style="font-size:9px;color:var(--mt);">MON</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);">12</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="badge b-feat" style="font-size:9px;">:sparkles: calendar view</span>
+            <span class="badge b-fix" style="font-size:9px;">:bug: date parsing fix</span>
+          </div>
+          <div style="font-size:10px;color:var(--mt);">3 commits &middot; +180 -25 &middot; 4 sessions</div>
+          <div class="memo-inline">TailwindCSS JIT mode issue resolved</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:8px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="min-width:36px;text-align:center;">
+          <div style="font-size:9px;color:var(--mt);">TUE</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);">13</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="badge b-feat" style="font-size:9px;">:sparkles: heatmap view</span>
+            <span class="badge b-feat" style="font-size:9px;">:sparkles: heatmap interaction</span>
+          </div>
+          <div style="font-size:10px;color:var(--mt);">2 commits &middot; +220 -15 &middot; 3 sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:8px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="min-width:36px;text-align:center;">
+          <div style="font-size:9px;color:var(--mt);">WED</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);">14</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="badge b-feat" style="font-size:9px;">:sparkles: cost analysis</span>
+            <span class="badge b-feat" style="font-size:9px;">:sparkles: anomaly detection</span>
+            <span class="badge b-style" style="font-size:9px;">:art: chart colors</span>
+          </div>
+          <div style="font-size:10px;color:var(--mt);">4 commits &middot; +350 -40 &middot; 5 sessions</div>
+          <div class="memo-inline">recharts limitation — may switch to d3 later</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:8px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="min-width:36px;text-align:center;">
+          <div style="font-size:9px;color:var(--mt);">THU</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);">15</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="badge b-style" style="font-size:9px;">:art: Midnight Studio dark theme</span>
+            <span class="badge b-fix" style="font-size:9px;">:bug: week calc fix</span>
+          </div>
+          <div style="font-size:10px;color:var(--mt);">3 commits &middot; +295 -195 &middot; 2 sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:8px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="min-width:36px;text-align:center;">
+          <div style="font-size:9px;color:var(--mt);">FRI</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx);">16</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="badge b-fix" style="font-size:9px;">:bug: monitor status fix</span>
+            <span class="badge b-refactor" style="font-size:9px;">:recycle: cache logic</span>
+          </div>
+          <div style="font-size:10px;color:var(--mt);">3 commits &middot; +85 -55 &middot; 4 sessions</div>
+          <div class="memo-inline">SSE reconnection tricky on Windows</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!--  DIRECTION B : Hybrid (성과 + 세션 나란히)                     -->
+<!-- ============================================================ -->
+<section class="proposal" id="dir-b">
+  <div class="p-badge" style="background:var(--gn);">Direction B</div>
+  <div class="p-title">Hybrid View</div>
+  <div class="p-sub">
+    좌측에 커밋 기반 성과 로그, 우측에 세션 활동 로그.
+    <strong>"뭘 만들었는가"와 "어떻게 작업했는가"를 동시에</strong> 볼 수 있는 구조.
+    세션을 클릭하면 기존 SlidePanel이 열림.
+  </div>
+  <div class="p-verdict">
+    <strong>핵심 가치:</strong> 성과와 활동을 분리하되 한 화면에 배치. 정보 밀도가 높고 두 관점을 동시에 제공.
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <div class="view-sw">
+      <button class="v-btn on">Daily</button>
+      <button class="v-btn">Weekly</button>
+      <button class="v-btn">Monthly</button>
+    </div>
+    <button class="nav-arrow">&#9664;</button>
+    <span style="font-size:13px;font-weight:600;color:var(--tx);">2026-05-19 (Mon)</span>
+    <button class="nav-arrow">&#9654;</button>
+    <div class="copy-btn" style="margin-left:auto;">&#128203; MD</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;">
+    <!-- Left: Changes -->
+    <div>
+      <div class="sec-title">Changes <span class="cnt">5 commits &middot; +810 -215</span></div>
+
+      <!-- feat group -->
+      <div class="card" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">&#10024;</span>
+          <span style="font-size:13px;font-weight:700;color:var(--tx);">Features</span>
+          <span class="badge b-feat">3</span>
+        </div>
+
+        <div style="margin-bottom:10px;padding:10px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span class="commit-hash">bec1c3e</span>
+            <span style="font-size:12px;font-weight:600;color:var(--tx);">캘린더/히트맵/비용/이상치 뷰</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="file-add">+320</span><span class="file-del">-12</span>
+            <span style="font-size:10px;color:var(--mt);">4 files</span>
+            <div class="diff-bar" style="width:60px;">
+              <div class="add" style="flex:320;"></div>
+              <div class="del" style="flex:12;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px;padding:10px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span class="commit-hash">83ca52f</span>
+            <span style="font-size:12px;font-weight:600;color:var(--tx);">CLI 세션 활성 추적</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="file-add">+150</span><span class="file-del">-8</span>
+            <span style="font-size:10px;color:var(--mt);">3 files</span>
+          </div>
+        </div>
+
+        <div style="padding:10px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="commit-hash">80d7b33</span>
+            <span style="font-size:12px;font-weight:600;color:var(--tx);">분석 페이지 디자인 시안</span>
+            <span style="font-size:10px;color:var(--mt);margin-left:auto;">+45</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- style + fix -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <span style="font-size:13px;">&#127912;</span>
+            <span style="font-size:13px;font-weight:700;color:var(--tx);">Style</span>
+            <span class="badge b-style">1</span>
+          </div>
+          <div style="padding:10px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--yw);">
+            <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px;">Dark theme</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="file-add">+280</span><span class="file-del">-195</span>
+              <span style="font-size:10px;color:var(--mt);">12 files</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <span style="font-size:13px;">&#128027;</span>
+            <span style="font-size:13px;font-weight:700;color:var(--tx);">Fixes</span>
+            <span class="badge b-fix">1</span>
+          </div>
+          <div style="padding:10px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--gn);">
+            <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px;">Monitor status fix</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="file-add">+15</span><span class="file-del">-8</span>
+              <span style="font-size:10px;color:var(--mt);">2 files</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memo -->
+      <div class="card">
+        <div class="sec-title">&#128221; Memo</div>
+        <textarea class="memo-area" placeholder="Enter notes...">recharts heatmap 없어서 SVG 직접 구현. d3-scale만 활용.</textarea>
+      </div>
+    </div>
+
+    <!-- Right: Sessions -->
+    <div>
+      <div class="sec-title">Sessions <span class="cnt">4</span></div>
+      <div class="card" style="margin-bottom:8px;padding:12px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="dot" style="background:var(--ac);"></div>
+          <span style="font-size:12px;font-weight:600;color:var(--tx);">session-board</span>
+          <span class="mono" style="font-size:10px;color:var(--mt);margin-left:auto;">09:30~10:15</span>
+        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+          analytics page layout and calendar view implementation
+        </div>
+        <div style="display:flex;gap:6px;">
+          <span class="badge b-feat" style="font-size:9px;">opus</span>
+          <span style="font-size:9px;color:var(--mt);">25K &middot; Edit 8 &middot; Bash 5</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:8px;padding:12px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="dot" style="background:var(--ac);"></div>
+          <span style="font-size:12px;font-weight:600;color:var(--tx);">session-board</span>
+          <span class="mono" style="font-size:10px;color:var(--mt);margin-left:auto;">11:00~11:45</span>
+        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">heatmap view implementation</div>
+        <div style="display:flex;gap:6px;">
+          <span class="badge b-feat" style="font-size:9px;">opus</span>
+          <span style="font-size:9px;color:var(--mt);">18K &middot; Edit 12</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:8px;padding:12px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="dot" style="background:var(--ac);"></div>
+          <span style="font-size:12px;font-weight:600;color:var(--tx);">session-board</span>
+          <span class="mono" style="font-size:10px;color:var(--mt);margin-left:auto;">14:00~15:30</span>
+        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">cost analysis + anomaly detection</div>
+        <div style="display:flex;gap:6px;">
+          <span class="badge b-feat" style="font-size:9px;">opus</span>
+          <span style="font-size:9px;color:var(--mt);">32K &middot; Edit 15 &middot; Bash 8</span>
+        </div>
+      </div>
+      <div class="card" style="padding:12px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="dot" style="background:var(--gn);"></div>
+          <span style="font-size:12px;font-weight:600;color:var(--tx);">commons</span>
+          <span class="mono" style="font-size:10px;color:var(--mt);margin-left:auto;">16:00~16:40</span>
+        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">DateUtil week calculation</div>
+        <div style="display:flex;gap:6px;">
+          <span class="badge b-fix" style="font-size:9px;">sonnet</span>
+          <span style="font-size:9px;color:var(--mt);">8K &middot; Edit 3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!--  DIRECTION C : Report (문서형 리포트)                          -->
+<!-- ============================================================ -->
+<section class="proposal" id="dir-c">
+  <div class="p-badge" style="background:var(--yw);color:#000;">Direction C</div>
+  <div class="p-title">Report View</div>
+  <div class="p-sub">
+    마크다운 문서처럼 읽히는 구조. 프로젝트별로 "무엇을 했고 어떤 파일이 바뀌었는지"를
+    서술형으로 정리. <strong>복사하면 바로 슬랙/노션에 붙여넣을 수 있는 포맷</strong>.
+  </div>
+  <div class="p-verdict">
+    <strong>핵심 가치:</strong> 화면 자체가 리포트. Copy MD 한 번으로 팀 공유 완료. 나중에 다시 읽었을 때 문맥이 유지됨.
+  </div>
+
+  <div style="max-width:760px;margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <div class="view-sw">
+        <button class="v-btn on">Daily</button>
+        <button class="v-btn">Weekly</button>
+        <button class="v-btn">Monthly</button>
+      </div>
+      <button class="nav-arrow">&#9664;</button>
+      <button class="nav-arrow">&#9654;</button>
+      <div class="copy-btn" style="margin-left:auto;">&#128203; Copy MD</div>
+    </div>
+
+    <!-- Report header -->
+    <div style="margin-bottom:28px;">
+      <div style="font-size:22px;font-weight:700;color:var(--tx);">2026. 5. 19. (Mon)</div>
+      <div style="font-size:12px;color:var(--mt);margin-top:4px;display:flex;gap:16px;">
+        <span>5 commits</span>
+        <span style="color:var(--gn);">+810</span>
+        <span style="color:var(--rd);">-215</span>
+        <span>18 files changed</span>
+        <span>4 sessions &middot; 75K tokens</span>
+      </div>
+    </div>
+
+    <!-- Project section -->
+    <div style="margin-bottom:32px;">
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--bd);margin-bottom:16px;">
+        <div class="dot" style="background:var(--ac);"></div>
+        <span style="font-size:15px;font-weight:700;color:var(--tx);">session-board</span>
+        <span style="font-size:11px;color:var(--mt);">4 commits &middot; 3 sessions</span>
+      </div>
+
+      <!-- Feature entries -->
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">&#10024;</span>
+          <span style="font-size:13px;font-weight:600;color:var(--ac);">Features</span>
+        </div>
+
+        <div style="margin-bottom:14px;padding:14px;background:var(--s2);border-radius:var(--rs);">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:8px;">
+            &#128073; 분석 페이지에 캘린더/히트맵/비용/이상치 4개 뷰 추가
+          </div>
+          <div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;color:var(--mt);">
+            <span><span class="commit-hash" style="margin-right:4px;">bec1c3e</span> + <span class="commit-hash">80d7b33</span></span>
+            <span class="file-add">+365</span>
+            <span class="file-del">-12</span>
+          </div>
+          <div style="padding-left:2px;">
+            <div class="file-line"><span class="file-new">NEW</span><span class="file-path">client/src/pages/AnalyticsPage.jsx</span><span style="margin-left:auto;font-size:10px;color:var(--mt);">180 lines</span></div>
+            <div class="file-line"><span class="file-new">NEW</span><span class="file-path">server/src/routes/analytics.js</span><span style="margin-left:auto;font-size:10px;color:var(--mt);">85 lines</span></div>
+            <div class="file-line"><span class="file-new">NEW</span><span class="file-path">server/src/services/analyticsService.js</span><span style="margin-left:auto;font-size:10px;color:var(--mt);">55 lines</span></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;padding:14px;background:var(--s2);border-radius:var(--rs);">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:8px;">
+            &#128073; CLI 세션 활성 추적 및 활동 힌트 표시 기능
+          </div>
+          <div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;color:var(--mt);">
+            <span class="commit-hash">83ca52f</span>
+            <span class="file-add">+150</span>
+            <span class="file-del">-8</span>
+            <span>3 files</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Style entry -->
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">&#127912;</span>
+          <span style="font-size:13px;font-weight:600;color:var(--yw);">Style</span>
+        </div>
+        <div style="padding:14px;background:var(--s2);border-radius:var(--rs);">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:8px;">
+            &#128073; Midnight Studio 다크 테마 전면 적용
+          </div>
+          <div style="display:flex;gap:16px;font-size:11px;color:var(--mt);">
+            <span class="commit-hash">a4c54ad</span>
+            <span class="file-add">+280</span>
+            <span class="file-del">-195</span>
+            <span>12 files changed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fix entry -->
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="font-size:13px;">&#128027;</span>
+          <span style="font-size:13px;font-weight:600;color:var(--gn);">Fixes</span>
+        </div>
+        <div style="padding:14px;background:var(--s2);border-radius:var(--rs);">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:8px;">
+            &#128073; 실시간 모니터링 세션 감지 및 상태 판단 오류 수정
+          </div>
+          <div style="display:flex;gap:16px;font-size:11px;color:var(--mt);">
+            <span class="commit-hash">77c4235</span>
+            <span class="file-add">+15</span>
+            <span class="file-del">-8</span>
+            <span>2 files</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project 2 -->
+    <div style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--bd);margin-bottom:16px;">
+        <div class="dot" style="background:var(--gn);"></div>
+        <span style="font-size:15px;font-weight:700;color:var(--tx);">commons</span>
+        <span style="font-size:11px;color:var(--mt);">1 commit &middot; 1 session</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+        <span style="font-size:13px;">&#128027;</span>
+        <span style="font-size:13px;font-weight:600;color:var(--gn);">Fixes</span>
+      </div>
+      <div style="padding:14px;background:var(--s2);border-radius:var(--rs);">
+        <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:8px;">
+          &#128073; DateUtil 주차 계산 로직 수정
+        </div>
+        <div style="display:flex;gap:16px;font-size:11px;color:var(--mt);">
+          <span class="commit-hash">a1b2c3d</span>
+          <span class="file-add">+12</span>
+          <span class="file-del">-5</span>
+          <span>2 files</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memo -->
+    <div style="margin-bottom:16px;">
+      <div class="sec-title">&#128221; Memo</div>
+      <textarea class="memo-area" style="min-height:60px;" placeholder="Enter notes...">recharts heatmap 미지원 → SVG + d3-scale 직접 구현. 향후 인터랙션 확장 시 d3 전환 검토 필요.</textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!--  TAB STRUCTURE QUESTION                                       -->
+<!-- ============================================================ -->
+<section class="proposal" id="tab-q">
+  <div class="p-badge" style="background:var(--or);color:#000;">Tab Structure</div>
+  <div class="p-title">탭 구조: 합치기 vs 분리</div>
+  <div class="p-sub">
+    기존 "일자별 내역" 탭에 흡수할 것인가, 별도 탭으로 분리할 것인가.
+    두 가지 모두의 네비게이션 모습을 비교합니다.
+  </div>
+
+  <!-- Option 1: Merged -->
+  <div style="margin-bottom:40px;">
+    <div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:12px;">
+      Option 1: 기존 탭에 흡수 (뷰 전환)
+    </div>
+    <div class="mock-header">
+      <span style="font-size:13px;font-weight:700;color:var(--tx);">&#128202;</span>
+      <span class="mock-tab">Monitor</span>
+      <span class="mock-tab active">Daily</span>
+      <span class="mock-tab">Analytics</span>
+    </div>
+    <div class="mock-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="view-sw">
+          <button class="v-btn on">Sessions</button>
+          <button class="v-btn">Changelog</button>
+          <button class="v-btn">Weekly</button>
+          <button class="v-btn">Monthly</button>
+        </div>
+        <button class="nav-arrow">&#9664;</button>
+        <span style="font-size:12px;font-weight:600;color:var(--tx);">2026-05-19</span>
+        <button class="nav-arrow">&#9654;</button>
+      </div>
+      <div style="padding:20px;border:1px dashed var(--bd);border-radius:var(--rs);text-align:center;color:var(--dm);font-size:12px;">
+        Sessions = 기존 일자별 내역 (변경 없음)<br>
+        Changelog = 커밋 기반 성과 뷰 (신규)<br>
+        Weekly / Monthly = 주간/월간 집계 (신규)
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--tx2);">
+      <strong style="color:var(--gn);">Pro:</strong> 탭 수가 늘지 않음. 한 곳에서 세션/성과/집계를 전환.<br>
+      <strong style="color:var(--rd);">Con:</strong> "Daily" 탭 안에 역할이 너무 많아짐. Sessions과 Changelog는 관점이 다른 데이터.
+      Weekly/Monthly가 Daily 하위에 있는 게 직관적이지 않을 수 있음.
+    </div>
+  </div>
+
+  <!-- Option 2: Separate tab -->
+  <div style="margin-bottom:40px;">
+    <div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:12px;">
+      Option 2: 별도 탭으로 분리
+    </div>
+    <div class="mock-header">
+      <span style="font-size:13px;font-weight:700;color:var(--tx);">&#128202;</span>
+      <span class="mock-tab">Monitor</span>
+      <span class="mock-tab">Sessions</span>
+      <span class="mock-tab active">Daybook</span>
+      <span class="mock-tab">Analytics</span>
+    </div>
+    <div class="mock-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="view-sw">
+          <button class="v-btn on">Daily</button>
+          <button class="v-btn">Weekly</button>
+          <button class="v-btn">Monthly</button>
+        </div>
+        <button class="nav-arrow">&#9664;</button>
+        <span style="font-size:12px;font-weight:600;color:var(--tx);">2026-05-19</span>
+        <button class="nav-arrow">&#9654;</button>
+      </div>
+      <div style="padding:20px;border:1px dashed var(--bd);border-radius:var(--rs);text-align:center;color:var(--dm);font-size:12px;">
+        Sessions 탭 = 기존 일자별 내역 (100% 보존)<br>
+        Daybook 탭 = 커밋 기반 성과 + 메모 + 주간/월간 집계
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--tx2);">
+      <strong style="color:var(--gn);">Pro:</strong> 역할이 명확. Sessions="세션 원시 데이터", Daybook="정리된 성과 기록". 기존 탭 변경 제로.<br>
+      <strong style="color:var(--rd);">Con:</strong> 탭이 4개로 늘어남. 같은 날짜 데이터를 다른 탭에서 봐야 하는 중복감.
+    </div>
+  </div>
+
+  <!-- Option 3: Replace -->
+  <div>
+    <div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:12px;">
+      Option 3: 기존 탭을 대체
+    </div>
+    <div class="mock-header">
+      <span style="font-size:13px;font-weight:700;color:var(--tx);">&#128202;</span>
+      <span class="mock-tab">Monitor</span>
+      <span class="mock-tab active">Daybook</span>
+      <span class="mock-tab">Analytics</span>
+    </div>
+    <div class="mock-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="view-sw">
+          <button class="v-btn on">Daily</button>
+          <button class="v-btn">Weekly</button>
+          <button class="v-btn">Monthly</button>
+        </div>
+        <button class="nav-arrow">&#9664;</button>
+        <span style="font-size:12px;font-weight:600;color:var(--tx);">2026-05-19</span>
+        <button class="nav-arrow">&#9654;</button>
+      </div>
+      <div style="padding:20px;border:1px dashed var(--bd);border-radius:var(--rs);text-align:center;color:var(--dm);font-size:12px;">
+        Daily 뷰 = 성과(커밋) + 세션 목록 합친 형태 (Direction B: Hybrid)<br>
+        기존 세션 카드 클릭 → SlidePanel로 상세 보기<br>
+        Weekly / Monthly = 집계 뷰
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--tx2);">
+      <strong style="color:var(--gn);">Pro:</strong> 탭 수 유지(3개). 기존 기능 + 신규 기능이 한 곳에. 가장 강력한 업그레이드 느낌.<br>
+      <strong style="color:var(--rd);">Con:</strong> 기존 일자별 내역의 그리드 레이아웃이 사라짐. 익숙한 UI가 변경됨.
+    </div>
+  </div>
+</section>
+
+<div style="height:80px;"></div>
+</body>
+</html>

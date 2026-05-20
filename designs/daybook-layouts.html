@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daybook View - Layout Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080a; --s1: #0f0f12; --s2: #141418; --s3: #1a1a20;
+    --bd: #1f1f28; --bd2: #2a2a35; --bd-h: #35354a;
+    --tx: #e8e8ee; --tx2: #a0a0b0; --mt: #5a5a70; --dm: #3a3a4a;
+    --ac: #818cf8; --ac2: #a78bfa;
+    --ac-bg: rgba(129,140,248,.08); --ac-bd: rgba(129,140,248,.2);
+    --gn: #4ade80; --yw: #fbbf24; --rd: #f87171; --pr: #c084fc;
+    --glass: rgba(15,15,18,.8); --glass-bd: rgba(255,255,255,.06);
+    --r: 14px; --rs: 10px; --rx: 6px;
+    --shadow: 0 2px 8px rgba(0,0,0,.3);
+    --shadow-h: 0 8px 24px rgba(0,0,0,.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background: var(--bg); color: var(--tx);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  code, .mono { font-family:'JetBrains Mono',monospace; }
+
+  /* ===== Navigation ===== */
+  .top-nav {
+    position:sticky; top:0; z-index:100;
+    background: var(--glass); backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--glass-bd);
+    padding:12px 32px; display:flex; align-items:center; gap:16px;
+  }
+  .top-nav h1 { font-size:15px; font-weight:700; color:var(--tx); }
+  .nav-tabs { display:flex; gap:4px; margin-left:auto; }
+  .nav-tab {
+    padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600;
+    color:var(--mt); cursor:pointer; border:none; background:none;
+    transition: all .15s;
+  }
+  .nav-tab:hover { color:var(--tx2); background:var(--s2); }
+  .nav-tab.active { color:var(--ac); background:var(--ac-bg); }
+
+  /* ===== Section divider ===== */
+  .proposal {
+    padding: 40px 32px; border-bottom: 1px solid var(--bd);
+    max-width: 1400px; margin: 0 auto;
+  }
+  .proposal-header {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:8px;
+  }
+  .proposal-label {
+    font-size:11px; font-weight:700; letter-spacing:1px;
+    color:var(--bg); background:var(--ac); padding:3px 10px;
+    border-radius:4px; text-transform:uppercase;
+  }
+  .proposal-title { font-size:20px; font-weight:700; color:var(--tx); }
+  .proposal-desc {
+    font-size:13px; color:var(--tx2); margin-bottom:28px;
+    max-width:700px; line-height:1.7;
+  }
+
+  /* ===== Common elements ===== */
+  .view-switch {
+    display:inline-flex; gap:2px; padding:3px;
+    background:var(--s2); border-radius:var(--rs); border:1px solid var(--bd);
+  }
+  .view-btn {
+    padding:6px 16px; border-radius:7px; font-size:11px; font-weight:600;
+    color:var(--mt); cursor:pointer; border:none; background:none;
+    transition:all .15s;
+  }
+  .view-btn:hover { color:var(--tx2); }
+  .view-btn.on { color:var(--tx); background:var(--s3); box-shadow:var(--shadow); }
+
+  .stat-box {
+    background:var(--s2); border-radius:var(--rs); padding:12px 16px;
+    border:1px solid var(--bd);
+  }
+  .stat-val { font-size:18px; font-weight:700; color:var(--tx); }
+  .stat-label { font-size:10px; color:var(--mt); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+
+  .card {
+    background:var(--s1); border:1px solid var(--bd); border-radius:var(--r);
+    padding:16px; box-shadow:var(--shadow); transition:border-color .15s;
+  }
+  .card:hover { border-color:var(--bd-h); }
+
+  .badge {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:2px 8px; border-radius:var(--rx); font-size:10px; font-weight:600;
+  }
+  .badge-indigo { background:rgba(129,140,248,.12); color:#818cf8; }
+  .badge-emerald { background:rgba(74,222,128,.12); color:#4ade80; }
+  .badge-amber { background:rgba(251,191,36,.12); color:#fbbf24; }
+  .badge-violet { background:rgba(167,139,250,.12); color:#a78bfa; }
+  .badge-rose { background:rgba(248,113,113,.12); color:#f87171; }
+
+  .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .dot-indigo { background:#818cf8; }
+  .dot-emerald { background:#4ade80; }
+  .dot-amber { background:#fbbf24; }
+
+  .copy-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 12px; border-radius:var(--rx); font-size:11px; font-weight:500;
+    color:var(--tx2); background:var(--s2); border:1px solid var(--bd);
+    cursor:pointer; transition:all .15s;
+  }
+  .copy-btn:hover { color:var(--tx); border-color:var(--bd2); }
+
+  .memo-area {
+    width:100%; min-height:60px; padding:12px; border-radius:var(--rs);
+    background:var(--s2); border:1px solid var(--bd); color:var(--tx);
+    font-size:12px; font-family:inherit; resize:vertical;
+    transition:border-color .15s; outline:none;
+  }
+  .memo-area:focus { border-color:var(--ac); }
+  .memo-area::placeholder { color:var(--dm); }
+
+  .commit-item {
+    display:flex; align-items:flex-start; gap:10px; padding:8px 0;
+  }
+  .commit-hash {
+    font-family:'JetBrains Mono',monospace; font-size:11px;
+    color:var(--ac); background:var(--ac-bg); padding:2px 6px;
+    border-radius:4px; flex-shrink:0;
+  }
+  .commit-msg { font-size:12px; color:var(--tx2); }
+  .commit-time { font-size:10px; color:var(--dm); margin-left:auto; flex-shrink:0; }
+
+  .session-mini {
+    display:flex; align-items:center; gap:10px; padding:8px 12px;
+    border-radius:var(--rs); background:var(--s2); border:1px solid var(--bd);
+    cursor:pointer; transition:all .15s;
+  }
+  .session-mini:hover { border-color:var(--bd-h); }
+
+  .section-title {
+    font-size:11px; font-weight:600; color:var(--mt);
+    text-transform:uppercase; letter-spacing:.5px;
+    margin-bottom:10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title .count {
+    font-size:10px; color:var(--ac); background:var(--ac-bg);
+    padding:1px 6px; border-radius:4px;
+  }
+
+  .progress-bar {
+    height:6px; border-radius:3px; background:var(--s3); overflow:hidden;
+  }
+  .progress-fill { height:100%; border-radius:3px; transition:width .3s; }
+
+  .day-row {
+    display:flex; gap:16px; align-items:stretch;
+    padding:14px 0; border-bottom:1px solid var(--bd);
+  }
+  .day-row:last-child { border-bottom:none; }
+
+  .day-label {
+    width:48px; flex-shrink:0; text-align:center; padding-top:2px;
+  }
+  .day-label .dow { font-size:10px; color:var(--mt); text-transform:uppercase; }
+  .day-label .num { font-size:18px; font-weight:700; color:var(--tx); }
+
+  .timeline-line {
+    width:2px; background:var(--bd); margin:0 15px; flex-shrink:0;
+    position:relative;
+  }
+  .timeline-dot {
+    width:10px; height:10px; border-radius:50%; border:2px solid var(--bd);
+    background:var(--s1); position:absolute; left:-4px;
+  }
+
+  /* ===== A: Extended Grid ===== */
+  .a-header { display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .a-stats { display:flex; gap:10px; flex:1; min-width:0; }
+  .a-grid {
+    display:grid; gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+    align-content:start;
+  }
+  .a-project-header {
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+    padding-bottom:10px; border-bottom:1px solid var(--bd);
+  }
+  .a-project-name { font-size:13px; font-weight:600; color:var(--tx); }
+  .a-project-meta { font-size:10px; color:var(--mt); margin-left:auto; }
+  .a-section { margin-top:14px; }
+  .a-memo-row {
+    margin-top:20px; padding:16px; background:var(--s1);
+    border:1px solid var(--bd); border-radius:var(--r);
+  }
+
+  /* ===== B: Timeline ===== */
+  .b-container { display:flex; gap:24px; }
+  .b-main { flex:1; min-width:0; }
+  .b-sidebar { width:280px; flex-shrink:0; }
+  .b-timeline-item {
+    display:flex; gap:16px; padding:12px 0;
+  }
+  .b-time {
+    width:52px; flex-shrink:0; text-align:right;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mt);
+    padding-top:2px;
+  }
+  .b-content { flex:1; min-width:0; }
+  .b-type-tag {
+    font-size:9px; font-weight:700; letter-spacing:.5px;
+    text-transform:uppercase; margin-bottom:4px;
+  }
+
+  /* ===== C: Dashboard ===== */
+  .c-top { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:20px; }
+  .c-projects {
+    display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;
+  }
+  .c-project-chip {
+    display:flex; align-items:center; gap:8px; padding:10px 16px;
+    background:var(--s1); border:1px solid var(--bd); border-radius:var(--rs);
+    flex:1; min-width:200px;
+  }
+  .c-detail { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .c-list-item {
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    border-bottom:1px solid var(--bd); transition:background .15s;
+  }
+  .c-list-item:hover { background:var(--s2); }
+  .c-list-item:last-child { border-bottom:none; }
+
+  /* ===== D: Notebook ===== */
+  .d-container { max-width:720px; margin:0 auto; }
+  .d-date-header {
+    font-size:24px; font-weight:700; color:var(--tx);
+    margin-bottom:4px;
+  }
+  .d-date-sub { font-size:12px; color:var(--mt); margin-bottom:24px; }
+  .d-section { margin-bottom:28px; }
+  .d-section-head {
+    font-size:13px; font-weight:600; color:var(--tx);
+    padding-bottom:8px; margin-bottom:12px;
+    border-bottom:1px solid var(--bd);
+    display:flex; align-items:center; gap:8px;
+  }
+  .d-project-block { margin-bottom:20px; }
+  .d-inline-stats {
+    display:flex; gap:16px; font-size:11px; color:var(--mt);
+    margin-bottom:10px;
+  }
+  .d-inline-stats span { display:flex; align-items:center; gap:4px; }
+
+  /* ===== Weekly variants ===== */
+  .weekly-header {
+    display:flex; align-items:center; gap:16px; margin-bottom:20px;
+  }
+  .week-range { font-size:14px; font-weight:600; color:var(--tx); }
+  .week-nav {
+    display:flex; gap:4px;
+  }
+  .week-nav button {
+    width:28px; height:28px; border-radius:var(--rx);
+    background:var(--s2); border:1px solid var(--bd);
+    color:var(--tx2); cursor:pointer; font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .day-activity-bar {
+    display:flex; gap:2px; height:20px; align-items:flex-end;
+  }
+  .day-activity-bar .bar {
+    flex:1; border-radius:2px 2px 0 0; min-height:3px;
+    transition:height .3s;
+  }
+  .memo-inline {
+    font-size:11px; color:var(--ac2); font-style:italic;
+    margin-top:4px; padding-left:4px;
+    border-left:2px solid var(--ac-bd);
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== Top navigation ====== -->
+<nav class="top-nav">
+  <h1>Claude Session Dashboard</h1>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="scrollTo('#proposal-a')">A. Extended Grid</button>
+    <button class="nav-tab" onclick="scrollTo('#proposal-b')">B. Timeline</button>
+    <button class="nav-tab" onclick="scrollTo('#proposal-c')">C. Dashboard</button>
+    <button class="nav-tab" onclick="scrollTo('#proposal-d')">D. Notebook</button>
+  </div>
+</nav>
+
+<script>
+function scrollTo(sel) {
+  document.querySelector(sel)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- PROPOSAL A : Extended Grid (기존 그리드 확장)                   -->
+<!-- ============================================================ -->
+<section class="proposal" id="proposal-a">
+  <div class="proposal-header">
+    <span class="proposal-label">A</span>
+    <span class="proposal-title">Extended Grid</span>
+  </div>
+  <p class="proposal-desc">
+    현재 DailyPage 레이아웃을 최소한으로 확장. 프로젝트별 카드 안에 git 커밋 섹션을 추가하고,
+    하단에 메모 영역 배치. 기존 사용자에게 가장 익숙한 구조.
+  </p>
+
+  <!-- Daily View -->
+  <div style="margin-bottom:40px">
+    <div class="a-header">
+      <div class="view-switch">
+        <button class="view-btn on">Daily</button>
+        <button class="view-btn">Weekly</button>
+        <button class="view-btn">Monthly</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;font-size:12px;">&#9664;</button>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);min-width:120px;text-align:center;">2026-05-19 (Mon)</span>
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;font-size:12px;">&#9654;</button>
+      </div>
+      <div class="a-stats">
+        <div class="stat-box" style="flex:1">
+          <div class="stat-val">4</div><div class="stat-label">Sessions</div>
+        </div>
+        <div class="stat-box" style="flex:1">
+          <div class="stat-val">5</div><div class="stat-label">Commits</div>
+        </div>
+        <div class="stat-box" style="flex:1">
+          <div class="stat-val">75K</div><div class="stat-label">Tokens</div>
+        </div>
+        <div class="stat-box" style="flex:1">
+          <div class="stat-val">12</div><div class="stat-label">Files</div>
+        </div>
+      </div>
+      <div class="copy-btn">&#128203; Copy MD</div>
+    </div>
+
+    <div class="a-grid">
+      <!-- Project Card 1 -->
+      <div class="card">
+        <div class="a-project-header">
+          <div class="dot dot-indigo"></div>
+          <span class="a-project-name">session-board</span>
+          <span class="a-project-meta">3 sessions &middot; 5 commits</span>
+        </div>
+
+        <div class="section-title">Sessions <span class="count">3</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="session-mini">
+            <span class="mono" style="font-size:11px;color:var(--ac);">09:30</span>
+            <span style="font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              analytics page layout
+            </span>
+            <span class="badge badge-indigo">opus</span>
+            <span style="font-size:10px;color:var(--mt);">25K</span>
+          </div>
+          <div class="session-mini">
+            <span class="mono" style="font-size:11px;color:var(--ac);">11:00</span>
+            <span style="font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              heatmap view implementation
+            </span>
+            <span class="badge badge-indigo">opus</span>
+            <span style="font-size:10px;color:var(--mt);">18K</span>
+          </div>
+          <div class="session-mini">
+            <span class="mono" style="font-size:11px;color:var(--ac);">14:00</span>
+            <span style="font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              cost analysis + anomaly detection
+            </span>
+            <span class="badge badge-indigo">opus</span>
+            <span style="font-size:10px;color:var(--mt);">32K</span>
+          </div>
+        </div>
+
+        <div class="a-section">
+          <div class="section-title">Git Commits <span class="count">5</span></div>
+          <div style="display:flex;flex-direction:column;">
+            <div class="commit-item">
+              <span class="commit-hash">80d7b33</span>
+              <span class="commit-msg">:memo: 분석 페이지 디자인 시안 추가</span>
+              <span class="commit-time">15:30</span>
+            </div>
+            <div class="commit-item">
+              <span class="commit-hash">bec1c3e</span>
+              <span class="commit-msg">:sparkles: 캘린더/히트맵/비용/이상치 뷰</span>
+              <span class="commit-time">14:20</span>
+            </div>
+            <div class="commit-item">
+              <span class="commit-hash">83ca52f</span>
+              <span class="commit-msg">:sparkles: CLI 세션 활성 추적 기능</span>
+              <span class="commit-time">11:45</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Card 2 -->
+      <div class="card">
+        <div class="a-project-header">
+          <div class="dot dot-emerald"></div>
+          <span class="a-project-name">commons</span>
+          <span class="a-project-meta">1 session &middot; 1 commit</span>
+        </div>
+        <div class="section-title">Sessions <span class="count">1</span></div>
+        <div class="session-mini">
+          <span class="mono" style="font-size:11px;color:var(--ac);">16:00</span>
+          <span style="font-size:12px;color:var(--tx);flex:1;">DateUtil week calculation</span>
+          <span class="badge badge-emerald">sonnet</span>
+          <span style="font-size:10px;color:var(--mt);">8K</span>
+        </div>
+        <div class="a-section">
+          <div class="section-title">Git Commits <span class="count">1</span></div>
+          <div class="commit-item">
+            <span class="commit-hash">a1b2c3d</span>
+            <span class="commit-msg">:bug: 주차 계산 로직 수정</span>
+            <span class="commit-time">16:40</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memo -->
+    <div class="a-memo-row">
+      <div class="section-title" style="margin-bottom:8px;">
+        &#128221; Daily Memo
+      </div>
+      <textarea class="memo-area" placeholder="Enter notes...">heatmap was built in SVG because recharts doesn't have it. Borrowed d3-scale only.</textarea>
+    </div>
+  </div>
+
+  <!-- Weekly View -->
+  <div>
+    <div class="a-header">
+      <div class="view-switch">
+        <button class="view-btn">Daily</button>
+        <button class="view-btn on">Weekly</button>
+        <button class="view-btn">Monthly</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;font-size:12px;">&#9664;</button>
+        <span style="font-size:13px;font-weight:600;color:var(--tx);min-width:180px;text-align:center;">W20 &middot; 5/12 ~ 5/18</span>
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;font-size:12px;">&#9654;</button>
+      </div>
+      <div class="a-stats">
+        <div class="stat-box" style="flex:1"><div class="stat-val">18</div><div class="stat-label">Sessions</div></div>
+        <div class="stat-box" style="flex:1"><div class="stat-val">15</div><div class="stat-label">Commits</div></div>
+        <div class="stat-box" style="flex:1"><div class="stat-val">125K</div><div class="stat-label">Tokens</div></div>
+        <div class="stat-box" style="flex:1"><div class="stat-val">$4.32</div><div class="stat-label">Cost</div></div>
+      </div>
+      <div class="copy-btn">&#128203; Copy MD</div>
+    </div>
+
+    <!-- Project bar -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="flex:4;background:rgba(129,140,248,.15);border-radius:var(--rx);padding:8px 12px;display:flex;align-items:center;gap:8px;">
+        <div class="dot dot-indigo"></div>
+        <span style="font-size:12px;font-weight:500;color:#818cf8;">session-board</span>
+        <span style="font-size:10px;color:var(--mt);margin-left:auto;">12 sessions</span>
+      </div>
+      <div style="flex:1;background:rgba(74,222,128,.1);border-radius:var(--rx);padding:8px 12px;display:flex;align-items:center;gap:8px;">
+        <div class="dot dot-emerald"></div>
+        <span style="font-size:12px;font-weight:500;color:#4ade80;">commons</span>
+        <span style="font-size:10px;color:var(--mt);margin-left:auto;">3</span>
+      </div>
+    </div>
+
+    <!-- Day rows -->
+    <div class="card">
+      <div class="day-row">
+        <div class="day-label"><div class="dow">Mon</div><div class="num">12</div></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:500;color:var(--tx);">4 sessions</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">3 commits</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">25K tokens</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-indigo">:sparkles: calendar view</span>
+            <span class="badge badge-indigo">:bug: date parsing fix</span>
+          </div>
+          <div class="memo-inline">TailwindCSS JIT mode issue...</div>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><div class="dow">Tue</div><div class="num">13</div></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:500;color:var(--tx);">3 sessions</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">2 commits</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">18K tokens</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-indigo">:sparkles: heatmap view</span>
+          </div>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><div class="dow">Wed</div><div class="num">14</div></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:500;color:var(--tx);">5 sessions</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">4 commits</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">35K tokens</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-indigo">:sparkles: cost analysis</span>
+            <span class="badge badge-indigo">:sparkles: anomaly detection</span>
+          </div>
+          <div class="memo-inline">recharts limitation found, may switch to d3 later</div>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><div class="dow">Thu</div><div class="num">15</div></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:500;color:var(--tx);">2 sessions</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">3 commits</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">15K tokens</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-indigo">:art: dark theme</span>
+            <span class="badge badge-emerald">:bug: week calc fix</span>
+          </div>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><div class="dow">Fri</div><div class="num">16</div></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:500;color:var(--tx);">4 sessions</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">3 commits</span>
+            <span style="font-size:11px;color:var(--mt);">&middot;</span>
+            <span style="font-size:11px;color:var(--mt);">32K tokens</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-indigo">:bug: monitor fix</span>
+          </div>
+          <div class="memo-inline">SSE reconnection was tricky on Windows</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- PROPOSAL B : Timeline (시간축 중심)                            -->
+<!-- ============================================================ -->
+<section class="proposal" id="proposal-b">
+  <div class="proposal-header">
+    <span class="proposal-label">B</span>
+    <span class="proposal-title">Timeline</span>
+  </div>
+  <p class="proposal-desc">
+    세션과 커밋을 시간순으로 섞어 보여주는 타임라인 뷰.
+    "오늘 하루의 흐름"을 한 눈에 파악 가능. 우측 사이드바에 메모와 요약 배치.
+  </p>
+
+  <div class="b-container">
+    <div class="b-main">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+        <div class="view-switch">
+          <button class="view-btn on">Daily</button>
+          <button class="view-btn">Weekly</button>
+          <button class="view-btn">Monthly</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9664;</button>
+          <span style="font-size:13px;font-weight:600;color:var(--tx);">2026-05-19 (Mon)</span>
+          <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9654;</button>
+        </div>
+        <div class="copy-btn" style="margin-left:auto;">&#128203; Copy MD</div>
+      </div>
+
+      <!-- Timeline items -->
+      <div class="card" style="padding:20px;">
+        <div class="b-timeline-item" style="border-bottom:1px solid var(--bd);padding-bottom:12px;">
+          <div class="b-time">09:30</div>
+          <div style="width:24px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--ac);flex-shrink:0;"></div>
+            <div style="width:2px;flex:1;background:var(--bd);margin-top:4px;"></div>
+          </div>
+          <div class="b-content">
+            <div class="b-type-tag" style="color:var(--ac);">SESSION</div>
+            <div style="font-size:12px;color:var(--tx);margin-bottom:4px;">analytics page layout</div>
+            <div style="display:flex;gap:8px;">
+              <span class="badge badge-indigo">opus</span>
+              <span style="font-size:10px;color:var(--mt);">25K tokens &middot; Edit 8 &middot; Bash 5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-timeline-item" style="border-bottom:1px solid var(--bd);padding-bottom:12px;">
+          <div class="b-time">10:15</div>
+          <div style="width:24px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--gn);flex-shrink:0;"></div>
+            <div style="width:2px;flex:1;background:var(--bd);margin-top:4px;"></div>
+          </div>
+          <div class="b-content">
+            <div class="b-type-tag" style="color:var(--gn);">COMMIT</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="commit-hash">83ca52f</span>
+              <span style="font-size:12px;color:var(--tx);">:sparkles: CLI session tracking</span>
+            </div>
+            <div style="font-size:10px;color:var(--mt);margin-top:2px;">
+              <span class="dot dot-indigo" style="width:6px;height:6px;display:inline-block;"></span>
+              session-board &middot; 4 files changed
+            </div>
+          </div>
+        </div>
+
+        <div class="b-timeline-item" style="border-bottom:1px solid var(--bd);padding-bottom:12px;">
+          <div class="b-time">11:00</div>
+          <div style="width:24px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--ac);flex-shrink:0;"></div>
+            <div style="width:2px;flex:1;background:var(--bd);margin-top:4px;"></div>
+          </div>
+          <div class="b-content">
+            <div class="b-type-tag" style="color:var(--ac);">SESSION</div>
+            <div style="font-size:12px;color:var(--tx);margin-bottom:4px;">heatmap view implementation</div>
+            <div style="display:flex;gap:8px;">
+              <span class="badge badge-indigo">opus</span>
+              <span style="font-size:10px;color:var(--mt);">18K tokens &middot; Edit 12 &middot; Read 6</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-timeline-item" style="border-bottom:1px solid var(--bd);padding-bottom:12px;">
+          <div class="b-time">11:45</div>
+          <div style="width:24px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--gn);flex-shrink:0;"></div>
+            <div style="width:2px;flex:1;background:var(--bd);margin-top:4px;"></div>
+          </div>
+          <div class="b-content">
+            <div class="b-type-tag" style="color:var(--gn);">COMMIT</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="commit-hash">bec1c3e</span>
+              <span style="font-size:12px;color:var(--tx);">:sparkles: calendar + heatmap views</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-timeline-item">
+          <div class="b-time">14:00</div>
+          <div style="width:24px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--ac);flex-shrink:0;"></div>
+          </div>
+          <div class="b-content">
+            <div class="b-type-tag" style="color:var(--ac);">SESSION</div>
+            <div style="font-size:12px;color:var(--tx);margin-bottom:4px;">cost analysis + anomaly detection</div>
+            <div style="display:flex;gap:8px;">
+              <span class="badge badge-indigo">opus</span>
+              <span style="font-size:10px;color:var(--mt);">32K tokens &middot; Edit 15 &middot; Bash 8</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="b-sidebar">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-title">Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="stat-box"><div class="stat-val" style="font-size:16px;">4</div><div class="stat-label">Sessions</div></div>
+          <div class="stat-box"><div class="stat-val" style="font-size:16px;">5</div><div class="stat-label">Commits</div></div>
+          <div class="stat-box"><div class="stat-val" style="font-size:16px;">75K</div><div class="stat-label">Tokens</div></div>
+          <div class="stat-box"><div class="stat-val" style="font-size:16px;">12</div><div class="stat-label">Files</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-title">Projects</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div class="dot dot-indigo"></div>
+          <span style="font-size:12px;color:var(--tx);flex:1;">session-board</span>
+          <span style="font-size:10px;color:var(--mt);">3 sess</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dot dot-emerald"></div>
+          <span style="font-size:12px;color:var(--tx);flex:1;">commons</span>
+          <span style="font-size:10px;color:var(--mt);">1 sess</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">&#128221; Memo</div>
+        <textarea class="memo-area" style="min-height:100px;" placeholder="Enter notes...">heatmap was built in SVG because recharts doesn't have it.</textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- PROPOSAL C : Dashboard (요약 카드 중심)                        -->
+<!-- ============================================================ -->
+<section class="proposal" id="proposal-c">
+  <div class="proposal-header">
+    <span class="proposal-label">C</span>
+    <span class="proposal-title">Dashboard</span>
+  </div>
+  <p class="proposal-desc">
+    상단에 핵심 지표를 크게 보여주고, 아래에 세션/커밋을 병렬 리스트로 배치.
+    주간/월간 뷰에서 집계 데이터가 돋보이는 구조. 한 눈에 "얼마나"를 파악하기 좋음.
+  </p>
+
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+    <div class="view-switch">
+      <button class="view-btn on">Daily</button>
+      <button class="view-btn">Weekly</button>
+      <button class="view-btn">Monthly</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9664;</button>
+      <span style="font-size:13px;font-weight:600;color:var(--tx);">2026-05-19 (Mon)</span>
+      <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9654;</button>
+    </div>
+    <div class="copy-btn" style="margin-left:auto;">&#128203; Copy MD</div>
+  </div>
+
+  <!-- Big stat cards -->
+  <div class="c-top">
+    <div class="stat-box" style="text-align:center;">
+      <div class="stat-val" style="font-size:28px;">4</div>
+      <div class="stat-label">Sessions</div>
+    </div>
+    <div class="stat-box" style="text-align:center;">
+      <div class="stat-val" style="font-size:28px;">5</div>
+      <div class="stat-label">Commits</div>
+    </div>
+    <div class="stat-box" style="text-align:center;">
+      <div class="stat-val" style="font-size:28px;">75K</div>
+      <div class="stat-label">Tokens</div>
+    </div>
+    <div class="stat-box" style="text-align:center;">
+      <div class="stat-val" style="font-size:28px;">12</div>
+      <div class="stat-label">Files Changed</div>
+    </div>
+    <div class="stat-box" style="text-align:center;">
+      <div class="stat-val" style="font-size:28px;color:var(--yw);">$1.20</div>
+      <div class="stat-label">Est. Cost</div>
+    </div>
+  </div>
+
+  <!-- Project chips -->
+  <div class="c-projects">
+    <div class="c-project-chip">
+      <div class="dot dot-indigo"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx);">session-board</div>
+        <div style="font-size:10px;color:var(--mt);">3 sessions &middot; 5 commits</div>
+      </div>
+      <div style="margin-left:auto;">
+        <div class="progress-bar" style="width:80px;">
+          <div class="progress-fill" style="width:80%;background:var(--ac);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="c-project-chip">
+      <div class="dot dot-emerald"></div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx);">commons</div>
+        <div style="font-size:10px;color:var(--mt);">1 session &middot; 1 commit</div>
+      </div>
+      <div style="margin-left:auto;">
+        <div class="progress-bar" style="width:80px;">
+          <div class="progress-fill" style="width:20%;background:var(--gn);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two column: Sessions | Commits -->
+  <div class="c-detail">
+    <div class="card">
+      <div class="section-title">Sessions <span class="count">4</span></div>
+      <div class="c-list-item">
+        <span class="mono" style="font-size:11px;color:var(--ac);width:44px;">09:30</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">analytics page layout</div>
+          <div style="font-size:10px;color:var(--mt);">Edit 8 &middot; Bash 5 &middot; Read 3</div>
+        </div>
+        <span style="font-size:10px;color:var(--mt);">25K</span>
+      </div>
+      <div class="c-list-item">
+        <span class="mono" style="font-size:11px;color:var(--ac);width:44px;">11:00</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">heatmap view implementation</div>
+          <div style="font-size:10px;color:var(--mt);">Edit 12 &middot; Read 6</div>
+        </div>
+        <span style="font-size:10px;color:var(--mt);">18K</span>
+      </div>
+      <div class="c-list-item">
+        <span class="mono" style="font-size:11px;color:var(--ac);width:44px;">14:00</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">cost analysis + anomaly detection</div>
+          <div style="font-size:10px;color:var(--mt);">Edit 15 &middot; Bash 8</div>
+        </div>
+        <span style="font-size:10px;color:var(--mt);">32K</span>
+      </div>
+      <div class="c-list-item">
+        <span class="mono" style="font-size:11px;color:var(--ac);width:44px;">16:00</span>
+        <div class="dot dot-emerald"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">DateUtil week calculation</div>
+          <div style="font-size:10px;color:var(--mt);">Edit 3 &middot; Read 4</div>
+        </div>
+        <span style="font-size:10px;color:var(--mt);">8K</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Git Commits <span class="count">5</span></div>
+      <div class="c-list-item">
+        <span class="commit-hash">80d7b33</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">:memo: 분석 페이지 디자인 시안 추가</div>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--mt);">15:30</span>
+      </div>
+      <div class="c-list-item">
+        <span class="commit-hash">bec1c3e</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">:sparkles: 캘린더/히트맵/비용/이상치 뷰</div>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--mt);">14:20</span>
+      </div>
+      <div class="c-list-item">
+        <span class="commit-hash">83ca52f</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">:sparkles: CLI 세션 활성 추적 기능</div>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--mt);">11:45</span>
+      </div>
+      <div class="c-list-item">
+        <span class="commit-hash">a4c54ad</span>
+        <div class="dot dot-indigo"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">:art: Midnight Studio dark theme</div>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--mt);">10:30</span>
+      </div>
+      <div class="c-list-item">
+        <span class="commit-hash">a1b2c3d</span>
+        <div class="dot dot-emerald"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--tx);">:bug: 주차 계산 로직 수정</div>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--mt);">16:40</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memo -->
+  <div style="margin-top:14px;">
+    <div class="card">
+      <div class="section-title">&#128221; Memo</div>
+      <textarea class="memo-area" placeholder="Enter notes...">heatmap was built in SVG because recharts doesn't have it. Borrowed d3-scale only.</textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- PROPOSAL D : Notebook (일지 스타일)                            -->
+<!-- ============================================================ -->
+<section class="proposal" id="proposal-d">
+  <div class="proposal-header">
+    <span class="proposal-label">D</span>
+    <span class="proposal-title">Notebook</span>
+  </div>
+  <p class="proposal-desc">
+    단일 컬럼, 문서 형태의 레이아웃. 위에서 아래로 자연스럽게 읽히는 구조.
+    "오늘의 기록"을 읽는 느낌. Daybook 컨셉에 가장 충실한 형태.
+  </p>
+
+  <div class="d-container">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+      <div class="view-switch">
+        <button class="view-btn on">Daily</button>
+        <button class="view-btn">Weekly</button>
+        <button class="view-btn">Monthly</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9664;</button>
+        <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9654;</button>
+      </div>
+      <div class="copy-btn" style="margin-left:auto;">&#128203; Copy MD</div>
+    </div>
+
+    <div class="d-date-header">2026. 5. 19.</div>
+    <div class="d-date-sub">Monday &middot; 4 sessions &middot; 5 commits &middot; 75K tokens</div>
+
+    <!-- Project: session-board -->
+    <div class="d-section">
+      <div class="d-section-head">
+        <div class="dot dot-indigo"></div>
+        session-board
+        <span style="font-size:10px;color:var(--mt);font-weight:400;margin-left:auto;">3 sessions &middot; 5 commits</span>
+      </div>
+
+      <div class="d-project-block">
+        <div class="d-inline-stats">
+          <span>&#9201; 09:30 ~ 15:30</span>
+          <span>&#128200; 75K tokens</span>
+          <span>&#128196; 10 files</span>
+        </div>
+
+        <!-- Sessions -->
+        <div style="margin-bottom:16px;">
+          <div style="font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Sessions</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+              <span class="mono" style="font-size:11px;color:var(--ac);">09:30~10:15</span>
+              <span style="font-size:12px;color:var(--tx);flex:1;">analytics page layout</span>
+              <span style="font-size:10px;color:var(--mt);">25K</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+              <span class="mono" style="font-size:11px;color:var(--ac);">11:00~11:45</span>
+              <span style="font-size:12px;color:var(--tx);flex:1;">heatmap view implementation</span>
+              <span style="font-size:10px;color:var(--mt);">18K</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--ac);">
+              <span class="mono" style="font-size:11px;color:var(--ac);">14:00~15:30</span>
+              <span style="font-size:12px;color:var(--tx);flex:1;">cost analysis + anomaly detection</span>
+              <span style="font-size:10px;color:var(--mt);">32K</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Commits -->
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Commits</div>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div class="commit-item" style="padding:6px 0;">
+              <span class="commit-hash">80d7b33</span>
+              <span class="commit-msg">:memo: 분석 페이지 디자인 시안 추가</span>
+              <span class="commit-time">15:30</span>
+            </div>
+            <div class="commit-item" style="padding:6px 0;">
+              <span class="commit-hash">bec1c3e</span>
+              <span class="commit-msg">:sparkles: 캘린더/히트맵/비용/이상치 뷰</span>
+              <span class="commit-time">14:20</span>
+            </div>
+            <div class="commit-item" style="padding:6px 0;">
+              <span class="commit-hash">83ca52f</span>
+              <span class="commit-msg">:sparkles: CLI 세션 활성 추적 기능</span>
+              <span class="commit-time">11:45</span>
+            </div>
+            <div class="commit-item" style="padding:6px 0;">
+              <span class="commit-hash">a4c54ad</span>
+              <span class="commit-msg">:art: Midnight Studio dark theme</span>
+              <span class="commit-time">10:30</span>
+            </div>
+            <div class="commit-item" style="padding:6px 0;">
+              <span class="commit-hash">77c4235</span>
+              <span class="commit-msg">:bug: 실시간 모니터링 상태 판단 오류 수정</span>
+              <span class="commit-time">09:50</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project: commons -->
+    <div class="d-section">
+      <div class="d-section-head">
+        <div class="dot dot-emerald"></div>
+        commons
+        <span style="font-size:10px;color:var(--mt);font-weight:400;margin-left:auto;">1 session &middot; 1 commit</span>
+      </div>
+      <div class="d-project-block">
+        <div class="d-inline-stats">
+          <span>&#9201; 16:00 ~ 16:40</span>
+          <span>&#128200; 8K tokens</span>
+          <span>&#128196; 2 files</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--rs);border-left:3px solid var(--gn);margin-bottom:8px;">
+          <span class="mono" style="font-size:11px;color:var(--gn);">16:00~16:40</span>
+          <span style="font-size:12px;color:var(--tx);flex:1;">DateUtil week calculation</span>
+          <span style="font-size:10px;color:var(--mt);">8K</span>
+        </div>
+        <div class="commit-item" style="padding:6px 0;">
+          <span class="commit-hash">a1b2c3d</span>
+          <span class="commit-msg">:bug: 주차 계산 로직 수정</span>
+          <span class="commit-time">16:40</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memo -->
+    <div class="d-section">
+      <div class="d-section-head">&#128221; Memo</div>
+      <textarea class="memo-area" style="min-height:80px;" placeholder="Enter notes...">heatmap was built in SVG because recharts doesn't have it. Borrowed d3-scale only.
+
+recharts limitation: no built-in heatmap component. May need to switch to d3 if interactivity requirements grow.</textarea>
+    </div>
+
+    <!-- Weekly view preview -->
+    <div style="margin-top:48px;padding-top:32px;border-top:2px solid var(--bd);">
+      <div style="font-size:12px;color:var(--mt);margin-bottom:16px;font-weight:600;">&#8595; Same layout, Weekly view</div>
+
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+        <div class="view-switch">
+          <button class="view-btn">Daily</button>
+          <button class="view-btn on">Weekly</button>
+          <button class="view-btn">Monthly</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9664;</button>
+          <button style="background:var(--s2);border:1px solid var(--bd);color:var(--tx2);width:28px;height:28px;border-radius:var(--rx);cursor:pointer;">&#9654;</button>
+        </div>
+        <div class="copy-btn" style="margin-left:auto;">&#128203; Copy MD</div>
+      </div>
+
+      <div class="d-date-header" style="font-size:20px;">Week 20</div>
+      <div class="d-date-sub">5/12 ~ 5/18 &middot; 18 sessions &middot; 15 commits &middot; 125K tokens &middot; $4.32</div>
+
+      <!-- Day entries stacked -->
+      <div class="card" style="margin-bottom:10px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="min-width:36px;">
+            <div style="font-size:10px;color:var(--mt);">Mon</div>
+            <div style="font-size:16px;font-weight:700;color:var(--tx);">12</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--tx);">4 sessions</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">3 commits</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">25K tokens</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span class="badge badge-indigo" style="font-size:9px;">:sparkles: calendar view</span>
+              <span class="badge badge-indigo" style="font-size:9px;">:bug: date parsing</span>
+            </div>
+            <div class="memo-inline" style="margin-top:6px;">TailwindCSS JIT mode issue resolved</div>
+          </div>
+          <div style="font-size:10px;color:var(--mt);cursor:pointer;">&#9654;</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="min-width:36px;">
+            <div style="font-size:10px;color:var(--mt);">Tue</div>
+            <div style="font-size:16px;font-weight:700;color:var(--tx);">13</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--tx);">3 sessions</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">2 commits</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">18K tokens</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span class="badge badge-indigo" style="font-size:9px;">:sparkles: heatmap view</span>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--mt);cursor:pointer;">&#9654;</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="min-width:36px;">
+            <div style="font-size:10px;color:var(--mt);">Wed</div>
+            <div style="font-size:16px;font-weight:700;color:var(--tx);">14</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--tx);">5 sessions</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">4 commits</span>
+              <span style="font-size:11px;color:var(--dm);">&middot;</span>
+              <span style="font-size:11px;color:var(--mt);">35K tokens</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span class="badge badge-indigo" style="font-size:9px;">:sparkles: cost analysis</span>
+              <span class="badge badge-indigo" style="font-size:9px;">:sparkles: anomaly detect</span>
+            </div>
+            <div class="memo-inline" style="margin-top:6px;">recharts limitation found, may switch to d3</div>
+          </div>
+          <div style="font-size:10px;color:var(--mt);cursor:pointer;">&#9654;</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;padding:14px 16px;opacity:.5;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="min-width:36px;">
+            <div style="font-size:10px;color:var(--mt);">Sat</div>
+            <div style="font-size:16px;font-weight:700;color:var(--dm);">17</div>
+          </div>
+          <div style="flex:1;">
+            <span style="font-size:11px;color:var(--dm);">No activity</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div style="height:80px;"></div>
+
+</body>
+</html>

@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import DailyPage from './pages/DailyPage';
 import MonitorPage from './pages/MonitorPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import DaybookPage from './pages/DaybookPage';
 
 export default function App() {
   const today = dayjs().format('YYYY-MM-DD');
@@ -15,6 +16,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Navigate to={`/daily/${today}`} replace />} />
             <Route path="/daily/:date" element={<DailyPage project={project} />} />
+            <Route path="/daybook/:date?" element={<DaybookPage project={project} />} />
             <Route path="/monitor" element={<MonitorPage />} />
             <Route path="/analytics" element={<AnalyticsPage project={project} />} />
           </Routes>

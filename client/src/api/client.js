@@ -1,7 +1,7 @@
 const API_BASE = '/api';
 
-async function fetchJson(url) {
-  const res = await fetch(`${API_BASE}${url}`);
+async function fetchJson(url, opts) {
+  const res = await fetch(`${API_BASE}${url}`, opts);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
@@ -36,6 +36,28 @@ export function fetchAnalyticsYearly(project = 'all') {
 
 export function fetchAnalyticsAnomalies(month, project = 'all') {
   return fetchJson(`/analytics/anomalies?month=${month}&project=${project}`);
+}
+
+export function fetchDaybook(date, project = 'all', { signal } = {}) {
+  return fetchJson(`/daybook?date=${date}&project=${project}`, { signal });
+}
+
+export function fetchDaybookRange(from, to, project = 'all', aggregate = false, { signal } = {}) {
+  return fetchJson(`/daybook/range?from=${from}&to=${to}&project=${project}&aggregate=${aggregate}`, { signal });
+}
+
+export function fetchDaybookDates(project = 'all') {
+  return fetchJson(`/daybook/dates?project=${project}`);
+}
+
+export async function saveMemo(date, content) {
+  const res = await fetch(`${API_BASE}/daybook/memos/${date}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
 }
 
 export function createMonitorStream(onEvent) {

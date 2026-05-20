@@ -17,6 +17,7 @@ export default function Layout({ children }) {
   }, [project]);
 
   const isDaily = location.pathname.startsWith('/daily');
+  const isDaybook = location.pathname.startsWith('/daybook');
   const isMonitor = location.pathname === '/monitor';
   const isAnalytics = location.pathname === '/analytics';
 
@@ -46,13 +47,19 @@ export default function Layout({ children }) {
             active={isDaily}
             onClick={() => navigate(`/daily/${dayjs().format('YYYY-MM-DD')}`)}
           >
-            일자별
+            세션
+          </NavTab>
+          <NavTab
+            active={isDaybook}
+            onClick={() => navigate(`/daybook/${dayjs().format('YYYY-MM-DD')}`)}
+          >
+            커밋로그
           </NavTab>
           <NavTab active={isMonitor} onClick={() => navigate('/monitor')}>
             모니터링
           </NavTab>
           <NavTab active={isAnalytics} onClick={() => navigate('/analytics')}>
-            분석
+            리포트
           </NavTab>
         </nav>
 
