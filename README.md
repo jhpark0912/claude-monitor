@@ -1,19 +1,34 @@
 # Claude Session Dashboard
 
-Claude Code 세션 로그를 파싱하여 일자별 작업 내역과 실시간 세션 상태를 보여주는 로컬 웹 대시보드.
+Claude Code 세션 로그를 파싱하여 일자별 작업 내역, 실시간 세션 상태, 커밋 기반 작업 로그, 사용량 분석을 보여주는 로컬 웹 대시보드.
 
 ## 주요 기능
 
-### 일자별 내역 (`/daily/:date`)
+### 세션 내역 (`/daily/:date`)
 - 날짜별 세션 목록 조회 (프롬프트, 도구 호출, 변경 파일, 토큰 사용량)
 - 프로젝트 필터링
 - 날짜 네비게이션 (이전/다음/오늘)
 
+### 커밋로그 (`/daybook/:date?`)
+- 프로젝트별 git 커밋 히스토리 일/주/월 단위 조회
+- 커밋 diff 통계 시각화 (추가/삭제 라인)
+- 마크다운 복사 기능
+- 일일 메모 저장 (파일 기반)
+
 ### 실시간 모니터링 (`/monitor`)
 - 현재 실행 중인 모든 Claude Code 세션 실시간 표시
 - 세션 상태 자동 감지 (활성 / 대기 / 종료)
+- 활동 힌트 표시 (도구 실행, AI 응답, 승인 대기 등)
 - SSE(Server-Sent Events) 기반 실시간 업데이트
+- 좀비 세션 자동 정리 (30분 무활동 시)
 - 완료된 세션 숨기기 토글
+
+### 리포트 (`/analytics`)
+- 월간 캘린더 히트맵 (일별 세션 활동량)
+- 시간대별 활동 히트맵
+- 토큰 비용 분석 및 일별 추이
+- 도구 사용 통계
+- 이상치 감지
 
 ## 사전 요구사항
 
@@ -59,11 +74,16 @@ session-dashboard/
 │       │   ├── projects.js      # GET /api/projects
 │       │   ├── sessions.js      # GET /api/sessions/:projectId
 │       │   ├── daily.js         # GET /api/daily?date=&project=
-│       │   └── monitor.js       # GET /api/monitor/stream (SSE)
+│       │   ├── monitor.js       # GET /api/monitor/stream (SSE)
+│       │   ├── analytics.js     # GET /api/analytics/*
+│       │   └── daybook.js       # GET /api/daybook/*
 │       ├── services/
 │       │   ├── projectScanner.js    # 프로젝트 스캔 + 날짜 인덱스
 │       │   ├── jsonlParser.js       # JSONL 파싱 (전체/증분)
 │       │   ├── sessionMonitor.js    # chokidar 감시 + SSE 브로드캐스트
+│       │   ├── analyticsService.js  # 월간 통계 집계
+│       │   ├── gitService.js        # git log 파싱
+│       │   ├── memoService.js       # 일일 메모 저장/조회
 │       │   └── cacheManager.js      # mtime 기반 캐시
 │       └── utils/
 │           └── pathDecoder.js       # 프로젝트 경로 디코딩
@@ -78,14 +98,18 @@ session-dashboard/
         │   └── client.js        # API + SSE 클라이언트
         ├── components/
         │   ├── Layout.jsx           # 헤더 + 탭 네비게이션
-        │   ├── ProjectSelector.jsx  # 프로젝트 드롭다운
+        │   ├── ProjectFilter.jsx    # 프로젝트 필터
         │   ├── DateNavigator.jsx    # 날짜 이동
-        │   ├── SessionCard.jsx      # 세션 카드 (일자별)
-        │   ├── MonitorSessionCard.jsx # 세션 카드 (모니터링)
-        │   └── ToolCallList.jsx     # 도구 호출 목록
+        │   ├── SlidePanel.jsx       # 슬라이드 패널
+        │   ├── analytics/           # 리포트 관련 컴포넌트
+        │   └── daybook/             # 커밋로그 관련 컴포넌트
+        ├── utils/
+        │   └── colors.js            # 프로젝트 색상 유틸
         └── pages/
-            ├── DailyPage.jsx        # 일자별 내역
-            └── MonitorPage.jsx      # 실시간 모니터링
+            ├── DailyPage.jsx        # 세션 내역
+            ├── DaybookPage.jsx      # 커밋로그
+            ├── MonitorPage.jsx      # 실시간 모니터링
+            └── AnalyticsPage.jsx    # 리포트
 ```
 
 ## 동작 원리
@@ -103,4 +127,13 @@ Claude Code는 `~/.claude/projects/<인코딩된 경로>/` 하위에 세션별 J
 |------|------|
 | 활성 | PID 실행 중 AND JSONL 마지막 쓰기 120초 이내 |
 | 대기 | PID 실행 중 AND JSONL 마지막 쓰기 120초 초과 |
-| 종료 | PID 미실행 |
+| 종료 | PID 미실행 OR 좀비 세션 (30분 무활동) |
+
+### 활동 힌트
+| 힌트 | 의미 |
+|------|------|
+| AI 응답 중 | 사용자 입력 후 AI가 응답 생성 중 |
+| 도구 실행 중 | 도구(tool) 호출 후 60초 이내 |
+| AI 처리 중 | 도구 결과 수신 후 AI가 처리 중 |
+| 승인 대기 | 도구 호출 후 60초 초과 (사용자 승인 필요) |
+| 입력 대기 | AI 응답 완료 후 사용자 입력 대기 |
