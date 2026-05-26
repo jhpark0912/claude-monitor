@@ -50,9 +50,10 @@ function resolveProjectDir(projectId) {
 const COMMIT_DELIM = '---COMMIT_DELIM---';
 
 async function gitLogWithNumstat(dir, from, to) {
+  const untilDate = dayjs(to).add(1, 'day').format('YYYY-MM-DD');
   const args = [
     '-C', dir, 'log', '--all',
-    `--after=${from}T00:00:00`, `--before=${to}T23:59:59`,
+    `--since=${from}T00:00:00`, `--before=${untilDate}T00:00:00`,
     `--format=${COMMIT_DELIM}%n%H|%h|%aI|%an|%s`,
     '--numstat', '--diff-merges=first-parent',
   ];
@@ -118,8 +119,7 @@ export async function getDayCommits(projectId, date) {
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const nextDay = dayjs(date).add(1, 'day').format('YYYY-MM-DD');
-  const results = await gitLogWithNumstat(dir, date, nextDay);
+  const results = await gitLogWithNumstat(dir, date, date);
 
   cacheSet(cacheKey, results, date);
   return results;
@@ -133,8 +133,7 @@ export async function getCommitsForDateRange(projectId, from, to) {
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const nextDay = dayjs(to).add(1, 'day').format('YYYY-MM-DD');
-  const commits = await gitLogWithNumstat(dir, from, nextDay);
+  const commits = await gitLogWithNumstat(dir, from, to);
   const byDate = new Map();
 
   for (const c of commits) {
@@ -155,9 +154,10 @@ export async function getCommitCounts(projectId, from, to) {
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
+  const untilDate = dayjs(to).add(1, 'day').format('YYYY-MM-DD');
   const args = [
     '-C', dir, 'log', '--all',
-    `--after=${from}T00:00:00`, `--before=${dayjs(to).add(1, 'day').format('YYYY-MM-DD')}T00:00:00`,
+    `--since=${from}T00:00:00`, `--before=${untilDate}T00:00:00`,
     '--format=%s',
   ];
   try {
