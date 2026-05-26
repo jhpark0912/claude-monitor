@@ -41,7 +41,7 @@ export default function DaybookPage({ project = 'all' }) {
     } else {
       const from = dayjs(currentDate).startOf('month').format('YYYY-MM-DD');
       const to = dayjs(currentDate).endOf('month').format('YYYY-MM-DD');
-      promise = fetchDaybookRange(from, to, project, true, { signal });
+      promise = fetchDaybookRange(from, to, project, false, { signal });
     }
 
     promise
@@ -99,7 +99,7 @@ export default function DaybookPage({ project = 'all' }) {
         )}
 
         {!loading && view === 'daily' && data && <DailyView data={data} />}
-        {!loading && view === 'weekly' && data && <WeeklyView data={data} onDayClick={handleDayClick} />}
+        {!loading && view === 'weekly' && data && <WeeklyView data={data} />}
         {!loading && view === 'monthly' && data && <MonthlyView data={data} onDayClick={handleDayClick} />}
 
         {!loading && !data && (

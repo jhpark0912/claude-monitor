@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import dayjs from 'dayjs';
 import DiffBar from './DiffBar';
 
-export default function CommitItem({ commit }) {
+export default function CommitItem({ commit, showDate }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -28,6 +29,14 @@ export default function CommitItem({ commit }) {
         }}>
           {commit.hash}
         </span>
+        {showDate && commit.date && (
+          <span style={{
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 10,
+            color: 'var(--dm)', flexShrink: 0,
+          }}>
+            {dayjs(commit.date).format('MM/DD')}
+          </span>
+        )}
         <span style={{
           fontSize: 12, fontWeight: 500, color: 'var(--tx)',
           flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

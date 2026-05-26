@@ -10,7 +10,7 @@ const TYPE_CONFIG = {
   other:    { emoji: '📌', label: 'Other',     color: 'var(--dm)' },
 };
 
-export default function CommitGroup({ type, commits }) {
+export default function CommitGroup({ type, commits, showDate }) {
   if (!commits || commits.length === 0) return null;
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.other;
 
@@ -30,7 +30,7 @@ export default function CommitGroup({ type, commits }) {
         </span>
       </div>
       <div style={{ borderLeft: `2px solid ${cfg.color}`, paddingLeft: 8 }}>
-        {commits.map((c) => <CommitItem key={c.fullHash} commit={c} />)}
+        {commits.map((c) => <CommitItem key={c.fullHash} commit={c} showDate={showDate} />)}
       </div>
     </div>
   );
