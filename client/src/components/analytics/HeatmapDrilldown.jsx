@@ -47,7 +47,7 @@ export default function HeatmapDrilldown({ project, onBack }) {
             {[{ label: '1주', val: 1 }, { label: '4주', val: 4 }, { label: '3개월', val: 12 }].map(opt => (
               <button key={opt.val} onClick={() => setWeeks(opt.val)} style={{
                 ...periodBtn,
-                background: weeks === opt.val ? '#10b981' : 'var(--s2)',
+                background: weeks === opt.val ? 'var(--gn)' : 'var(--s2)',
                 color: weeks === opt.val ? '#fff' : 'var(--mt)',
               }}>{opt.label}</button>
             ))}
@@ -71,7 +71,7 @@ export default function HeatmapDrilldown({ project, onBack }) {
             <div key={h} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 40px', gap: 8, alignItems: 'center', height: 22 }}>
               <div style={{
                 fontSize: 10, textAlign: 'right',
-                color: hourlyTotals[h] === Math.max(...hourlyTotals) ? '#6ee7b7' : 'var(--mt)',
+                color: hourlyTotals[h] === Math.max(...hourlyTotals) ? 'var(--gn)' : 'var(--mt)',
                 fontWeight: hourlyTotals[h] === Math.max(...hourlyTotals) ? 600 : 400,
               }}>{h}시</div>
               <div style={{ height: 14, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>

@@ -7,9 +7,9 @@ export default function FactSummary({ sessionCount, baseline }) {
     <div style={cardStyle}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <StatBlock label="세션" value={sessionCount || '—'} color="var(--ac)" />
-        <StatBlock label="총 비용" value={totalCost > 0 ? `$${totalCost.toFixed(1)}` : '—'} color="#f59e0b" />
-        <StatBlock label="세션당 평균" value={avgCost > 0 ? `$${avgCost.toFixed(2)}` : '—'} color="#ccc" />
-        <StatBlock label="평균 세션" value={avgMin > 0 ? `${avgMin}분` : '—'} color="#ccc" />
+        <StatBlock label="총 비용" value={totalCost > 0 ? `$${totalCost.toFixed(1)}` : '—'} color="var(--ch-amber)" />
+        <StatBlock label="세션당 평균" value={avgCost > 0 ? `$${avgCost.toFixed(2)}` : '—'} color="var(--mt)" />
+        <StatBlock label="평균 세션" value={avgMin > 0 ? `${avgMin}분` : '—'} color="var(--mt)" />
       </div>
       <div style={{ fontSize: 10, color: 'var(--mt)', marginTop: 8, textAlign: 'center' }}>
         수치만 표시, 판단 없음

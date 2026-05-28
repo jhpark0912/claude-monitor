@@ -23,7 +23,7 @@ export default function SlidePanel({ session, onClose, onPrev, onNext, hasPrev, 
       transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform .3s cubic-bezier(.4,0,.2,1)',
       zIndex: 50, display: 'flex', flexDirection: 'column',
-      boxShadow: '-8px 0 40px rgba(0,0,0,.3)',
+      boxShadow: 'var(--shadow-h)',
     }}>
       <div style={{
         padding: '16px 20px', borderBottom: '1px solid var(--bd)',
@@ -78,7 +78,7 @@ export function DefaultDetail({ session }) {
         {session.projectLabel}
       </div>
 
-      <div style={{ fontSize: 17, fontWeight: 500, color: '#fafafa', lineHeight: 1.7, marginBottom: 24, wordBreak: 'break-all' }}>
+      <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', lineHeight: 1.7, marginBottom: 24, wordBreak: 'break-all' }}>
         {session.firstPrompt || '(프롬프트 없음)'}
       </div>
 
@@ -164,7 +164,7 @@ function StatBox({ value, label }) {
       background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 'var(--rs)',
       padding: 16, textAlign: 'center',
     }}>
-      <div style={{ fontSize: 24, fontWeight: 700, color: '#fafafa', letterSpacing: '-.5px' }}>{value}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.5px' }}>{value}</div>
       <div style={{ fontSize: 11, color: 'var(--mt)', marginTop: 4 }}>{label}</div>
     </div>
   );

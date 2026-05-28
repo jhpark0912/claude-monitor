@@ -29,7 +29,7 @@ export default function HeatmapCard({ project }) {
     });
   });
 
-  const colors = ['var(--s1)', '#064e3b', '#059669', '#34d399', '#6ee7b7'];
+  const colors = ['var(--s1)', 'var(--heat-1)', 'var(--heat-2)', 'var(--heat-3)', 'var(--heat-4)'];
 
   function getColor(val) {
     if (!val) return colors[0];
@@ -51,7 +51,7 @@ export default function HeatmapCard({ project }) {
           {[{ label: '1주', val: 1 }, { label: '4주', val: 4 }, { label: '3개월', val: 12 }].map(opt => (
             <button key={opt.val} onClick={() => setWeeks(opt.val)} style={{
               ...periodBtn,
-              background: weeks === opt.val ? '#10b981' : 'var(--s2)',
+              background: weeks === opt.val ? 'var(--gn)' : 'var(--s2)',
               color: weeks === opt.val ? '#fff' : 'var(--mt)',
             }}>{opt.label}</button>
           ))}
@@ -114,7 +114,7 @@ export default function HeatmapCard({ project }) {
           많음
         </div>
         <div style={{ fontSize: 11, color: 'var(--mt)' }}>
-          피크: <strong style={{ color: '#6ee7b7' }}>{peakDay} {peakHour}시</strong>
+          피크: <strong style={{ color: 'var(--gn)' }}>{peakDay} {peakHour}시</strong>
         </div>
       </div>
     </div>
@@ -134,7 +134,7 @@ const headerStyle = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#0a3622',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, var(--gn) 18%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };
 const periodBtn = {
@@ -147,12 +147,12 @@ function tooltipStyle(x, y) {
     left: x,
     top: y,
     transform: 'translate(-50%, -100%)',
-    background: '#222233',
-    border: '1px solid #444',
+    background: 'var(--s2)',
+    border: '1px solid var(--bd2)',
     borderRadius: 6,
     padding: '5px 10px',
     fontSize: 11,
-    color: '#e0e0e0',
+    color: 'var(--tx)',
     whiteSpace: 'nowrap',
     pointerEvents: 'none',
     zIndex: 20,

@@ -38,7 +38,7 @@ export default function AnomalyCard({ anomalies = [], recentSessions = [] }) {
                 {s.toolSummary && ` · ${s.toolSummary}`}
               </div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#f59e0b', paddingLeft: 12, flexShrink: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ch-amber)', paddingLeft: 12, flexShrink: 0 }}>
               ${s.cost.toFixed(2)}
             </div>
           </div>
@@ -83,15 +83,17 @@ function fmtTokens(n) {
 
 function getBadgeStyle(type) {
   const map = {
-    cost: { bg: '#2d1f0f', color: '#f59e0b' },
-    duration: { bg: '#0f1a2d', color: '#3b82f6' },
-    bash: { bg: '#1a0d0d', color: '#ef4444' },
-    file_thrashing: { bg: '#2d0f1f', color: '#ec4899' },
+    cost: '#f59e0b',
+    duration: '#3b82f6',
+    bash: '#ef4444',
+    file_thrashing: '#ec4899',
   };
-  const c = map[type] || map.cost;
+  const color = map[type] || map.cost;
   return {
     display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
-    borderRadius: 4, fontSize: 9, fontWeight: 600, background: c.bg, color: c.color,
+    borderRadius: 4, fontSize: 9, fontWeight: 600,
+    background: `color-mix(in srgb, ${color} 15%, var(--s2))`,
+    color,
   };
 }
 
@@ -104,7 +106,7 @@ const headerStyle = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#2d1f0f',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, #f59e0b 15%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };
 const emptyStyle = {
@@ -113,7 +115,7 @@ const emptyStyle = {
 };
 const anomalyRowStyle = {
   display: 'flex', alignItems: 'flex-start', padding: '10px 12px',
-  background: 'rgba(245, 158, 11, 0.05)', borderRadius: 8, borderLeft: '3px solid #f59e0b',
+  background: 'color-mix(in srgb, var(--ch-amber) 5%, transparent)', borderRadius: 8, borderLeft: '3px solid var(--ch-amber)',
 };
 const recentRowStyle = {
   display: 'flex', alignItems: 'center', padding: '8px 12px',

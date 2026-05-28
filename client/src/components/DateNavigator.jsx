@@ -17,7 +17,7 @@ export default function DateNavigator({ date, onDateChange }) {
         &#8249;
       </DateBtn>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', color: '#fafafa' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', color: 'var(--tx)' }}>
           {dateText}
         </div>
         <div style={{ fontSize: 12, color: 'var(--dm)', marginTop: 2 }}>{dateSub}</div>

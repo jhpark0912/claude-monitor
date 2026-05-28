@@ -37,7 +37,7 @@ export default function DailyCostCard({ project }) {
           {[{ label: '1주', val: '1w' }, { label: '4주', val: '4w' }, { label: '3개월', val: '3m' }].map(opt => (
             <button key={opt.val} onClick={() => setPeriod(opt.val)} style={{
               ...periodBtn,
-              background: period === opt.val ? '#f59e0b' : 'var(--s2)',
+              background: period === opt.val ? 'var(--ch-amber)' : 'var(--s2)',
               color: period === opt.val ? '#000' : 'var(--mt)',
             }}>{opt.label}</button>
           ))}
@@ -54,11 +54,11 @@ export default function DailyCostCard({ project }) {
             <div key={i} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}>
               <div style={{
                 width: '100%', height: `${h}%`, minHeight: dayCost > 0 ? 2 : 0,
-                background: isHigh ? '#f59e0b' : '#6d28d9',
+                background: isHigh ? 'var(--ch-amber)' : 'var(--ch-purple)',
                 borderRadius: '2px 2px 0 0',
               }} />
               {isHigh && (
-                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 8, color: '#f59e0b', whiteSpace: 'nowrap' }}>
+                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 8, color: 'var(--ch-amber)', whiteSpace: 'nowrap' }}>
                   ${dayCost.toFixed(1)}
                 </div>
               )}
@@ -78,10 +78,10 @@ export default function DailyCostCard({ project }) {
         <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
           <svg viewBox="0 0 120 120" width="100" height="100">
             <circle cx="60" cy="60" r="45" fill="none" stroke="var(--bd)" strokeWidth="14" />
-            <circle cx="60" cy="60" r="45" fill="none" stroke="#6366f1" strokeWidth="14"
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--ch-blue)" strokeWidth="14"
               strokeDasharray={`${opusPct * 2.83} ${283 - opusPct * 2.83}`}
               strokeDashoffset="0" transform="rotate(-90 60 60)" />
-            <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" strokeWidth="14"
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--ch-green)" strokeWidth="14"
               strokeDasharray={`${sonnetPct * 2.83} ${283 - sonnetPct * 2.83}`}
               strokeDashoffset={`${-opusPct * 2.83}`} transform="rotate(-90 60 60)" />
           </svg>
@@ -92,9 +92,9 @@ export default function DailyCostCard({ project }) {
         </div>
         <div style={{ flex: 1, fontSize: 10 }}>
           {[
-            { name: 'Opus', color: '#6366f1', cost: opusCost, pct: opusPct },
-            { name: 'Sonnet', color: '#10b981', cost: sonnetCost, pct: sonnetPct },
-            { name: 'Haiku', color: '#f59e0b', cost: haikuCost, pct: 100 - opusPct - sonnetPct },
+            { name: 'Opus', color: 'var(--ch-blue)', cost: opusCost, pct: opusPct },
+            { name: 'Sonnet', color: 'var(--ch-green)', cost: sonnetCost, pct: sonnetPct },
+            { name: 'Haiku', color: 'var(--ch-amber)', cost: haikuCost, pct: 100 - opusPct - sonnetPct },
           ].map(m => (
             <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--bd)' }}>
               <span style={{ color: 'var(--tx)' }}>
@@ -106,7 +106,7 @@ export default function DailyCostCard({ project }) {
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, color: 'var(--mt)' }}>
             <span>캐시 절감</span>
-            <span style={{ color: '#10b981' }}>-${cacheSavings.toFixed(1)}</span>
+            <span style={{ color: 'var(--ch-green)' }}>-${cacheSavings.toFixed(1)}</span>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ const headerStyle = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#451a03',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, var(--ch-amber) 15%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };
 const periodBtn = {

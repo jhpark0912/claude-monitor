@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Light Mode Design Comparison</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f0f0f5;
+    padding: 32px;
+    color: #333;
+  }
+
+  h1 {
+    font-size: 28px; font-weight: 700; text-align: center;
+    margin-bottom: 8px; color: #1a1a2e;
+  }
+  .subtitle {
+    text-align: center; font-size: 14px; color: #666;
+    margin-bottom: 40px;
+  }
+
+  .themes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .theme-card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
+
+  .theme-label {
+    padding: 16px 24px;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .theme-label .ref {
+    font-weight: 400; font-size: 11px; opacity: .7;
+    text-transform: none; letter-spacing: 0;
+  }
+
+  /* ===== Mock Dashboard inside each theme ===== */
+  .mock {
+    padding: 20px;
+    min-height: 560px;
+  }
+
+  .mock-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 16px; margin-bottom: 16px;
+  }
+  .mock-nav { font-size: 22px; font-weight: 700; }
+  .mock-tabs { display: flex; gap: 4px; }
+  .mock-tabs span {
+    font-size: 11px; padding: 5px 12px; border-radius: 6px;
+    cursor: default; font-weight: 500;
+  }
+
+  .mock-summary {
+    padding: 14px 18px; border-radius: 12px; margin-bottom: 14px;
+  }
+  .mock-summary-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mock-summary-title { font-size: 13px; font-weight: 700; }
+  .mock-summary-stats {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    display: flex; gap: 10px;
+  }
+  .mock-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .mock-badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600;
+  }
+
+  .mock-project {
+    border-radius: 10px; margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .mock-project-header {
+    padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px;
+  }
+  .mock-project-left {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mock-dot {
+    width: 7px; height: 7px; border-radius: 3px; flex-shrink: 0;
+  }
+  .mock-project-name { font-weight: 600; font-size: 13px; }
+  .mock-project-count {
+    font-size: 10px; padding: 1px 7px; border-radius: 4px;
+  }
+  .mock-diff {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    display: flex; gap: 6px;
+  }
+  .mock-arrow { font-size: 9px; margin-right: 2px; }
+
+  .mock-commit-group { padding: 8px 14px; }
+  .mock-commit-type {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; margin-bottom: 4px;
+  }
+  .mock-commit-type .cnt {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600;
+  }
+  .mock-commit-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px; border-radius: 5px; font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .mock-hash {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 1px 5px; border-radius: 3px;
+  }
+  .mock-date {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .mock-msg { font-weight: 500; flex: 1; }
+
+  .mock-daily {
+    padding: 14px 18px; border-radius: 12px; margin-top: 14px;
+  }
+  .mock-daily-title {
+    font-size: 13px; font-weight: 700; margin-bottom: 10px;
+  }
+  .mock-daily-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0; font-size: 11px;
+  }
+  .mock-daily-day { width: 24px; text-align: right; font-size: 10px; }
+  .mock-daily-date { width: 20px; font-weight: 600; font-size: 12px; }
+  .mock-bar-track {
+    flex: 1; height: 7px; border-radius: 4px; overflow: hidden;
+  }
+  .mock-bar-fill {
+    height: 100%; border-radius: 4px;
+  }
+  .mock-daily-stat {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    width: 24px; text-align: right;
+  }
+
+  /* ===================================================================
+     THEME 1: GitHub Light
+     =================================================================== */
+  .t-github .theme-label {
+    background: #24292f; color: #fff;
+  }
+  .t-github .mock {
+    background: #ffffff;
+    border-bottom: 1px solid #d0d7de;
+  }
+  .t-github .mock-header {
+    border-bottom: 1px solid #d0d7de;
+  }
+  .t-github .mock-nav { color: #1f2328; }
+  .t-github .mock-tabs span {
+    color: #656d76; background: transparent;
+  }
+  .t-github .mock-tabs span.active {
+    color: #fff; background: #0969da;
+  }
+
+  .t-github .mock-summary {
+    background: #f6f8fa; border: 1px solid #d0d7de;
+  }
+  .t-github .mock-summary-title { color: #1f2328; }
+  .t-github .mock-summary-stats span:first-child { color: #1f2328; font-weight: 600; }
+  .t-github .mock-summary-stats .gn { color: #1a7f37; }
+  .t-github .mock-summary-stats .rd { color: #cf222e; }
+  .t-github .mock-badge {
+    background: #ddf4ff; color: #0969da;
+  }
+  .t-github .mock-badge.fix { background: #dafbe1; color: #1a7f37; }
+  .t-github .mock-badge.refactor { background: #fbefff; color: #8250df; }
+  .t-github .mock-badge.docs { background: #fff8c5; color: #9a6700; }
+
+  .t-github .mock-project {
+    border: 1px solid #d0d7de; background: #fff;
+  }
+  .t-github .mock-project-header {
+    border-bottom: 1px solid #d0d7de; background: #f6f8fa;
+  }
+  .t-github .mock-dot { background: #0969da; }
+  .t-github .mock-project-name { color: #1f2328; }
+  .t-github .mock-project-count { background: #f6f8fa; color: #656d76; border: 1px solid #d0d7de; }
+  .t-github .mock-diff .gn { color: #1a7f37; }
+  .t-github .mock-diff .rd { color: #cf222e; }
+  .t-github .mock-arrow { color: #656d76; }
+
+  .t-github .mock-commit-type { color: #0969da; }
+  .t-github .mock-commit-type .cnt { background: #ddf4ff; color: #0969da; }
+  .t-github .mock-commit-type.fix { color: #1a7f37; }
+  .t-github .mock-commit-type.fix .cnt { background: #dafbe1; color: #1a7f37; }
+  .t-github .mock-commit-row:hover { background: #f6f8fa; }
+  .t-github .mock-hash { background: #ddf4ff; color: #0969da; }
+  .t-github .mock-date { color: #656d76; }
+  .t-github .mock-msg { color: #1f2328; }
+
+  .t-github .mock-daily {
+    background: #f6f8fa; border: 1px solid #d0d7de;
+  }
+  .t-github .mock-daily-title { color: #1f2328; }
+  .t-github .mock-daily-day { color: #656d76; }
+  .t-github .mock-daily-date { color: #1f2328; }
+  .t-github .mock-bar-track { background: #eaeef2; }
+  .t-github .mock-bar-fill { background: linear-gradient(90deg, #0969da, #8250df); }
+  .t-github .mock-daily-stat { color: #656d76; }
+  .t-github .mock-daily-stat.ac { color: #0969da; font-weight: 600; }
+
+  /* ===================================================================
+     THEME 2: Linear Light
+     =================================================================== */
+  .t-linear .theme-label {
+    background: #5e6ad2; color: #fff;
+  }
+  .t-linear .mock {
+    background: #fbfbfc;
+  }
+  .t-linear .mock-header {
+    border-bottom: 1px solid #e8e8ec;
+  }
+  .t-linear .mock-nav { color: #1b1b1f; }
+  .t-linear .mock-tabs span {
+    color: #8a8a9a; background: transparent;
+  }
+  .t-linear .mock-tabs span.active {
+    color: #5e6ad2; background: #eef0ff; font-weight: 600;
+  }
+
+  .t-linear .mock-summary {
+    background: #f5f5f8; border: 1px solid #e8e8ec;
+  }
+  .t-linear .mock-summary-title { color: #1b1b1f; }
+  .t-linear .mock-summary-stats span:first-child { color: #1b1b1f; font-weight: 600; }
+  .t-linear .mock-summary-stats .gn { color: #2da44e; }
+  .t-linear .mock-summary-stats .rd { color: #e5534b; }
+  .t-linear .mock-badge {
+    background: #eef0ff; color: #5e6ad2;
+  }
+  .t-linear .mock-badge.fix { background: #e6f9ed; color: #2da44e; }
+  .t-linear .mock-badge.refactor { background: #f3eeff; color: #8b5cf6; }
+  .t-linear .mock-badge.docs { background: #e0f7fa; color: #0891b2; }
+
+  .t-linear .mock-project {
+    border: 1px solid #e8e8ec; background: #fff;
+  }
+  .t-linear .mock-project-header {
+    border-bottom: 1px solid #e8e8ec;
+  }
+  .t-linear .mock-dot { background: #5e6ad2; }
+  .t-linear .mock-project-name { color: #1b1b1f; }
+  .t-linear .mock-project-count { background: #f5f5f8; color: #8a8a9a; }
+  .t-linear .mock-diff .gn { color: #2da44e; }
+  .t-linear .mock-diff .rd { color: #e5534b; }
+  .t-linear .mock-arrow { color: #8a8a9a; }
+
+  .t-linear .mock-commit-type { color: #5e6ad2; }
+  .t-linear .mock-commit-type .cnt { background: #eef0ff; color: #5e6ad2; }
+  .t-linear .mock-commit-type.fix { color: #2da44e; }
+  .t-linear .mock-commit-type.fix .cnt { background: #e6f9ed; color: #2da44e; }
+  .t-linear .mock-commit-row:hover { background: #f5f5f8; }
+  .t-linear .mock-hash { background: #eef0ff; color: #5e6ad2; }
+  .t-linear .mock-date { color: #8a8a9a; }
+  .t-linear .mock-msg { color: #1b1b1f; }
+
+  .t-linear .mock-daily {
+    background: #f5f5f8; border: 1px solid #e8e8ec;
+  }
+  .t-linear .mock-daily-title { color: #1b1b1f; }
+  .t-linear .mock-daily-day { color: #8a8a9a; }
+  .t-linear .mock-daily-date { color: #1b1b1f; }
+  .t-linear .mock-bar-track { background: #e8e8ec; }
+  .t-linear .mock-bar-fill { background: linear-gradient(90deg, #5e6ad2, #8b5cf6); }
+  .t-linear .mock-daily-stat { color: #8a8a9a; }
+  .t-linear .mock-daily-stat.ac { color: #5e6ad2; font-weight: 600; }
+
+  /* ===================================================================
+     THEME 3: Notion Light
+     =================================================================== */
+  .t-notion .theme-label {
+    background: #191919; color: #fff;
+  }
+  .t-notion .mock {
+    background: #ffffff;
+  }
+  .t-notion .mock-header {
+    border-bottom: 1px solid #e3e3e0;
+  }
+  .t-notion .mock-nav { color: #37352f; }
+  .t-notion .mock-tabs span {
+    color: #9b9a97; background: transparent;
+  }
+  .t-notion .mock-tabs span.active {
+    color: #37352f; background: #f1f1ef; font-weight: 600;
+  }
+
+  .t-notion .mock-summary {
+    background: #fbfbfa; border: 1px solid #e3e3e0;
+  }
+  .t-notion .mock-summary-title { color: #37352f; }
+  .t-notion .mock-summary-stats span:first-child { color: #37352f; font-weight: 600; }
+  .t-notion .mock-summary-stats .gn { color: #448361; }
+  .t-notion .mock-summary-stats .rd { color: #c4554d; }
+  .t-notion .mock-badge {
+    background: #d3e5ef; color: #2e7d9a;
+  }
+  .t-notion .mock-badge.fix { background: #dbeddb; color: #448361; }
+  .t-notion .mock-badge.refactor { background: #e8deee; color: #9065b0; }
+  .t-notion .mock-badge.docs { background: #fdecc8; color: #cf9f23; }
+
+  .t-notion .mock-project {
+    border: 1px solid #e3e3e0; background: #fff;
+  }
+  .t-notion .mock-project-header {
+    border-bottom: 1px solid #e3e3e0; background: #fbfbfa;
+  }
+  .t-notion .mock-dot { background: #2e7d9a; }
+  .t-notion .mock-project-name { color: #37352f; }
+  .t-notion .mock-project-count { background: #f1f1ef; color: #9b9a97; }
+  .t-notion .mock-diff .gn { color: #448361; }
+  .t-notion .mock-diff .rd { color: #c4554d; }
+  .t-notion .mock-arrow { color: #9b9a97; }
+
+  .t-notion .mock-commit-type { color: #2e7d9a; }
+  .t-notion .mock-commit-type .cnt { background: #d3e5ef; color: #2e7d9a; }
+  .t-notion .mock-commit-type.fix { color: #448361; }
+  .t-notion .mock-commit-type.fix .cnt { background: #dbeddb; color: #448361; }
+  .t-notion .mock-commit-row:hover { background: #f7f6f3; }
+  .t-notion .mock-hash { background: #d3e5ef; color: #2e7d9a; }
+  .t-notion .mock-date { color: #9b9a97; }
+  .t-notion .mock-msg { color: #37352f; }
+
+  .t-notion .mock-daily {
+    background: #fbfbfa; border: 1px solid #e3e3e0;
+  }
+  .t-notion .mock-daily-title { color: #37352f; }
+  .t-notion .mock-daily-day { color: #9b9a97; }
+  .t-notion .mock-daily-date { color: #37352f; }
+  .t-notion .mock-bar-track { background: #e3e3e0; }
+  .t-notion .mock-bar-fill { background: linear-gradient(90deg, #2e7d9a, #9065b0); }
+  .t-notion .mock-daily-stat { color: #9b9a97; }
+  .t-notion .mock-daily-stat.ac { color: #2e7d9a; font-weight: 600; }
+
+  /* ===================================================================
+     THEME 4: Vercel Light
+     =================================================================== */
+  .t-vercel .theme-label {
+    background: #000; color: #fff;
+  }
+  .t-vercel .mock {
+    background: #fafafa;
+  }
+  .t-vercel .mock-header {
+    border-bottom: 1px solid #eaeaea;
+  }
+  .t-vercel .mock-nav { color: #000; }
+  .t-vercel .mock-tabs span {
+    color: #666; background: transparent;
+  }
+  .t-vercel .mock-tabs span.active {
+    color: #000; background: #000; color: #fff; border-radius: 999px;
+  }
+
+  .t-vercel .mock-summary {
+    background: #fff; border: 1px solid #eaeaea;
+  }
+  .t-vercel .mock-summary-title { color: #000; }
+  .t-vercel .mock-summary-stats span:first-child { color: #000; font-weight: 600; }
+  .t-vercel .mock-summary-stats .gn { color: #0070f3; }
+  .t-vercel .mock-summary-stats .rd { color: #e00; }
+  .t-vercel .mock-badge {
+    background: #f0f4ff; color: #0070f3;
+  }
+  .t-vercel .mock-badge.fix { background: #e6ffec; color: #0a7227; }
+  .t-vercel .mock-badge.refactor { background: #f5f0ff; color: #7928ca; }
+  .t-vercel .mock-badge.docs { background: #fff4e5; color: #c05621; }
+
+  .t-vercel .mock-project {
+    border: 1px solid #eaeaea; background: #fff;
+  }
+  .t-vercel .mock-project-header {
+    border-bottom: 1px solid #eaeaea;
+  }
+  .t-vercel .mock-dot { background: #0070f3; }
+  .t-vercel .mock-project-name { color: #000; }
+  .t-vercel .mock-project-count { background: #fafafa; color: #666; border: 1px solid #eaeaea; }
+  .t-vercel .mock-diff .gn { color: #0070f3; }
+  .t-vercel .mock-diff .rd { color: #e00; }
+  .t-vercel .mock-arrow { color: #999; }
+
+  .t-vercel .mock-commit-type { color: #0070f3; }
+  .t-vercel .mock-commit-type .cnt { background: #f0f4ff; color: #0070f3; }
+  .t-vercel .mock-commit-type.fix { color: #0a7227; }
+  .t-vercel .mock-commit-type.fix .cnt { background: #e6ffec; color: #0a7227; }
+  .t-vercel .mock-commit-row:hover { background: #fafafa; }
+  .t-vercel .mock-hash { background: #f0f4ff; color: #0070f3; }
+  .t-vercel .mock-date { color: #999; }
+  .t-vercel .mock-msg { color: #000; }
+
+  .t-vercel .mock-daily {
+    background: #fff; border: 1px solid #eaeaea;
+  }
+  .t-vercel .mock-daily-title { color: #000; }
+  .t-vercel .mock-daily-day { color: #999; }
+  .t-vercel .mock-daily-date { color: #000; }
+  .t-vercel .mock-bar-track { background: #eaeaea; }
+  .t-vercel .mock-bar-fill { background: linear-gradient(90deg, #0070f3, #7928ca); }
+  .t-vercel .mock-daily-stat { color: #999; }
+  .t-vercel .mock-daily-stat.ac { color: #0070f3; font-weight: 600; }
+
+  /* ===== CSS Variables Reference ===== */
+  .var-table {
+    max-width: 1400px; margin: 48px auto 0;
+    border-collapse: collapse; width: 100%;
+    font-size: 12px;
+  }
+  .var-table th {
+    background: #1a1a2e; color: #fff; padding: 10px 16px;
+    text-align: left; font-weight: 600;
+  }
+  .var-table td {
+    padding: 8px 16px; border-bottom: 1px solid #e5e5e5;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .var-table tr:hover td { background: #f8f8fc; }
+  .color-chip {
+    display: inline-block; width: 14px; height: 14px;
+    border-radius: 3px; border: 1px solid rgba(0,0,0,.1);
+    vertical-align: middle; margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Light Mode Design Comparison</h1>
+<p class="subtitle">4 themes inspired by GitHub, Linear, Notion, Vercel &mdash; mapped to existing CSS variables</p>
+
+<div class="themes-grid">
+
+  <!-- ====== THEME 1: GitHub ====== -->
+  <div class="theme-card t-github">
+    <div class="theme-label">
+      <span>1. GitHub Light</span>
+      <span class="ref">Clean &middot; Neutral &middot; Professional</span>
+    </div>
+    <div class="mock">
+      <div class="mock-header">
+        <span class="mock-nav">05/17 ~ 05/23</span>
+        <div class="mock-tabs">
+          <span>일간</span>
+          <span class="active">주간</span>
+          <span>월간</span>
+        </div>
+      </div>
+
+      <div class="mock-summary">
+        <div class="mock-summary-top">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mock-summary-title">주간 요약</span>
+            <span class="mock-badge">5개 프로젝트</span>
+          </div>
+          <div class="mock-summary-stats">
+            <span>26 commits</span>
+            <span class="gn">+13660</span>
+            <span class="rd">-1119</span>
+          </div>
+        </div>
+        <div class="mock-badges">
+          <span class="mock-badge">✨ 11</span>
+          <span class="mock-badge fix">🐛 5</span>
+          <span class="mock-badge refactor">♻️ 5</span>
+          <span class="mock-badge docs">📝 3</span>
+        </div>
+      </div>
+
+      <div class="mock-project">
+        <div class="mock-project-header">
+          <div class="mock-project-left">
+            <span class="mock-arrow">▼</span>
+            <span class="mock-dot"></span>
+            <span class="mock-project-name">sparrowdto</span>
+            <span class="mock-project-count">9개 커밋</span>
+          </div>
+          <div class="mock-diff">
+            <span class="gn">+1291</span>
+            <span class="rd">-909</span>
+          </div>
+        </div>
+        <div class="mock-commit-group">
+          <div class="mock-commit-type">
+            ✨ Features <span class="cnt">4</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">e889348</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 중요도 등급 산정 로직 구현</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">11c83a6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 타입 판별 기준 전환</span>
+          </div>
+          <div class="mock-commit-type fix" style="margin-top:8px">
+            🐛 Fixes <span class="cnt">2</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">02712f6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">ltDates datetime 파싱 오류 수정</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-daily">
+        <div class="mock-daily-title">일별 활동</div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">월</span>
+          <span class="mock-daily-date">18</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+          <span class="mock-daily-stat ac">14c</span>
+          <span class="mock-daily-stat">13s</span>
+        </div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">화</span>
+          <span class="mock-daily-date">19</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:60%"></div></div>
+          <span class="mock-daily-stat ac">9c</span>
+          <span class="mock-daily-stat">8s</span>
+        </div>
+        <div class="mock-daily-row" style="opacity:.3">
+          <span class="mock-daily-day">수</span>
+          <span class="mock-daily-date">20</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:0%"></div></div>
+          <span class="mock-daily-stat"></span>
+          <span class="mock-daily-stat"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== THEME 2: Linear ====== -->
+  <div class="theme-card t-linear">
+    <div class="theme-label">
+      <span>2. Linear Light</span>
+      <span class="ref">Modern &middot; Subtle Purple &middot; Polished</span>
+    </div>
+    <div class="mock">
+      <div class="mock-header">
+        <span class="mock-nav">05/17 ~ 05/23</span>
+        <div class="mock-tabs">
+          <span>일간</span>
+          <span class="active">주간</span>
+          <span>월간</span>
+        </div>
+      </div>
+
+      <div class="mock-summary">
+        <div class="mock-summary-top">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mock-summary-title">주간 요약</span>
+            <span class="mock-badge">5개 프로젝트</span>
+          </div>
+          <div class="mock-summary-stats">
+            <span>26 commits</span>
+            <span class="gn">+13660</span>
+            <span class="rd">-1119</span>
+          </div>
+        </div>
+        <div class="mock-badges">
+          <span class="mock-badge">✨ 11</span>
+          <span class="mock-badge fix">🐛 5</span>
+          <span class="mock-badge refactor">♻️ 5</span>
+          <span class="mock-badge docs">📝 3</span>
+        </div>
+      </div>
+
+      <div class="mock-project">
+        <div class="mock-project-header">
+          <div class="mock-project-left">
+            <span class="mock-arrow">▼</span>
+            <span class="mock-dot"></span>
+            <span class="mock-project-name">sparrowdto</span>
+            <span class="mock-project-count">9개 커밋</span>
+          </div>
+          <div class="mock-diff">
+            <span class="gn">+1291</span>
+            <span class="rd">-909</span>
+          </div>
+        </div>
+        <div class="mock-commit-group">
+          <div class="mock-commit-type">
+            ✨ Features <span class="cnt">4</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">e889348</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 중요도 등급 산정 로직 구현</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">11c83a6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 타입 판별 기준 전환</span>
+          </div>
+          <div class="mock-commit-type fix" style="margin-top:8px">
+            🐛 Fixes <span class="cnt">2</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">02712f6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">ltDates datetime 파싱 오류 수정</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-daily">
+        <div class="mock-daily-title">일별 활동</div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">월</span>
+          <span class="mock-daily-date">18</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+          <span class="mock-daily-stat ac">14c</span>
+          <span class="mock-daily-stat">13s</span>
+        </div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">화</span>
+          <span class="mock-daily-date">19</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:60%"></div></div>
+          <span class="mock-daily-stat ac">9c</span>
+          <span class="mock-daily-stat">8s</span>
+        </div>
+        <div class="mock-daily-row" style="opacity:.3">
+          <span class="mock-daily-day">수</span>
+          <span class="mock-daily-date">20</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:0%"></div></div>
+          <span class="mock-daily-stat"></span>
+          <span class="mock-daily-stat"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== THEME 3: Notion ====== -->
+  <div class="theme-card t-notion">
+    <div class="theme-label">
+      <span>3. Notion Light</span>
+      <span class="ref">Warm &middot; Paper-like &middot; Minimal</span>
+    </div>
+    <div class="mock">
+      <div class="mock-header">
+        <span class="mock-nav">05/17 ~ 05/23</span>
+        <div class="mock-tabs">
+          <span>일간</span>
+          <span class="active">주간</span>
+          <span>월간</span>
+        </div>
+      </div>
+
+      <div class="mock-summary">
+        <div class="mock-summary-top">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mock-summary-title">주간 요약</span>
+            <span class="mock-badge">5개 프로젝트</span>
+          </div>
+          <div class="mock-summary-stats">
+            <span>26 commits</span>
+            <span class="gn">+13660</span>
+            <span class="rd">-1119</span>
+          </div>
+        </div>
+        <div class="mock-badges">
+          <span class="mock-badge">✨ 11</span>
+          <span class="mock-badge fix">🐛 5</span>
+          <span class="mock-badge refactor">♻️ 5</span>
+          <span class="mock-badge docs">📝 3</span>
+        </div>
+      </div>
+
+      <div class="mock-project">
+        <div class="mock-project-header">
+          <div class="mock-project-left">
+            <span class="mock-arrow">▼</span>
+            <span class="mock-dot"></span>
+            <span class="mock-project-name">sparrowdto</span>
+            <span class="mock-project-count">9개 커밋</span>
+          </div>
+          <div class="mock-diff">
+            <span class="gn">+1291</span>
+            <span class="rd">-909</span>
+          </div>
+        </div>
+        <div class="mock-commit-group">
+          <div class="mock-commit-type">
+            ✨ Features <span class="cnt">4</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">e889348</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 중요도 등급 산정 로직 구현</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">11c83a6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 타입 판별 기준 전환</span>
+          </div>
+          <div class="mock-commit-type fix" style="margin-top:8px">
+            🐛 Fixes <span class="cnt">2</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">02712f6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">ltDates datetime 파싱 오류 수정</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-daily">
+        <div class="mock-daily-title">일별 활동</div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">월</span>
+          <span class="mock-daily-date">18</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+          <span class="mock-daily-stat ac">14c</span>
+          <span class="mock-daily-stat">13s</span>
+        </div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">화</span>
+          <span class="mock-daily-date">19</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:60%"></div></div>
+          <span class="mock-daily-stat ac">9c</span>
+          <span class="mock-daily-stat">8s</span>
+        </div>
+        <div class="mock-daily-row" style="opacity:.3">
+          <span class="mock-daily-day">수</span>
+          <span class="mock-daily-date">20</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:0%"></div></div>
+          <span class="mock-daily-stat"></span>
+          <span class="mock-daily-stat"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== THEME 4: Vercel ====== -->
+  <div class="theme-card t-vercel">
+    <div class="theme-label">
+      <span>4. Vercel Light</span>
+      <span class="ref">Sharp &middot; High Contrast &middot; Monochrome+Blue</span>
+    </div>
+    <div class="mock">
+      <div class="mock-header">
+        <span class="mock-nav">05/17 ~ 05/23</span>
+        <div class="mock-tabs">
+          <span>일간</span>
+          <span class="active">주간</span>
+          <span>월간</span>
+        </div>
+      </div>
+
+      <div class="mock-summary">
+        <div class="mock-summary-top">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mock-summary-title">주간 요약</span>
+            <span class="mock-badge">5개 프로젝트</span>
+          </div>
+          <div class="mock-summary-stats">
+            <span>26 commits</span>
+            <span class="gn">+13660</span>
+            <span class="rd">-1119</span>
+          </div>
+        </div>
+        <div class="mock-badges">
+          <span class="mock-badge">✨ 11</span>
+          <span class="mock-badge fix">🐛 5</span>
+          <span class="mock-badge refactor">♻️ 5</span>
+          <span class="mock-badge docs">📝 3</span>
+        </div>
+      </div>
+
+      <div class="mock-project">
+        <div class="mock-project-header">
+          <div class="mock-project-left">
+            <span class="mock-arrow">▼</span>
+            <span class="mock-dot"></span>
+            <span class="mock-project-name">sparrowdto</span>
+            <span class="mock-project-count">9개 커밋</span>
+          </div>
+          <div class="mock-diff">
+            <span class="gn">+1291</span>
+            <span class="rd">-909</span>
+          </div>
+        </div>
+        <div class="mock-commit-group">
+          <div class="mock-commit-type">
+            ✨ Features <span class="cnt">4</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">e889348</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 중요도 등급 산정 로직 구현</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">11c83a6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">프로젝트 타입 판별 기준 전환</span>
+          </div>
+          <div class="mock-commit-type fix" style="margin-top:8px">
+            🐛 Fixes <span class="cnt">2</span>
+          </div>
+          <div class="mock-commit-row">
+            <span class="mock-hash">02712f6</span>
+            <span class="mock-date">05/18</span>
+            <span class="mock-msg">ltDates datetime 파싱 오류 수정</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-daily">
+        <div class="mock-daily-title">일별 활동</div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">월</span>
+          <span class="mock-daily-date">18</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+          <span class="mock-daily-stat ac">14c</span>
+          <span class="mock-daily-stat">13s</span>
+        </div>
+        <div class="mock-daily-row">
+          <span class="mock-daily-day">화</span>
+          <span class="mock-daily-date">19</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:60%"></div></div>
+          <span class="mock-daily-stat ac">9c</span>
+          <span class="mock-daily-stat">8s</span>
+        </div>
+        <div class="mock-daily-row" style="opacity:.3">
+          <span class="mock-daily-day">수</span>
+          <span class="mock-daily-date">20</span>
+          <div class="mock-bar-track"><div class="mock-bar-fill" style="width:0%"></div></div>
+          <span class="mock-daily-stat"></span>
+          <span class="mock-daily-stat"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CSS Variable Mapping Table -->
+<table class="var-table">
+  <tr>
+    <th>Variable</th>
+    <th>Dark (현재)</th>
+    <th>GitHub Light</th>
+    <th>Linear Light</th>
+    <th>Notion Light</th>
+    <th>Vercel Light</th>
+  </tr>
+  <tr>
+    <td>--bg</td>
+    <td><span class="color-chip" style="background:#08080a"></span>#08080a</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+    <td><span class="color-chip" style="background:#fbfbfc"></span>#fbfbfc</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+    <td><span class="color-chip" style="background:#fafafa"></span>#fafafa</td>
+  </tr>
+  <tr>
+    <td>--s1</td>
+    <td><span class="color-chip" style="background:#0f0f12"></span>#0f0f12</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+    <td><span class="color-chip" style="background:#ffffff"></span>#ffffff</td>
+  </tr>
+  <tr>
+    <td>--s2</td>
+    <td><span class="color-chip" style="background:#141418"></span>#141418</td>
+    <td><span class="color-chip" style="background:#f6f8fa"></span>#f6f8fa</td>
+    <td><span class="color-chip" style="background:#f5f5f8"></span>#f5f5f8</td>
+    <td><span class="color-chip" style="background:#f7f6f3"></span>#f7f6f3</td>
+    <td><span class="color-chip" style="background:#fafafa"></span>#fafafa</td>
+  </tr>
+  <tr>
+    <td>--s3</td>
+    <td><span class="color-chip" style="background:#1a1a20"></span>#1a1a20</td>
+    <td><span class="color-chip" style="background:#eaeef2"></span>#eaeef2</td>
+    <td><span class="color-chip" style="background:#e8e8ec"></span>#e8e8ec</td>
+    <td><span class="color-chip" style="background:#e3e3e0"></span>#e3e3e0</td>
+    <td><span class="color-chip" style="background:#eaeaea"></span>#eaeaea</td>
+  </tr>
+  <tr>
+    <td>--bd</td>
+    <td><span class="color-chip" style="background:#1f1f28"></span>#1f1f28</td>
+    <td><span class="color-chip" style="background:#d0d7de"></span>#d0d7de</td>
+    <td><span class="color-chip" style="background:#e8e8ec"></span>#e8e8ec</td>
+    <td><span class="color-chip" style="background:#e3e3e0"></span>#e3e3e0</td>
+    <td><span class="color-chip" style="background:#eaeaea"></span>#eaeaea</td>
+  </tr>
+  <tr>
+    <td>--tx</td>
+    <td><span class="color-chip" style="background:#e8e8ee"></span>#e8e8ee</td>
+    <td><span class="color-chip" style="background:#1f2328"></span>#1f2328</td>
+    <td><span class="color-chip" style="background:#1b1b1f"></span>#1b1b1f</td>
+    <td><span class="color-chip" style="background:#37352f"></span>#37352f</td>
+    <td><span class="color-chip" style="background:#000000"></span>#000000</td>
+  </tr>
+  <tr>
+    <td>--mt</td>
+    <td><span class="color-chip" style="background:#5a5a70"></span>#5a5a70</td>
+    <td><span class="color-chip" style="background:#656d76"></span>#656d76</td>
+    <td><span class="color-chip" style="background:#8a8a9a"></span>#8a8a9a</td>
+    <td><span class="color-chip" style="background:#9b9a97"></span>#9b9a97</td>
+    <td><span class="color-chip" style="background:#666666"></span>#666666</td>
+  </tr>
+  <tr>
+    <td>--dm</td>
+    <td><span class="color-chip" style="background:#3a3a4a"></span>#3a3a4a</td>
+    <td><span class="color-chip" style="background:#8c959f"></span>#8c959f</td>
+    <td><span class="color-chip" style="background:#b4b4c0"></span>#b4b4c0</td>
+    <td><span class="color-chip" style="background:#c0bfbc"></span>#c0bfbc</td>
+    <td><span class="color-chip" style="background:#999999"></span>#999999</td>
+  </tr>
+  <tr>
+    <td>--ac</td>
+    <td><span class="color-chip" style="background:#818cf8"></span>#818cf8</td>
+    <td><span class="color-chip" style="background:#0969da"></span>#0969da</td>
+    <td><span class="color-chip" style="background:#5e6ad2"></span>#5e6ad2</td>
+    <td><span class="color-chip" style="background:#2e7d9a"></span>#2e7d9a</td>
+    <td><span class="color-chip" style="background:#0070f3"></span>#0070f3</td>
+  </tr>
+  <tr>
+    <td>--ac2</td>
+    <td><span class="color-chip" style="background:#a78bfa"></span>#a78bfa</td>
+    <td><span class="color-chip" style="background:#8250df"></span>#8250df</td>
+    <td><span class="color-chip" style="background:#8b5cf6"></span>#8b5cf6</td>
+    <td><span class="color-chip" style="background:#9065b0"></span>#9065b0</td>
+    <td><span class="color-chip" style="background:#7928ca"></span>#7928ca</td>
+  </tr>
+  <tr>
+    <td>--gn</td>
+    <td><span class="color-chip" style="background:#4ade80"></span>#4ade80</td>
+    <td><span class="color-chip" style="background:#1a7f37"></span>#1a7f37</td>
+    <td><span class="color-chip" style="background:#2da44e"></span>#2da44e</td>
+    <td><span class="color-chip" style="background:#448361"></span>#448361</td>
+    <td><span class="color-chip" style="background:#0a7227"></span>#0a7227</td>
+  </tr>
+  <tr>
+    <td>--rd</td>
+    <td><span class="color-chip" style="background:#f87171"></span>#f87171</td>
+    <td><span class="color-chip" style="background:#cf222e"></span>#cf222e</td>
+    <td><span class="color-chip" style="background:#e5534b"></span>#e5534b</td>
+    <td><span class="color-chip" style="background:#c4554d"></span>#c4554d</td>
+    <td><span class="color-chip" style="background:#ee0000"></span>#ee0000</td>
+  </tr>
+</table>
+
+</body>
+</html>

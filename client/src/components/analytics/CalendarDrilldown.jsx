@@ -34,7 +34,7 @@ export default function CalendarDrilldown({ project, onBack }) {
     }
   }
 
-  const intensityColors = ['transparent', '#1a1535', '#2d1b69', '#4c1d95', '#6d28d9'];
+  const intensityColors = ['transparent', 'var(--cal-1)', 'var(--cal-2)', 'var(--cal-3)', 'var(--cal-4)'];
   function getIntensity(count) {
     if (!count) return 0;
     const ratio = count / maxSessions;
@@ -76,9 +76,9 @@ export default function CalendarDrilldown({ project, onBack }) {
                   aspectRatio: '1', borderRadius: 6,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, cursor: 'pointer',
-                  color: intensity > 0 ? '#c4b5fd' : 'var(--mt)',
+                  color: intensity > 0 ? 'var(--cal-tx)' : 'var(--mt)',
                   background: intensity > 0 ? intensityColors[intensity] : 'var(--s2)',
-                  outline: isSelected ? '2px solid #fff' : 'none',
+                  outline: isSelected ? '2px solid var(--tx)' : 'none',
                   outlineOffset: -2,
                 }}>{i + 1}</div>
               );
@@ -106,8 +106,8 @@ export default function CalendarDrilldown({ project, onBack }) {
                 </div>
                 <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 11, color: 'var(--mt)' }}>
                   <span>{dayjs(s.startedAt).format('HH:mm')}~{dayjs(s.endedAt).format('HH:mm')}</span>
-                  <span style={{ color: '#f59e0b' }}>{formatTokens(s.tokens.totalInput + s.tokens.totalOutput)}</span>
-                  <span style={{ color: '#10b981' }}>
+                  <span style={{ color: 'var(--yw)' }}>{formatTokens(s.tokens.totalInput + s.tokens.totalOutput)}</span>
+                  <span style={{ color: 'var(--gn)' }}>
                     {Object.entries(s.toolUsage || {}).slice(0, 2).map(([k, v]) => `${k}×${v}`).join(' ')}
                   </span>
                 </div>

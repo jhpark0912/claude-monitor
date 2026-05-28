@@ -133,7 +133,7 @@ function DaybookNav({ date, view, onPrev, onNext, onToday, isToday }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <NavBtn onClick={onPrev}>&#8249;</NavBtn>
       <div style={{ textAlign: 'center', minWidth: 140 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', color: '#fafafa' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-.5px', color: 'var(--tx)' }}>
           {mainText}
         </div>
         <div style={{ fontSize: 12, color: 'var(--dm)', marginTop: 2 }}>{subText}</div>

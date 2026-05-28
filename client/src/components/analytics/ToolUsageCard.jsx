@@ -44,6 +44,6 @@ const cardStyle = {
   padding: 16, height: '100%', boxSizing: 'border-box',
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#1a1535',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, var(--pr) 18%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };

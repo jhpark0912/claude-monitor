@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+:root, [data-theme="dark"] {
   --bg: #08080a; --s1: #0f0f12; --s2: #141418; --s3: #1a1a20;
   --bd: #1f1f28; --bd2: #2a2a35; --bd-h: #35354a;
   --tx: #e8e8ee; --tx2: #a0a0b0; --mt: #5a5a70; --dm: #3a3a4a;
@@ -11,7 +11,37 @@
   --shadow-h: 0 8px 24px rgba(0,0,0,.4);
   --glass: rgba(15,15,18,.8); --glass-bd: rgba(255,255,255,.06);
   --r: 14px; --rs: 10px; --rx: 6px;
+  /* Analytics intensity scales */
+  --cal-1: #1a1535; --cal-2: #2d1b69; --cal-3: #4c1d95; --cal-4: #6d28d9;
+  --cal-tx: #c4b5fd;
+  --heat-1: #064e3b; --heat-2: #059669; --heat-3: #34d399; --heat-4: #6ee7b7;
+  /* Chart accent (vibrant, data-viz 전용) */
+  --ch-blue: #6366f1; --ch-green: #10b981; --ch-amber: #f59e0b; --ch-purple: #8b5cf6;
 }
+
+/* Notion Light */
+[data-theme="light"] {
+  --bg: #ffffff; --s1: #ffffff; --s2: #f7f6f3; --s3: #e3e3e0;
+  --bd: #e3e3e0; --bd2: #d4d4d0; --bd-h: #c8c8c4;
+  --tx: #37352f; --tx2: #6b6b65; --mt: #9b9a97; --dm: #c0bfbc;
+  --ac: #2e7d9a; --ac2: #9065b0;
+  --ac-bg: rgba(46,125,154,.08); --ac-bd: rgba(46,125,154,.2);
+  --gn: #448361; --yw: #cf9f23; --rd: #c4554d; --pr: #9065b0;
+  --shadow: 0 1px 4px rgba(0,0,0,.06);
+  --shadow-h: 0 4px 16px rgba(0,0,0,.1);
+  --glass: rgba(255,255,255,.88); --glass-bd: rgba(55,53,47,.08);
+  --r: 14px; --rs: 10px; --rx: 6px;
+  /* Analytics intensity scales */
+  --cal-1: #ede9fe; --cal-2: #ddd6fe; --cal-3: #c4b5fd; --cal-4: #8b5cf6;
+  --cal-tx: #5b21b6;
+  --heat-1: #dcfce7; --heat-2: #86efac; --heat-3: #34d399; --heat-4: #059669;
+  /* Chart accent (파스텔, Notion 톤) */
+  --ch-blue: #8b9cf8; --ch-green: #68c49c; --ch-amber: #e8b44c; --ch-purple: #a78bdd;
+}
+
+/* 폰트 크기 (zoom 기반 3단계) */
+html[data-fontsize="small"] { zoom: 0.88; }
+html[data-fontsize="large"] { zoom: 1.12; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; min-width: 0; }
 
@@ -46,6 +76,15 @@ mark {
   50% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
 }
 
+/* 라이트모드 pulse */
+[data-theme="light"] .live-dot {
+  animation-name: pulse-light;
+}
+@keyframes pulse-light {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(68,131,97,.4); }
+  50% { box-shadow: 0 0 0 4px rgba(68,131,97,0); }
+}
+
 @keyframes progressShimmer {
   0% { opacity: .7; } 50% { opacity: 1; } 100% { opacity: .7; }
 }
@@ -70,3 +109,17 @@ mark {
 .b-pink { background: rgba(244,114,182,.12); color: #f472b6; }
 .b-sky { background: rgba(56,189,248,.12); color: #38bdf8; }
 .b-red { background: rgba(248,113,113,.12); color: #f87171; }
+
+/* 라이트모드 태그 대비 보정 */
+[data-theme="light"] .b-indigo { background: rgba(79,70,229,.1); color: #4338ca; }
+[data-theme="light"] .b-emerald { background: rgba(5,150,105,.1); color: #047857; }
+[data-theme="light"] .b-amber { background: rgba(180,83,9,.1); color: #92400e; }
+[data-theme="light"] .b-rose { background: rgba(225,29,72,.1); color: #be123c; }
+[data-theme="light"] .b-cyan { background: rgba(8,145,178,.1); color: #0e7490; }
+[data-theme="light"] .b-violet { background: rgba(124,58,237,.1); color: #6d28d9; }
+[data-theme="light"] .b-orange { background: rgba(194,65,12,.1); color: #9a3412; }
+[data-theme="light"] .b-teal { background: rgba(13,148,136,.1); color: #0f766e; }
+[data-theme="light"] .b-lime { background: rgba(77,124,15,.1); color: #3f6212; }
+[data-theme="light"] .b-pink { background: rgba(219,39,119,.1); color: #9d174d; }
+[data-theme="light"] .b-sky { background: rgba(2,132,199,.1); color: #0369a1; }
+[data-theme="light"] .b-red { background: rgba(220,38,38,.1); color: #b91c1c; }

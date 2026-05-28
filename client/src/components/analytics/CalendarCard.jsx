@@ -38,7 +38,7 @@ export default function CalendarCard({ project, month: externalMonth, onMonthCha
     return 4;
   }
 
-  const intensityColors = ['transparent', '#1a1535', '#2d1b69', '#4c1d95', '#6d28d9'];
+  const intensityColors = ['transparent', 'var(--cal-1)', 'var(--cal-2)', 'var(--cal-3)', 'var(--cal-4)'];
 
   return (
     <div style={cardStyle}>
@@ -78,7 +78,7 @@ export default function CalendarCard({ project, month: externalMonth, onMonthCha
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 10,
-              color: intensity > 0 ? '#c4b5fd' : 'var(--mt)',
+              color: intensity > 0 ? 'var(--cal-tx)' : 'var(--mt)',
               background: intensity > 0 ? intensityColors[intensity] : 'var(--s1)',
               outline: isToday ? '2px solid var(--ac)' : 'none',
               outlineOffset: -2,
@@ -86,7 +86,7 @@ export default function CalendarCard({ project, month: externalMonth, onMonthCha
               cursor: 'pointer',
               transition: 'background .15s',
             }}
-            onMouseEnter={e => { if (intensity === 0) e.currentTarget.style.background = '#1e1e2e'; }}
+            onMouseEnter={e => { if (intensity === 0) e.currentTarget.style.background = 'var(--s2)'; }}
             onMouseLeave={e => { if (intensity === 0) e.currentTarget.style.background = 'var(--s1)'; }}>
               {i + 1}
               {info && (
@@ -110,7 +110,7 @@ export default function CalendarCard({ project, month: externalMonth, onMonthCha
           많음
         </div>
         <div style={{ fontSize: 11, color: 'var(--mt)' }}>
-          이번 달 <strong style={{ color: '#a78bfa' }}>{totalDays}일</strong> 활동 · <strong style={{ color: '#a78bfa' }}>{totalSessions}</strong>세션
+          이번 달 <strong style={{ color: 'var(--ac2)' }}>{totalDays}일</strong> 활동 · <strong style={{ color: 'var(--ac2)' }}>{totalSessions}</strong>세션
         </div>
       </div>
     </div>
@@ -130,7 +130,7 @@ const cardStyle = {
   flexDirection: 'column',
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#1e1b4b',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, var(--pr) 18%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };
 const navBtn = {

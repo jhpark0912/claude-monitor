@@ -51,7 +51,7 @@ export default function AnalyticsPage({ project }) {
             <div style={{ fontSize: 11, color: 'var(--mt)', marginTop: 3 }}>연속 활동 중</div>
           </div>
           <div style={{ textAlign: 'right', fontSize: 10, color: 'var(--mt)' }}>
-            최장: <strong style={{ color: '#6d28d9' }}>{calcMaxStreak(anomalyData)}일</strong>
+            최장: <strong style={{ color: 'var(--pr)' }}>{calcMaxStreak(anomalyData)}일</strong>
           </div>
         </div>
 

@@ -46,7 +46,7 @@ export default function CostCard({ project }) {
           {[{ label: '1주', val: '1w' }, { label: '1개월', val: '4w' }, { label: '3개월', val: '3m' }].map(opt => (
             <button key={opt.val} onClick={() => setPeriod(opt.val)} style={{
               ...periodBtn,
-              background: period === opt.val ? '#f59e0b' : 'var(--s2)',
+              background: period === opt.val ? 'var(--ch-amber)' : 'var(--s2)',
               color: period === opt.val ? '#000' : 'var(--mt)',
             }}>{opt.label}</button>
           ))}
@@ -58,13 +58,13 @@ export default function CostCard({ project }) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <svg width="140" height="140" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="70" fill="none" stroke="var(--bd)" strokeWidth="20" />
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#6366f1" strokeWidth="20"
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--ch-blue)" strokeWidth="20"
               strokeDasharray={`${opusPct * 4.4} 440`} strokeDashoffset="0"
               transform="rotate(-90 100 100)" strokeLinecap="round" />
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#10b981" strokeWidth="20"
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--ch-green)" strokeWidth="20"
               strokeDasharray={`${sonnetPct * 4.4} 440`} strokeDashoffset={`${-opusPct * 4.4}`}
               transform="rotate(-90 100 100)" strokeLinecap="round" />
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#f59e0b" strokeWidth="20"
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--ch-amber)" strokeWidth="20"
               strokeDasharray={`${haikuPct * 4.4} 440`} strokeDashoffset={`${-(opusPct + sonnetPct) * 4.4}`}
               transform="rotate(-90 100 100)" strokeLinecap="round" />
             <text x="100" y="95" textAnchor="middle" fill="var(--tx)" fontSize="24" fontWeight="700">
@@ -84,9 +84,9 @@ export default function CostCard({ project }) {
             <span style={{ textAlign: 'right' }}>비용</span>
           </div>
           {[
-            { name: 'Opus', color: '#6366f1', cost: opusCost, pct: opusPct, input: models.opus.input, output: models.opus.output },
-            { name: 'Sonnet', color: '#10b981', cost: sonnetCost, pct: sonnetPct, input: models.sonnet.input, output: models.sonnet.output },
-            { name: 'Haiku', color: '#f59e0b', cost: haikuCost, pct: haikuPct, input: models.haiku.input, output: models.haiku.output },
+            { name: 'Opus', color: 'var(--ch-blue)', cost: opusCost, pct: opusPct, input: models.opus.input, output: models.opus.output },
+            { name: 'Sonnet', color: 'var(--ch-green)', cost: sonnetCost, pct: sonnetPct, input: models.sonnet.input, output: models.sonnet.output },
+            { name: 'Haiku', color: 'var(--ch-amber)', cost: haikuCost, pct: haikuPct, input: models.haiku.input, output: models.haiku.output },
           ].map(m => (
             <div key={m.name} style={{ display: 'grid', gridTemplateColumns: '12px 1fr 60px 40px 56px', gap: 10, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--bd)' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
@@ -103,10 +103,10 @@ export default function CostCard({ project }) {
       <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--bd)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 11, color: 'var(--mt)' }}>캐시 적중률</span>
-          <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>-${formatCost(cacheSavings)} 절감 ({cacheHitRate}%)</span>
+          <span style={{ fontSize: 11, color: 'var(--ch-green)', fontWeight: 600 }}>-${formatCost(cacheSavings)} 절감 ({cacheHitRate}%)</span>
         </div>
         <div style={{ height: 8, background: 'var(--bg)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--bd)' }}>
-          <div style={{ height: '100%', width: `${cacheHitRate}%`, borderRadius: 4, background: 'linear-gradient(90deg, #10b981, #6ee7b7)' }} />
+          <div style={{ height: '100%', width: `${cacheHitRate}%`, borderRadius: 4, background: 'linear-gradient(90deg, var(--ch-green), #6ee7b7)' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--mt)' }}>
           <span>Creation: {formatTokens(data?.cacheCreation || 0)}</span>
@@ -130,7 +130,7 @@ const headerStyle = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
 };
 const iconStyle = {
-  width: 24, height: 24, borderRadius: 6, background: '#451a03',
+  width: 24, height: 24, borderRadius: 6, background: 'color-mix(in srgb, var(--ch-amber) 15%, var(--s2))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
 };
 const periodBtn = {

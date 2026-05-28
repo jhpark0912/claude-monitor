@@ -7,6 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
   <body>
+    <script>
+      // 테마/폰트크기 플래시 방지: React 로드 전 적용
+      (function(){
+        var t = localStorage.getItem('dashboard-theme') || 'dark';
+        var f = localStorage.getItem('dashboard-fontsize') || 'medium';
+        document.documentElement.dataset.theme = t;
+        document.documentElement.dataset.fontsize = f;
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -367,7 +367,7 @@ function MonitorCard({ session, isSelected, onClick }) {
       )}
 
       <div style={{
-        fontSize: 13, color: '#d4d4d8', lineHeight: 1.6, marginBottom: 8,
+        fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 8,
         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
       }}>
         {session.lastPrompt || session.firstPrompt || '(프롬프트 없음)'}
@@ -387,7 +387,7 @@ function MonitorCard({ session, isSelected, onClick }) {
 
       <div style={{
         display: 'flex', gap: 5, flexWrap: 'wrap',
-        paddingTop: 8, borderTop: '1px solid rgba(255,255,255,.04)',
+        paddingTop: 8, borderTop: '1px solid var(--glass-bd)',
       }}>
         <Tag>{formatTokens(totalTokens)}</Tag>
         {session.toolCallCount > 0 && <Tag>도구 {session.toolCallCount}회</Tag>}
@@ -440,7 +440,7 @@ function MonitorDetail({ session }) {
         })()}
       </div>
 
-      <div style={{ fontSize: 17, fontWeight: 500, color: '#fafafa', lineHeight: 1.7, marginBottom: 24 }}>
+      <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', lineHeight: 1.7, marginBottom: 24 }}>
         {session.lastPrompt || session.firstPrompt || '(프롬프트 없음)'}
       </div>
 
@@ -520,7 +520,7 @@ function StatCard({ value, label }) {
       background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 'var(--rs)',
       padding: '10px 18px', textAlign: 'center', minWidth: 90,
     }}>
-      <div style={{ fontSize: 20, fontWeight: 700, color: '#fafafa', letterSpacing: '-.5px' }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.5px' }}>{value}</div>
       <div style={{ fontSize: 10, color: 'var(--mt)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '.5px' }}>{label}</div>
     </div>
   );
@@ -532,7 +532,7 @@ function DetailStat({ value, label }) {
       background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 'var(--rs)',
       padding: 16, textAlign: 'center',
     }}>
-      <div style={{ fontSize: 24, fontWeight: 700, color: '#fafafa', letterSpacing: '-.5px' }}>{value}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.5px' }}>{value}</div>
       <div style={{ fontSize: 11, color: 'var(--mt)', marginTop: 4 }}>{label}</div>
     </div>
   );

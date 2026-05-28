@@ -66,7 +66,7 @@ export default function ProjectFilter({ value, onChange }) {
           position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200,
           background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '10px',
           padding: '6px', minWidth: '220px',
-          boxShadow: '0 12px 32px rgba(0,0,0,.5)',
+          boxShadow: 'var(--shadow-h)',
         }}>
           {projects.map((p) => {
             const color = getProjectColor(p.label);
@@ -79,11 +79,11 @@ export default function ProjectFilter({ value, onChange }) {
                   padding: '9px 12px', borderRadius: '6px', cursor: 'pointer',
                   fontSize: '13px', transition: 'all .1s',
                   color: p.id === value ? 'var(--ac)' : 'var(--tx2)',
-                  background: p.id === value ? 'rgba(99,102,241,.15)' : 'transparent',
+                  background: p.id === value ? 'var(--ac-bg)' : 'transparent',
                 }}
                 onMouseEnter={(e) => {
                   if (p.id !== value) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,.06)';
+                    e.currentTarget.style.background = 'var(--s2)';
                     e.currentTarget.style.color = 'var(--tx)';
                   }
                 }}

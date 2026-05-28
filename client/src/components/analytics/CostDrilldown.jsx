@@ -29,7 +29,7 @@ export default function CostDrilldown({ project, onBack }) {
             {[{ label: '1주', val: '1w' }, { label: '1개월', val: '4w' }, { label: '3개월', val: '3m' }].map(opt => (
               <button key={opt.val} onClick={() => setPeriod(opt.val)} style={{
                 ...periodBtn,
-                background: period === opt.val ? '#f59e0b' : 'var(--s2)',
+                background: period === opt.val ? 'var(--ch-amber)' : 'var(--s2)',
                 color: period === opt.val ? '#000' : 'var(--mt)',
               }}>{opt.label}</button>
             ))}
@@ -50,7 +50,7 @@ export default function CostDrilldown({ project, onBack }) {
         </div>
         <div style={kpiCard}>
           <div style={{ fontSize: 11, color: 'var(--mt)' }}>캐시 절감</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#10b981' }}>-${cacheSavings.toFixed(1)}</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--ch-green)' }}>-${cacheSavings.toFixed(1)}</div>
           <div style={{ fontSize: 11, color: 'var(--mt)' }}>적중률 {cacheHitRate}%</div>
         </div>
       </div>
@@ -69,9 +69,9 @@ export default function CostDrilldown({ project, onBack }) {
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}
                 title={`${d.date}: $${total.toFixed(2)}`}>
                 <div style={{ borderRadius: '3px 3px 0 0', overflow: 'hidden' }}>
-                  <div style={{ height: opusH, background: '#6366f1' }} />
+                  <div style={{ height: opusH, background: 'var(--ch-blue)' }} />
                   <div style={{ height: sonnetH, background: '#10b981' }} />
-                  <div style={{ height: haikuH, background: '#f59e0b' }} />
+                  <div style={{ height: haikuH, background: 'var(--ch-amber)' }} />
                 </div>
               </div>
             );
@@ -86,9 +86,9 @@ export default function CostDrilldown({ project, onBack }) {
         </div>
         <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'center' }}>
           {[
-            { name: 'Opus', color: '#6366f1' },
-            { name: 'Sonnet', color: '#10b981' },
-            { name: 'Haiku', color: '#f59e0b' },
+            { name: 'Opus', color: 'var(--ch-blue)' },
+            { name: 'Sonnet', color: 'var(--ch-green)' },
+            { name: 'Haiku', color: 'var(--ch-amber)' },
           ].map(m => (
             <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--mt)' }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: m.color }} />
@@ -105,11 +105,11 @@ export default function CostDrilldown({ project, onBack }) {
           <span>항목</span><span>사용량</span><span>단가</span><span style={{ textAlign: 'right' }}>금액</span>
         </div>
         {[
-          { name: 'Opus input', color: '#6366f1', tokens: models.opus.input, rate: '$15/M', cost: (models.opus.input / 1e6) * 15 },
-          { name: 'Opus output', color: '#6366f1', tokens: models.opus.output, rate: '$75/M', cost: (models.opus.output / 1e6) * 75 },
-          { name: 'Sonnet input', color: '#10b981', tokens: models.sonnet.input, rate: '$3/M', cost: (models.sonnet.input / 1e6) * 3 },
-          { name: 'Sonnet output', color: '#10b981', tokens: models.sonnet.output, rate: '$15/M', cost: (models.sonnet.output / 1e6) * 15 },
-          { name: 'Haiku in+out', color: '#f59e0b', tokens: models.haiku.input + models.haiku.output, rate: '혼합', cost: (models.haiku.input / 1e6) * 0.25 + (models.haiku.output / 1e6) * 1.25 },
+          { name: 'Opus input', color: 'var(--ch-blue)', tokens: models.opus.input, rate: '$15/M', cost: (models.opus.input / 1e6) * 15 },
+          { name: 'Opus output', color: 'var(--ch-blue)', tokens: models.opus.output, rate: '$75/M', cost: (models.opus.output / 1e6) * 75 },
+          { name: 'Sonnet input', color: 'var(--ch-green)', tokens: models.sonnet.input, rate: '$3/M', cost: (models.sonnet.input / 1e6) * 3 },
+          { name: 'Sonnet output', color: 'var(--ch-green)', tokens: models.sonnet.output, rate: '$15/M', cost: (models.sonnet.output / 1e6) * 15 },
+          { name: 'Haiku in+out', color: 'var(--ch-amber)', tokens: models.haiku.input + models.haiku.output, rate: '혼합', cost: (models.haiku.input / 1e6) * 0.25 + (models.haiku.output / 1e6) * 1.25 },
         ].map((item, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 70px 80px', gap: 8, padding: '10px 0', borderBottom: '1px solid var(--bd)', fontSize: 12, alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -125,17 +125,17 @@ export default function CostDrilldown({ project, onBack }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 70px 80px', gap: 8, padding: '10px 0', borderBottom: '1px solid var(--bd)', fontSize: 12, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-            <span style={{ color: '#10b981' }}>캐시 절감</span>
+            <span style={{ color: 'var(--ch-green)' }}>캐시 절감</span>
           </div>
-          <span style={{ color: '#10b981' }}>{formatTokens(data?.cacheRead || 0)}</span>
-          <span style={{ color: '#10b981' }}>90%↓</span>
-          <span style={{ color: '#10b981', fontWeight: 600, textAlign: 'right' }}>-${cacheSavings.toFixed(2)}</span>
+          <span style={{ color: 'var(--ch-green)' }}>{formatTokens(data?.cacheRead || 0)}</span>
+          <span style={{ color: 'var(--ch-green)' }}>90%↓</span>
+          <span style={{ color: 'var(--ch-green)', fontWeight: 600, textAlign: 'right' }}>-${cacheSavings.toFixed(2)}</span>
         </div>
         {/* Total */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 70px 80px', gap: 8, padding: '12px 0', fontSize: 12, alignItems: 'center' }}>
           <span style={{ color: 'var(--tx)', fontWeight: 600 }}>실 지불 추정</span>
           <span /><span />
-          <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: 14, textAlign: 'right' }}>${totalCost.toFixed(2)}</span>
+          <span style={{ color: 'var(--ch-amber)', fontWeight: 700, fontSize: 14, textAlign: 'right' }}>${totalCost.toFixed(2)}</span>
         </div>
       </div>
     </div>
