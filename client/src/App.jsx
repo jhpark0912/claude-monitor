@@ -17,7 +17,7 @@ export default function App() {
             <Route path="/" element={<Navigate to={`/daily/${today}`} replace />} />
             <Route path="/daily/:date" element={<DailyPage project={project} />} />
             <Route path="/daybook/:date?" element={<DaybookPage project={project} />} />
-            <Route path="/monitor" element={<MonitorPage />} />
+            <Route path="/monitor" element={<MonitorPage project={project} />} />
             <Route path="/analytics" element={<AnalyticsPage project={project} />} />
           </Routes>
         )}

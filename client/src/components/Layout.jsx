@@ -68,9 +68,7 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <ThemeToggle />
           <FontSizeControl />
-          <div style={{ visibility: (isMonitor || isAnalytics) ? 'hidden' : 'visible' }}>
-            <ProjectFilter value={project} onChange={setProject} />
-          </div>
+          <ProjectFilter value={project} onChange={setProject} />
         </div>
       </header>
 

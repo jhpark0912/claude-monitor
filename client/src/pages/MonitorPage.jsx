@@ -45,7 +45,7 @@ function formatDuration(startedAt) {
   return `${mins}분`;
 }
 
-export default function MonitorPage() {
+export default function MonitorPage({ project }) {
   const [sessions, setSessions] = useState({});
   const [connected, setConnected] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -86,11 +86,12 @@ export default function MonitorPage() {
   const filtered = useMemo(() => {
     return allSessions
       .filter((s) => statusFilter === 'all' || s.status === statusFilter)
+      .filter((s) => !project || project === 'all' || s.projectDir === project)
       .sort((a, b) => {
         const order = { active: 0, idle: 1, completed: 2 };
         return (order[a.status] ?? 2) - (order[b.status] ?? 2);
       });
-  }, [allSessions, statusFilter]);
+  }, [allSessions, statusFilter, project]);
 
   const grouped = useMemo(() => {
     const map = {};
@@ -102,17 +103,20 @@ export default function MonitorPage() {
     return Object.values(map);
   }, [filtered]);
 
-  const counts = useMemo(() => {
-    const all = allSessions;
-    return {
-      total: all.length,
-      active: all.filter((s) => s.status === 'active').length,
-      idle: all.filter((s) => s.status === 'idle').length,
-      completed: all.filter((s) => s.status === 'completed').length,
-    };
-  }, [allSessions]);
+  const projectFiltered = useMemo(() => {
+    return allSessions.filter((s) => !project || project === 'all' || s.projectDir === project);
+  }, [allSessions, project]);
 
-  const totalTokens = allSessions.reduce(
+  const counts = useMemo(() => {
+    return {
+      total: projectFiltered.length,
+      active: projectFiltered.filter((s) => s.status === 'active').length,
+      idle: projectFiltered.filter((s) => s.status === 'idle').length,
+      completed: projectFiltered.filter((s) => s.status === 'completed').length,
+    };
+  }, [projectFiltered]);
+
+  const totalTokens = projectFiltered.reduce(
     (a, s) => a + (s.tokens?.totalInput || 0) + (s.tokens?.totalOutput || 0), 0
   );
 
