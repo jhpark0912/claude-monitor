@@ -60,6 +60,10 @@ export async function saveMemo(date, content) {
   return res.json();
 }
 
+export function fetchConversation(projectDir, fileKey) {
+  return fetchJson(`/conversation/${encodeURIComponent(projectDir)}/${encodeURIComponent(fileKey)}`);
+}
+
 export function createMonitorStream(onEvent) {
   const eventSource = new EventSource(`${API_BASE}/monitor/stream`);
 

@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
-import { formatTokens } from '../utils/colors';
-
-const TOOL_ICONS = { Bash: '$', Write: '+', Edit: '~', Read: '>', Grep: '?', Glob: '*' };
+import { useEffect, useState, useCallback } from 'react';
+import { formatTokens, TOOL_ICONS } from '../utils/colors';
 
 export default function SlidePanel({ session, onClose, onPrev, onNext, hasPrev, hasNext, children }) {
   useEffect(() => {
@@ -69,13 +67,38 @@ export function DefaultDetail({ session }) {
   const filesChanged = session.filesChanged || [];
   const toolUsage = session.toolUsage || {};
 
+  const sessionId = session.sessionId || session.fileKey?.replace('.jsonl', '') || '';
+  const shortId = sessionId.substring(0, 8);
+  const [copiedField, setCopiedField] = useState(null);
+
+  const copyText = useCallback((text, field) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 1500);
+    });
+  }, []);
+
   return (
     <>
-      <div className={`b-${session._color}`} style={{
-        fontSize: 12, fontWeight: 600, padding: '4px 12px',
-        borderRadius: 'var(--rx)', display: 'inline-block', marginBottom: 14,
+      {/* Session ID */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', marginBottom: 12,
+        background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 'var(--rx)',
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
       }}>
-        {session.projectLabel}
+        <span style={{ color: 'var(--mt)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.5px' }}>ID</span>
+        <span style={{ color: 'var(--ac)', fontWeight: 500 }}>{shortId}</span>
+        <CopyButton label="복사" copied={copiedField === 'id'} onClick={() => copyText(sessionId, 'id')} />
+        <CopyButton label="--resume" mono copied={copiedField === 'resume'} onClick={() => copyText(`claude --resume ${sessionId}`, 'resume')} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <div className={`b-${session._color}`} style={{
+          fontSize: 12, fontWeight: 600, padding: '4px 12px',
+          borderRadius: 'var(--rx)', display: 'inline-block',
+        }}>
+          {session.projectLabel}
+        </div>
       </div>
 
       <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', lineHeight: 1.7, marginBottom: 24, wordBreak: 'break-all' }}>
@@ -189,5 +212,23 @@ function Section({ title, count, children }) {
       </div>
       {children}
     </div>
+  );
+}
+
+function CopyButton({ label, mono, copied, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 500,
+      border: '1px solid', cursor: 'pointer', transition: 'all .15s',
+      fontFamily: mono ? "'JetBrains Mono', monospace" : 'inherit',
+      background: copied ? 'rgba(74,222,128,.1)' : 'transparent',
+      color: copied ? 'var(--gn)' : 'var(--mt)',
+      borderColor: copied ? 'rgba(74,222,128,.3)' : 'var(--bd)',
+    }}
+      onMouseEnter={e => { if (!copied) { e.currentTarget.style.background = 'var(--ac-bg)'; e.currentTarget.style.color = 'var(--ac)'; }}}
+      onMouseLeave={e => { if (!copied) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--mt)'; }}}
+    >
+      {copied ? '✓' : label}
+    </button>
   );
 }

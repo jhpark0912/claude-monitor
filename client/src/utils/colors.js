@@ -22,3 +22,5 @@ export function formatTokens(n) {
   if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
   return String(n);
 }
+
+export const TOOL_ICONS = { Bash: '$', Write: '+', Edit: '~', Read: '>', Grep: '?', Glob: '*', Agent: 'A' };
