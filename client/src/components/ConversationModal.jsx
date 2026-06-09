@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { fetchConversation } from '../api/client';
 import { formatTokens, TOOL_ICONS } from '../utils/colors';
 
@@ -220,7 +221,7 @@ function Turn({ turn }) {
         color: 'var(--tx2)',
         ...(isUser ? { whiteSpace: 'pre-wrap' } : {}),
       }}>
-        {isUser ? turn.text : <ReactMarkdown components={MD_COMPONENTS}>{turn.text || ''}</ReactMarkdown>}
+        {isUser ? turn.text : <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{turn.text || ''}</ReactMarkdown>}
 
         {turn.tools?.length > 0 && (
           <div style={{ marginTop: turn.text ? 10 : 0 }}>
