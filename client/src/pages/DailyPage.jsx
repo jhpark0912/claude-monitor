@@ -2,23 +2,20 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import DateNavigator from '../components/DateNavigator';
-import SlidePanel, { DefaultDetail } from '../components/SlidePanel';
+import ConversationModal from '../components/ConversationModal';
 import { fetchDailySessions } from '../api/client';
 import { getProjectColor, formatTokens } from '../utils/colors';
-
-const TOOL_ICONS = { Bash: '$', Write: '+', Edit: '~', Read: '>', Grep: '?', Glob: '*' };
 
 export default function DailyPage({ project = 'all' }) {
   const { date } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState(null);
+  const [conversationSession, setConversationSession] = useState(null);
   const [searchQ, setSearchQ] = useState('');
 
   useEffect(() => {
     setLoading(true);
-    setSelectedId(null);
     fetchDailySessions(date, project)
       .then(setData)
       .catch(console.error)
@@ -55,13 +52,9 @@ export default function DailyPage({ project = 'all' }) {
 
   const totalTokens = data ? (data.totalTokens.input + data.totalTokens.output) : 0;
   const totalTools = sessions.reduce((a, s) => a + s.toolCalls.length, 0);
-  const selected = sessions.find((s) => (s.fileKey || s.sessionId) === selectedId);
-  const flatIds = filtered.map((s) => s.fileKey || s.sessionId);
-  const selectedIdx = flatIds.indexOf(selectedId);
 
-  function openPanel(s) {
-    const id = s.fileKey || s.sessionId;
-    setSelectedId(id);
+  function openConversation(s) {
+    setConversationSession(s);
   }
 
   return (
@@ -101,8 +94,6 @@ export default function DailyPage({ project = 'all' }) {
         display: 'grid', gap: 14,
         gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
         alignContent: 'start',
-        transition: 'padding-right .3s',
-        paddingRight: selected ? 500 : 16,
       }}>
         {loading && (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px 20px', color: 'var(--mt)' }}>
@@ -119,25 +110,19 @@ export default function DailyPage({ project = 'all' }) {
         )}
 
         {!loading && grouped.map((g) => (
-          <ProjectCell key={g.label} group={g} selectedId={selectedId} onSelect={openPanel} />
+          <ProjectCell key={g.label} group={g} onSelect={openConversation} />
         ))}
       </div>
 
-      <SlidePanel
-        session={selected}
-        onClose={() => setSelectedId(null)}
-        onPrev={selectedIdx > 0 ? () => setSelectedId(flatIds[selectedIdx - 1]) : null}
-        onNext={selectedIdx < flatIds.length - 1 ? () => setSelectedId(flatIds[selectedIdx + 1]) : null}
-        hasPrev={selectedIdx > 0}
-        hasNext={selectedIdx < flatIds.length - 1}
-      >
-        {selected && <DefaultDetail session={selected} />}
-      </SlidePanel>
+      <ConversationModal
+        session={conversationSession}
+        onClose={() => setConversationSession(null)}
+      />
     </>
   );
 }
 
-function ProjectCell({ group, selectedId, onSelect }) {
+function ProjectCell({ group, onSelect }) {
   const totalTokens = group.sessions.reduce(
     (a, s) => a + (s.tokens?.totalInput || 0) + (s.tokens?.totalOutput || 0), 0
   );
@@ -169,7 +154,6 @@ function ProjectCell({ group, selectedId, onSelect }) {
           <SessionCard
             key={s.fileKey || s.sessionId}
             session={s}
-            isSelected={(s.fileKey || s.sessionId) === selectedId}
             onClick={() => onSelect(s)}
           />
         ))}
@@ -178,7 +162,7 @@ function ProjectCell({ group, selectedId, onSelect }) {
   );
 }
 
-function SessionCard({ session, isSelected, onClick }) {
+function SessionCard({ session, onClick }) {
   const totalTokens = (session.tokens?.totalInput || 0) + (session.tokens?.totalOutput || 0);
   const toolEntries = Object.entries(session.toolUsage || {});
 
@@ -186,22 +170,17 @@ function SessionCard({ session, isSelected, onClick }) {
     <div
       onClick={onClick}
       style={{
-        background: 'var(--s2)', border: `1px solid ${isSelected ? 'var(--ac)' : 'var(--bd)'}`,
+        background: 'var(--s2)', border: '1px solid var(--bd)',
         borderRadius: 'var(--rs)', padding: '12px 14px', marginBottom: 8,
         cursor: 'pointer', transition: 'all .15s', overflow: 'hidden',
-        boxShadow: isSelected ? '0 0 0 1px var(--ac)' : 'none',
       }}
       onMouseEnter={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.borderColor = 'var(--bd-h)';
-          e.currentTarget.style.background = 'linear-gradient(135deg, var(--s2), rgba(129,140,248,.03))';
-        }
+        e.currentTarget.style.borderColor = 'var(--bd-h)';
+        e.currentTarget.style.background = 'linear-gradient(135deg, var(--s2), rgba(129,140,248,.03))';
       }}
       onMouseLeave={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.borderColor = 'var(--bd)';
-          e.currentTarget.style.background = 'var(--s2)';
-        }
+        e.currentTarget.style.borderColor = 'var(--bd)';
+        e.currentTarget.style.background = 'var(--s2)';
       }}
     >
       <div style={{

@@ -247,6 +247,75 @@ function processRecordLive(record, state) {
   }
 }
 
+export async function parseSessionConversation(filePath) {
+  return new Promise((resolve) => {
+    const stream = fs.createReadStream(filePath, { encoding: 'utf-8' });
+    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+    const turns = [];
+    let sessionId = null;
+
+    rl.on('line', (line) => {
+      try {
+        const record = JSON.parse(line);
+        if (record.sessionId && !sessionId) sessionId = record.sessionId;
+
+        if (record.type === 'user' && !record.isMeta) {
+          const content = record.message?.content;
+          const hasToolResult = Array.isArray(content) && content.some(b => b.type === 'tool_result');
+          if (hasToolResult) return;
+
+          const text = extractUserText(content);
+          if (text) {
+            turns.push({ role: 'user', text, timestamp: record.timestamp });
+          }
+        } else if (record.type === 'assistant') {
+          const msg = record.message;
+          if (!msg || !Array.isArray(msg.content)) return;
+
+          const textParts = [];
+          const tools = [];
+          for (const block of msg.content) {
+            if (block.type === 'text' && block.text) textParts.push(block.text);
+            if (block.type === 'tool_use') {
+              tools.push({
+                name: block.name,
+                input: summarizeToolInput(block.name, block.input),
+              });
+            }
+          }
+          if (textParts.length === 0 && tools.length === 0) return;
+          turns.push({
+            role: 'assistant',
+            text: textParts.join('\n'),
+            tools,
+            model: msg.model || null,
+            tokens: msg.usage ? (msg.usage.input_tokens || 0) + (msg.usage.output_tokens || 0) : 0,
+            timestamp: record.timestamp,
+          });
+        }
+      } catch { /* skip */ }
+    });
+
+    rl.on('close', () => resolve({ sessionId, turns: mergeTurns(turns) }));
+    stream.on('error', () => resolve({ sessionId, turns: [] }));
+  });
+}
+
+function mergeTurns(raw) {
+  const merged = [];
+  for (const turn of raw) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === 'assistant' && turn.role === 'assistant') {
+      if (turn.text) last.text = last.text ? last.text + '\n' + turn.text : turn.text;
+      if (turn.tools?.length) last.tools.push(...turn.tools);
+      last.tokens += turn.tokens || 0;
+    } else {
+      merged.push({ ...turn, tools: turn.tools ? [...turn.tools] : undefined });
+    }
+  }
+  return merged;
+}
+
 function buildSummary(state) {
   const filesChanged = [];
   for (const [filePath, action] of state.fileChangeMap) {
