@@ -22,6 +22,7 @@ export default function Layout({ children }) {
   const isDaybook = location.pathname.startsWith('/daybook');
   const isMonitor = location.pathname === '/monitor';
   const isAnalytics = location.pathname === '/analytics';
+  const isWeeklyReport = location.pathname === '/weekly-report';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -62,6 +63,9 @@ export default function Layout({ children }) {
           </NavTab>
           <NavTab active={isAnalytics} onClick={() => navigate('/analytics')}>
             리포트
+          </NavTab>
+          <NavTab active={isWeeklyReport} onClick={() => navigate('/weekly-report')}>
+            주간회의록
           </NavTab>
         </nav>
 
