@@ -6,6 +6,7 @@ import MonitorPage from './pages/MonitorPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import DaybookPage from './pages/DaybookPage';
 import WeeklyReportPage from './pages/WeeklyReportPage';
+import ReportPage from './pages/ReportPage';
 
 export default function App() {
   const today = dayjs().format('YYYY-MM-DD');
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/monitor" element={<MonitorPage project={project} />} />
             <Route path="/analytics" element={<AnalyticsPage project={project} />} />
             <Route path="/weekly-report" element={<WeeklyReportPage project={project} />} />
+            <Route path="/reports/:date?" element={<ReportPage />} />
           </Routes>
         )}
       </Layout>

@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+dotenv.config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../.env') });
 import express from 'express';
 import cors from 'cors';
 import projectsRouter from './routes/projects.js';
@@ -7,6 +11,7 @@ import monitorRouter from './routes/monitor.js';
 import analyticsRouter from './routes/analytics.js';
 import daybookRouter from './routes/daybook.js';
 import conversationRouter from './routes/conversation.js';
+import reportsRouter from './routes/reports.js';
 import { buildDateIndex } from './services/projectScanner.js';
 import { initWatcher } from './services/sessionMonitor.js';
 
@@ -23,6 +28,7 @@ app.use('/api/monitor', monitorRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/daybook', daybookRouter);
 app.use('/api/conversation', conversationRouter);
+app.use('/api/reports', reportsRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

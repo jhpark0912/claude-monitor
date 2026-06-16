@@ -2,7 +2,11 @@ const API_BASE = '/api';
 
 async function fetchJson(url, opts) {
   const res = await fetch(`${API_BASE}${url}`, opts);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    let msg = `API error: ${res.status}`;
+    try { const body = await res.json(); if (body.error) msg = body.error; } catch {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
@@ -62,6 +66,30 @@ export async function saveMemo(date, content) {
 
 export function fetchConversation(projectDir, fileKey) {
   return fetchJson(`/conversation/${encodeURIComponent(projectDir)}/${encodeURIComponent(fileKey)}`);
+}
+
+export function fetchReportDates() {
+  return fetchJson('/reports');
+}
+
+export function fetchReport(date) {
+  return fetchJson(`/reports/${date}`);
+}
+
+export function generateReport(date) {
+  return fetchJson('/reports/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date }),
+  });
+}
+
+export function generateAiSummary(date, projectNames) {
+  return fetchJson(`/reports/${date}/ai-summary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectNames }),
+  });
 }
 
 export function createMonitorStream(onEvent) {
