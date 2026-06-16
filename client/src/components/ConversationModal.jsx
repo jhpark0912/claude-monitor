@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { fetchConversation } from '../api/client';
 import { formatTokens, TOOL_ICONS } from '../utils/colors';
 
@@ -120,10 +122,75 @@ export default function ConversationModal({ session, onClose }) {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .turn-claude h1, .turn-claude h2, .turn-claude h3, .turn-claude h4 {
+          color: var(--tx); margin: 12px 0 6px; line-height: 1.4;
+        }
+        .turn-claude h1 { font-size: 1.3em; }
+        .turn-claude h2 { font-size: 1.15em; }
+        .turn-claude h3 { font-size: 1.05em; }
+        .turn-claude p { margin: 6px 0; }
+        .turn-claude ul, .turn-claude ol { margin: 6px 0; padding-left: 20px; }
+        .turn-claude li { margin: 2px 0; }
+        .turn-claude li > p { margin: 2px 0; }
+        .turn-claude blockquote {
+          margin: 8px 0; padding: 6px 12px;
+          border-left: 3px solid var(--ac); background: rgba(129,140,248,.06);
+          color: var(--mt);
+        }
+        .turn-claude a { color: var(--ac); text-decoration: underline; }
+        .turn-claude strong { color: var(--tx); }
+        .turn-claude hr { border: none; border-top: 1px solid var(--bd); margin: 12px 0; }
+        .turn-claude > :first-child { margin-top: 0; }
+        .turn-claude > :last-child { margin-bottom: 0; }
       `}</style>
     </div>
   );
 }
+
+const MD_COMPONENTS = {
+  pre({ children }) {
+    return (
+      <pre style={{
+        background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: 'var(--rx)',
+        padding: '12px 14px', overflow: 'auto', fontSize: 12, lineHeight: 1.6,
+        fontFamily: "'JetBrains Mono', monospace", margin: '8px 0',
+      }}>
+        {children}
+      </pre>
+    );
+  },
+  code({ className, children, ...props }) {
+    if (className) {
+      return <code style={{ fontFamily: "'JetBrains Mono', monospace" }} {...props}>{children}</code>;
+    }
+    return <code style={{
+      background: 'var(--bg)', padding: '2px 6px', borderRadius: 4,
+      fontSize: '0.9em', fontFamily: "'JetBrains Mono', monospace",
+      border: '1px solid var(--bd)',
+    }} {...props}>{children}</code>;
+  },
+  table({ children }) {
+    return (
+      <div style={{ overflow: 'auto', margin: '8px 0' }}>
+        <table style={{
+          borderCollapse: 'collapse', width: '100%', fontSize: 12,
+          fontFamily: "'JetBrains Mono', monospace",
+        }}>{children}</table>
+      </div>
+    );
+  },
+  th({ children }) {
+    return <th style={{
+      border: '1px solid var(--bd)', padding: '6px 10px', textAlign: 'left',
+      background: 'var(--bg)', fontWeight: 600, fontSize: 11,
+    }}>{children}</th>;
+  },
+  td({ children }) {
+    return <td style={{
+      border: '1px solid var(--bd)', padding: '6px 10px', fontSize: 12,
+    }}>{children}</td>;
+  },
+};
 
 function Turn({ turn }) {
   const isUser = turn.role === 'user';
@@ -146,14 +213,15 @@ function Turn({ turn }) {
         </span>
       </div>
 
-      <div style={{
+      <div className={isUser ? 'turn-user' : 'turn-claude'} style={{
         marginLeft: 32, padding: '14px 16px', borderRadius: 'var(--rs)',
-        fontSize: 13, lineHeight: 1.7, wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+        fontSize: 13, lineHeight: 1.7, wordBreak: 'break-word',
         background: isUser ? 'rgba(129,140,248,.08)' : 'var(--s2)',
         border: `1px solid ${isUser ? 'rgba(129,140,248,.15)' : 'var(--bd)'}`,
         color: 'var(--tx2)',
+        ...(isUser ? { whiteSpace: 'pre-wrap' } : {}),
       }}>
-        {turn.text}
+        {isUser ? turn.text : <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{turn.text || ''}</ReactMarkdown>}
 
         {turn.tools?.length > 0 && (
           <div style={{ marginTop: turn.text ? 10 : 0 }}>
