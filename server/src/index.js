@@ -12,8 +12,10 @@ import analyticsRouter from './routes/analytics.js';
 import daybookRouter from './routes/daybook.js';
 import conversationRouter from './routes/conversation.js';
 import reportsRouter from './routes/reports.js';
+import cron from 'node-cron';
 import { buildDateIndex } from './services/projectScanner.js';
 import { initWatcher } from './services/sessionMonitor.js';
+import { scheduleReportJob } from './services/reportScheduler.js';
 
 const app = express();
 const PORT = 3001;
@@ -39,6 +41,7 @@ async function start() {
   console.log('Building date index...');
   await buildDateIndex();
   await initWatcher();
+  scheduleReportJob(cron);
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
