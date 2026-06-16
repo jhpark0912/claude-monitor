@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+dotenv.config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../.env') });
 import express from 'express';
 import cors from 'cors';
 import projectsRouter from './routes/projects.js';
@@ -7,8 +11,11 @@ import monitorRouter from './routes/monitor.js';
 import analyticsRouter from './routes/analytics.js';
 import daybookRouter from './routes/daybook.js';
 import conversationRouter from './routes/conversation.js';
+import reportsRouter from './routes/reports.js';
+import cron from 'node-cron';
 import { buildDateIndex } from './services/projectScanner.js';
 import { initWatcher } from './services/sessionMonitor.js';
+import { scheduleReportJob } from './services/reportScheduler.js';
 
 const app = express();
 const PORT = 3001;
@@ -23,6 +30,7 @@ app.use('/api/monitor', monitorRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/daybook', daybookRouter);
 app.use('/api/conversation', conversationRouter);
+app.use('/api/reports', reportsRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -33,6 +41,7 @@ async function start() {
   console.log('Building date index...');
   await buildDateIndex();
   await initWatcher();
+  scheduleReportJob(cron);
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
