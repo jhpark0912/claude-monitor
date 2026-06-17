@@ -92,6 +92,66 @@ export function generateAiSummary(date, projectNames) {
   });
 }
 
+export function fetchWeeklyReport(from, to) {
+  return fetchJson(`/reports/weekly?from=${from}&to=${to}`);
+}
+
+export function saveWeeklyReport(from, to, data) {
+  return fetchJson('/reports/weekly', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, ...data }),
+  });
+}
+
+export function generateWeeklyAi(from, to, selectedProjects) {
+  return fetchJson('/reports/weekly/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, selectedProjects }),
+  });
+}
+
+export function fetchObjectives() {
+  return fetchJson('/objectives');
+}
+
+export function saveObjective(obj) {
+  return fetchJson('/objectives', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj),
+  });
+}
+
+export function deleteObjective(id) {
+  return fetchJson(`/objectives/${id}`, { method: 'DELETE' });
+}
+
+export function fetchObjectiveReport(period) {
+  return fetchJson(`/objectives/report/${period}`);
+}
+
+export function saveObjectiveReport(period, data) {
+  return fetchJson(`/objectives/report/${period}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
+export function generateObjectivesAi(period) {
+  return fetchJson('/objectives/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ period }),
+  });
+}
+
+export function fetchTimeline(date, project = 'all', { signal } = {}) {
+  return fetchJson(`/timeline?date=${date}&project=${project}`, { signal });
+}
+
 export function createMonitorStream(onEvent) {
   const eventSource = new EventSource(`${API_BASE}/monitor/stream`);
 

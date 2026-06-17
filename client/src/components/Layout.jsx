@@ -1,29 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import ProjectFilter from './ProjectFilter';
 
-const STORAGE_KEY = 'dashboard-selected-project';
 const THEME_KEY = 'dashboard-theme';
 const FONTSIZE_KEY = 'dashboard-fontsize';
 
 export default function Layout({ children }) {
-  const [project, setProject] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || 'all';
-  });
+  const project = 'all';
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, project);
-  }, [project]);
-
-  const isDaily = location.pathname.startsWith('/daily');
-  const isDaybook = location.pathname.startsWith('/daybook');
-  const isMonitor = location.pathname === '/monitor';
+  const isTimeline = location.pathname.startsWith('/timeline');
   const isAnalytics = location.pathname === '/analytics';
-  const isWeeklyReport = location.pathname === '/weekly-report';
   const isReports = location.pathname.startsWith('/reports');
+  const isMonitor = location.pathname === '/monitor';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -43,40 +33,27 @@ export default function Layout({ children }) {
           <span><span style={{ color: 'var(--ac)' }}>Claude</span> Session Dashboard</span>
         </div>
 
-        <nav style={{
-          display: 'flex', gap: 2, background: 'var(--s1)', borderRadius: 'var(--rs)',
-          padding: 3, border: '1px solid var(--bd)',
-        }}>
+        <nav style={{ display: 'flex', gap: 0 }}>
           <NavTab
-            active={isDaily}
-            onClick={() => navigate(`/daily/${dayjs().format('YYYY-MM-DD')}`)}
+            active={isTimeline}
+            onClick={() => navigate(`/timeline/${dayjs().format('YYYY-MM-DD')}`)}
           >
-            세션
+            타임라인
           </NavTab>
-          <NavTab
-            active={isDaybook}
-            onClick={() => navigate(`/daybook/${dayjs().format('YYYY-MM-DD')}`)}
-          >
-            커밋로그
+          <NavTab active={isAnalytics} onClick={() => navigate('/analytics')}>
+            분석
+          </NavTab>
+          <NavTab active={isReports} onClick={() => navigate('/reports/daily')}>
+            보고서
           </NavTab>
           <NavTab active={isMonitor} onClick={() => navigate('/monitor')}>
             모니터링
-          </NavTab>
-          <NavTab active={isAnalytics} onClick={() => navigate('/analytics')}>
-            리포트
-          </NavTab>
-          <NavTab active={isWeeklyReport} onClick={() => navigate('/weekly-report')}>
-            주간회의록
-          </NavTab>
-          <NavTab active={isReports} onClick={() => navigate('/reports')}>
-            일일보고
           </NavTab>
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <ThemeToggle />
           <FontSizeControl />
-          <ProjectFilter value={project} onChange={setProject} />
         </div>
       </header>
 
@@ -92,14 +69,15 @@ function NavTab({ active, onClick, children }) {
     <button
       onClick={onClick}
       style={{
-        padding: '6px 16px', borderRadius: 8, border: 'none',
-        background: active ? 'var(--ac)' : 'transparent',
-        color: active ? '#fff' : 'var(--mt)',
-        cursor: 'pointer', fontSize: 12, fontWeight: 600,
+        padding: '8px 18px', border: 'none', background: 'transparent',
+        color: active ? 'var(--tx)' : 'var(--mt)',
+        cursor: 'pointer', fontSize: 13, fontWeight: active ? 600 : 400,
         fontFamily: 'inherit', transition: 'all .15s',
+        borderBottom: active ? '2px solid var(--ac)' : '2px solid transparent',
+        marginBottom: -1,
       }}
       onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'var(--tx)'; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'var(--mt)'; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = active ? 'var(--tx)' : 'var(--mt)'; }}
     >
       {children}
     </button>
@@ -108,7 +86,7 @@ function NavTab({ active, onClick, children }) {
 
 function ThemeToggle() {
   const [theme, setTheme] = useState(() =>
-    localStorage.getItem(THEME_KEY) || 'dark',
+    localStorage.getItem(THEME_KEY) || 'light',
   );
 
   useEffect(() => {

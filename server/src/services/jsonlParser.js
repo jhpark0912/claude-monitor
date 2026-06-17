@@ -1,5 +1,6 @@
 import fs from 'fs';
 import readline from 'readline';
+import dayjs from 'dayjs';
 import cacheManager from './cacheManager.js';
 
 export async function readFirstTimestamp(filePath) {
@@ -24,6 +25,95 @@ export async function readFirstTimestamp(filePath) {
     rl.on('close', () => { if (!found) resolve(null); });
     stream.on('error', () => resolve(null));
   });
+}
+
+export async function readLastTimestamp(filePath) {
+  const TAIL_BYTES = 8192;
+  const stat = fs.statSync(filePath);
+  const start = Math.max(0, stat.size - TAIL_BYTES);
+
+  return new Promise((resolve) => {
+    const stream = fs.createReadStream(filePath, { start, encoding: 'utf-8' });
+    const lines = [];
+
+    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+    rl.on('line', (line) => { if (line.trim()) lines.push(line); });
+    rl.on('close', () => {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try {
+          const record = JSON.parse(lines[i]);
+          if (record.timestamp) { resolve(record.timestamp); return; }
+        } catch { /* skip */ }
+      }
+      resolve(null);
+    });
+    stream.on('error', () => resolve(null));
+  });
+}
+
+const dayActivityCache = new Map();
+
+export async function parseDayActivity(filePath, targetDate) {
+  const cacheKey = `${filePath}::${targetDate}`;
+  const mtime = fs.statSync(filePath).mtimeMs;
+  const cached = dayActivityCache.get(cacheKey);
+  if (cached && cached.mtime === mtime) return cached.data;
+
+  const data = await doParseDayActivity(filePath, targetDate);
+  dayActivityCache.set(cacheKey, { data, mtime });
+  return data;
+}
+
+async function doParseDayActivity(filePath, targetDate) {
+  return new Promise((resolve) => {
+    const stream = fs.createReadStream(filePath, { encoding: 'utf-8' });
+    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+
+    const state = {
+      sessionId: null, model: null, version: null,
+      firstPrompt: null, lastPrompt: null,
+      startedAt: null, endedAt: null,
+      tokens: { totalInput: 0, totalOutput: 0, cacheCreation: 0, cacheRead: 0 },
+      toolCalls: [], toolUsage: {}, fileChangeMap: new Map(),
+      promptCount: 0,
+    };
+
+    rl.on('line', (line) => {
+      try {
+        const record = JSON.parse(line);
+        if (!record.timestamp) return;
+        if (record.sessionId && !state.sessionId) state.sessionId = record.sessionId;
+        if (record.version && !state.version) state.version = record.version;
+
+        const recDate = dayjs(record.timestamp).format('YYYY-MM-DD');
+        if (recDate !== targetDate) return;
+
+        if (!state.startedAt) state.startedAt = record.timestamp;
+        state.endedAt = record.timestamp;
+
+        if (record.type === 'user') {
+          processUserRecordForDay(record, state);
+        } else if (record.type === 'assistant') {
+          processAssistantRecord(record, state);
+        }
+      } catch { /* skip */ }
+    });
+
+    rl.on('close', () => {
+      if (!state.startedAt) { resolve(null); return; }
+      resolve(buildSummary(state));
+    });
+    stream.on('error', () => resolve(null));
+  });
+}
+
+function processUserRecordForDay(record, state) {
+  if (record.isMeta) return;
+  const text = extractUserText(record.message?.content);
+  if (!text) return;
+  state.promptCount++;
+  if (!state.firstPrompt) state.firstPrompt = text.substring(0, 200);
+  state.lastPrompt = text.substring(0, 200);
 }
 
 export async function parseSessionSummary(filePath) {
