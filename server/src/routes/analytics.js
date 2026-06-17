@@ -1,10 +1,20 @@
 import { Router } from 'express';
 import dayjs from 'dayjs';
-import { getAvailableDates, getSessionsByDate, refreshIndex } from '../services/projectScanner.js';
-import { parseSessionSummary } from '../services/jsonlParser.js';
 import { buildAnalyticsData } from '../services/analyticsService.js';
 
 const router = Router();
+
+function getSessionDays(session) {
+  const start = dayjs(session.startedAt).startOf('day');
+  const end = dayjs(session.endedAt || session.startedAt).startOf('day');
+  const days = [];
+  let d = start;
+  while (d.isBefore(end) || d.isSame(end, 'day')) {
+    days.push(d.format('YYYY-MM-DD'));
+    d = d.add(1, 'day');
+  }
+  return days;
+}
 
 router.get('/calendar', async (req, res, next) => {
   try {
@@ -14,13 +24,17 @@ router.get('/calendar', async (req, res, next) => {
 
     const calendarDays = {};
     for (const session of data.sessions) {
-      const date = dayjs(session.startedAt).format('YYYY-MM-DD');
-      if (!date.startsWith(target)) continue;
-      if (!calendarDays[date]) {
-        calendarDays[date] = { date, sessionCount: 0, totalTokens: 0 };
+      const days = getSessionDays(session);
+      const fraction = 1 / days.length;
+      const totalTokens = session.tokens.totalInput + session.tokens.totalOutput;
+      for (const date of days) {
+        if (!date.startsWith(target)) continue;
+        if (!calendarDays[date]) {
+          calendarDays[date] = { date, sessionCount: 0, totalTokens: 0 };
+        }
+        calendarDays[date].sessionCount += 1;
+        calendarDays[date].totalTokens += Math.round(totalTokens * fraction);
       }
-      calendarDays[date].sessionCount += 1;
-      calendarDays[date].totalTokens += session.tokens.totalInput + session.tokens.totalOutput;
     }
 
     res.json({
@@ -77,16 +91,20 @@ router.get('/cost', async (req, res, next) => {
       const start = dayjs(session.startedAt);
       if (start.isBefore(since)) continue;
 
-      const date = start.format('YYYY-MM-DD');
+      const days = getSessionDays(session);
+      const fraction = 1 / days.length;
       const modelKey = classifyModel(session.model);
       models[modelKey].input += session.tokens.totalInput;
       models[modelKey].output += session.tokens.totalOutput;
       cacheCreation += session.tokens.cacheCreation || 0;
       cacheRead += session.tokens.cacheRead || 0;
 
-      if (!dailyCosts[date]) dailyCosts[date] = { date, opus: 0, sonnet: 0, haiku: 0 };
       const cost = estimateCost(session.tokens, modelKey);
-      dailyCosts[date][modelKey] += cost;
+      for (const date of days) {
+        if (dayjs(date).isBefore(since)) continue;
+        if (!dailyCosts[date]) dailyCosts[date] = { date, opus: 0, sonnet: 0, haiku: 0 };
+        dailyCosts[date][modelKey] += cost * fraction;
+      }
     }
 
     const totalCost = calcModelCost(models);
@@ -121,12 +139,15 @@ router.get('/yearly', async (req, res, next) => {
 
     const days = {};
     for (const session of data.sessions) {
-      const start = dayjs(session.startedAt);
-      if (start.year() !== year) continue;
-      const date = start.format('YYYY-MM-DD');
-      if (!days[date]) days[date] = { date, sessions: 0, tokens: 0 };
-      days[date].sessions += 1;
-      days[date].tokens += session.tokens.totalInput + session.tokens.totalOutput;
+      const sessionDays = getSessionDays(session);
+      const totalTokens = session.tokens.totalInput + session.tokens.totalOutput;
+      const fraction = 1 / sessionDays.length;
+      for (const date of sessionDays) {
+        if (!date.startsWith(String(year))) continue;
+        if (!days[date]) days[date] = { date, sessions: 0, tokens: 0 };
+        days[date].sessions += 1;
+        days[date].tokens += Math.round(totalTokens * fraction);
+      }
     }
 
     res.json({ year, days: Object.values(days) });
@@ -171,10 +192,12 @@ router.get('/anomalies', async (req, res, next) => {
     const target = month || dayjs().format('YYYY-MM');
     const data = await buildAnalyticsData(project || 'all');
 
-    // 해당 월의 세션만 필터링
-    const monthlySessions = data.sessions.filter(s =>
-      dayjs(s.startedAt).format('YYYY-MM') === target
-    );
+    // 해당 월의 세션만 필터링 (multi-day 세션은 endDate까지 확인)
+    const monthlySessions = data.sessions.filter(s => {
+      const startMonth = dayjs(s.startedAt).format('YYYY-MM');
+      const endMonth = dayjs(s.endedAt || s.startedAt).format('YYYY-MM');
+      return startMonth === target || endMonth === target;
+    });
 
     // 프로젝트별 세션 그룹핑
     const projectGroups = {};

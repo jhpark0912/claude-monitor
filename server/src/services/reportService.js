@@ -36,4 +36,21 @@ export function getReportDates() {
   } catch { return []; }
 }
 
+const WEEKLY_DIR = path.join(os.homedir(), '.career', 'weekly-reports');
+fs.mkdirSync(WEEKLY_DIR, { recursive: true });
+
+export function getWeeklyReport(from, to) {
+  const filePath = path.join(WEEKLY_DIR, `${from}_${to}.json`);
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch { return null; }
+}
+
+export function saveWeeklyReport(from, to, data) {
+  const filePath = path.join(WEEKLY_DIR, `${from}_${to}.json`);
+  const report = { from, to, ...data, savedAt: new Date().toISOString() };
+  fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf-8');
+  return report;
+}
+
 export { REPORT_DIR };

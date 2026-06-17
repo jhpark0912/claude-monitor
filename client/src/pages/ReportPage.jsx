@@ -10,7 +10,7 @@ import DatePicker from '../components/DatePicker';
 dayjs.locale('ko');
 
 export default function ReportPage() {
-  const { date } = useParams();
+  const { param: date } = useParams();
   const navigate = useNavigate();
   const [dates, setDates] = useState([]);
   const [report, setReport] = useState(null);
@@ -55,13 +55,13 @@ export default function ReportPage() {
         justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <NavBtn onClick={() => hasPrev && navigate(`/reports/${dates[idx + 1]}`)} disabled={!hasPrev}>&#8249;</NavBtn>
+          <NavBtn onClick={() => hasPrev && navigate(`/reports/daily/${dates[idx + 1]}`)} disabled={!hasPrev}>&#8249;</NavBtn>
           <DatePicker
             value={currentDate}
-            onChange={(d) => navigate(`/reports/${d}`)}
+            onChange={(d) => navigate(`/reports/daily/${d}`)}
             reportDates={dates}
           />
-          <NavBtn onClick={() => hasNext && navigate(`/reports/${dates[idx - 1]}`)} disabled={!hasNext}>&#8250;</NavBtn>
+          <NavBtn onClick={() => hasNext && navigate(`/reports/daily/${dates[idx - 1]}`)} disabled={!hasNext}>&#8250;</NavBtn>
         </div>
         <button onClick={handleGenerate} disabled={generating} style={{
           padding: '8px 16px', borderRadius: 'var(--rs)', fontSize: 13, fontWeight: 600,

@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProjectCard, { TYPES_ORDER, TYPE_CONFIG, mergeByProject, getTypeCounts } from './ProjectCard';
 
 export default function WeeklyView({ data }) {
+  const navigate = useNavigate();
   const projects = useMemo(() => mergeByProject(data?.days || []), [data]);
   const typeCounts = useMemo(() => getTypeCounts(projects), [projects]);
 
@@ -69,6 +71,19 @@ export default function WeeklyView({ data }) {
       {projects.map((proj) => (
         <ProjectCard key={proj.projectId} proj={proj} />
       ))}
+
+      {/* 보고서 브릿지 */}
+      {data?.from && data?.to && (
+        <div style={{ textAlign: 'center', paddingTop: 8 }}>
+          <button onClick={() => navigate(`/reports/weekly`)} style={{
+            padding: '8px 20px', borderRadius: 'var(--rs)', fontSize: 12, fontWeight: 600,
+            border: '1px solid var(--ac-bd)', background: 'var(--ac-bg)', color: 'var(--ac)',
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            → 주간회의록 생성
+          </button>
+        </div>
+      )}
     </div>
   );
 }

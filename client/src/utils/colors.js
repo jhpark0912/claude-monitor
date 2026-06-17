@@ -1,6 +1,7 @@
 const PALETTE = [
   'indigo', 'amber', 'emerald', 'rose', 'cyan',
   'violet', 'orange', 'teal', 'lime', 'pink', 'sky', 'red',
+  'fuchsia', 'blue', 'yellow', 'slate', 'mint', 'coral', 'plum', 'gold',
 ];
 
 const cache = new Map();

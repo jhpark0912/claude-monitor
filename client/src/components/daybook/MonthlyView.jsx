@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import ProjectCard, { TYPES_ORDER, TYPE_CONFIG, mergeByProject, getTypeCounts } from './ProjectCard';
 
 export default function MonthlyView({ data, onDayClick }) {
+  const navigate = useNavigate();
   const days = data?.days || [];
   const projects = useMemo(() => mergeByProject(days), [days]);
   const typeCounts = useMemo(() => getTypeCounts(projects), [projects]);
@@ -89,6 +91,17 @@ export default function MonthlyView({ data, onDayClick }) {
       {projects.map((proj) => (
         <ProjectCard key={proj.projectId} proj={proj} showDate />
       ))}
+
+      {/* 보고서 브릿지 */}
+      <div style={{ textAlign: 'center', paddingTop: 4 }}>
+        <button onClick={() => navigate('/reports/objectives')} style={{
+          padding: '8px 20px', borderRadius: 'var(--rs)', fontSize: 12, fontWeight: 600,
+          border: '1px solid var(--ac-bd)', background: 'var(--ac-bg)', color: 'var(--ac)',
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}>
+          → 중점추진과제 작성
+        </button>
+      </div>
 
       {/* 일별 활동 차트 */}
       <div style={{

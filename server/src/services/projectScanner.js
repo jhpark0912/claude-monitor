@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { execSync } from 'child_process';
 import { resolveProjectPath, extractProjectLabel, labelFromDirName } from '../utils/pathDecoder.js';
-import { readFirstTimestamp, parseSessionSummary } from './jsonlParser.js';
+import { readFirstTimestamp, readLastTimestamp, parseSessionSummary, parseDayActivity } from './jsonlParser.js';
 import dayjs from 'dayjs';
 
 export const CLAUDE_DIR = path.join(os.homedir(), '.claude');
@@ -64,13 +64,26 @@ export async function buildDateIndex() {
 
 async function indexFile(filePath, projectDir) {
   if (dateIndex.has(filePath)) return;
-  const timestamp = await readFirstTimestamp(filePath);
-  if (timestamp) {
+  const [firstTs, lastTs] = await Promise.all([
+    readFirstTimestamp(filePath),
+    readLastTimestamp(filePath),
+  ]);
+  if (firstTs) {
     dateIndex.set(filePath, {
       projectDir,
-      startDate: dayjs(timestamp).format('YYYY-MM-DD'),
+      startDate: dayjs(firstTs).format('YYYY-MM-DD'),
+      endDate: dayjs(lastTs || firstTs).format('YYYY-MM-DD'),
       fileName: path.basename(filePath),
     });
+  }
+}
+
+export async function reindexFile(filePath) {
+  const existing = dateIndex.get(filePath);
+  if (!existing) return;
+  const lastTs = await readLastTimestamp(filePath);
+  if (lastTs) {
+    existing.endDate = dayjs(lastTs).format('YYYY-MM-DD');
   }
 }
 
@@ -80,18 +93,20 @@ export async function refreshIndex() {
     catch { return false; }
   });
 
-  const newFiles = [];
+  const tasks = [];
   for (const dir of dirs) {
     const files = listJsonlFiles(dir);
     for (const file of files) {
       const filePath = path.join(PROJECTS_DIR, dir, file);
       if (!dateIndex.has(filePath)) {
-        newFiles.push(indexFile(filePath, dir));
+        tasks.push(indexFile(filePath, dir));
+      } else {
+        tasks.push(reindexFile(filePath));
       }
     }
   }
 
-  if (newFiles.length > 0) await Promise.all(newFiles);
+  if (tasks.length > 0) await Promise.all(tasks);
 }
 
 export async function getSessionsByDate(date, projectFilter) {
@@ -101,16 +116,18 @@ export async function getSessionsByDate(date, projectFilter) {
   const matchingFiles = [];
 
   for (const [filePath, info] of dateIndex) {
-    if (info.startDate !== targetDate) continue;
+    if (targetDate < info.startDate || targetDate > info.endDate) continue;
     if (projectFilter && projectFilter !== 'all' && info.projectDir !== projectFilter) continue;
     matchingFiles.push({ filePath, ...info });
   }
 
   const activeSessions = getActiveSessions();
-
   const results = [];
   for (const file of matchingFiles) {
-    const summary = await parseSessionSummary(file.filePath);
+    const multiDay = file.startDate !== file.endDate;
+    const summary = multiDay
+      ? await parseDayActivity(file.filePath, targetDate)
+      : await parseSessionSummary(file.filePath);
     if (!summary) continue;
 
     const project = projectCache.get(file.projectDir);
@@ -121,6 +138,8 @@ export async function getSessionsByDate(date, projectFilter) {
       projectPath: project?.path || file.projectDir,
       projectLabel: project?.label || file.projectDir,
       isActive: activeSessions.has(summary.sessionId),
+      isMultiDay: multiDay,
+      sessionStartDate: file.startDate,
     });
   }
 
@@ -161,7 +180,12 @@ export function getAvailableDates(projectFilter) {
   const dates = new Set();
   for (const [, info] of dateIndex) {
     if (projectFilter && projectFilter !== 'all' && info.projectDir !== projectFilter) continue;
-    dates.add(info.startDate);
+    let d = dayjs(info.startDate);
+    const end = dayjs(info.endDate);
+    while (d.isBefore(end) || d.isSame(end, 'day')) {
+      dates.add(d.format('YYYY-MM-DD'));
+      d = d.add(1, 'day');
+    }
   }
   return [...dates].sort().reverse();
 }
@@ -178,23 +202,89 @@ function getActiveSessions() {
   const active = new Set();
   try {
     const files = fs.readdirSync(SESSIONS_DIR);
+    const candidates = [];
     for (const file of files) {
       if (!file.endsWith('.json')) continue;
       try {
         const content = JSON.parse(
           fs.readFileSync(path.join(SESSIONS_DIR, file), 'utf-8')
         );
-        if (content.pid && isProcessRunning(content.pid)) {
-          active.add(content.sessionId);
+        if (content.pid && content.sessionId) {
+          candidates.push(content);
         }
       } catch { /* skip */ }
+    }
+
+    if (candidates.length === 0) return active;
+
+    const alivePids = getAlivePids(candidates.map(c => c.pid));
+    for (const c of candidates) {
+      if (alivePids.has(c.pid)) active.add(c.sessionId);
     }
   } catch { /* sessions dir may not exist */ }
   return active;
 }
 
 const processNameCache = new Map();
-const PROCESS_CACHE_TTL = 30_000;
+const PROCESS_CACHE_TTL = 60_000;
+
+function getAlivePids(pids) {
+  const alive = new Set();
+  const unchecked = [];
+
+  for (const pid of pids) {
+    try { process.kill(pid, 0); } catch { continue; }
+
+    if (process.platform !== 'win32') {
+      alive.add(pid);
+      continue;
+    }
+
+    const cached = processNameCache.get(pid);
+    if (cached && Date.now() - cached.ts < PROCESS_CACHE_TTL) {
+      if (cached.alive) alive.add(pid);
+      continue;
+    }
+    unchecked.push(pid);
+  }
+
+  if (unchecked.length > 0 && process.platform === 'win32') {
+    const processMap = getWindowsProcessMap();
+    const now = Date.now();
+    for (const pid of unchecked) {
+      const name = processMap.get(pid);
+      const isAlive = !!(name && (name.includes('node') || name.includes('claude')));
+      processNameCache.set(pid, { alive: isAlive, ts: now });
+      if (isAlive) alive.add(pid);
+    }
+  }
+
+  return alive;
+}
+
+let cachedProcessMap = null;
+let processMapTime = 0;
+const PROCESS_MAP_TTL = 10_000;
+
+function getWindowsProcessMap() {
+  const now = Date.now();
+  if (cachedProcessMap && now - processMapTime < PROCESS_MAP_TTL) {
+    return cachedProcessMap;
+  }
+  const map = new Map();
+  try {
+    const out = execSync('tasklist /FO CSV /NH', {
+      encoding: 'utf-8', timeout: 5000, windowsHide: true,
+    });
+    for (const line of out.split('\n')) {
+      const match = line.match(/^"([^"]+)","(\d+)"/);
+      if (match) map.set(Number(match[2]), match[1].toLowerCase());
+    }
+  } catch { /* fallback: empty map */ }
+  cachedProcessMap = map;
+  processMapTime = now;
+  return map;
+}
 
 export function isProcessRunning(pid) {
   try {
@@ -210,16 +300,9 @@ export function isProcessRunning(pid) {
     return cached.alive;
   }
 
-  let alive = false;
-  try {
-    const out = execSync(`tasklist /FI "PID eq ${Number(pid)}" /FO CSV /NH`, {
-      encoding: 'utf-8', timeout: 3000, windowsHide: true,
-    });
-    const lower = out.toLowerCase();
-    alive = lower.includes('node.exe') || lower.includes('claude');
-  } catch {
-    alive = false;
-  }
+  const processMap = getWindowsProcessMap();
+  const name = processMap.get(pid);
+  const alive = !!(name && (name.includes('node') || name.includes('claude')));
   processNameCache.set(pid, { alive, ts: Date.now() });
   return alive;
 }
