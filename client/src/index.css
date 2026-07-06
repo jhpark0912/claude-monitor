@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root, [data-theme="dark"] {
   --bg: #08080a; --s1: #0f0f12; --s2: #141418; --s3: #1a1a20;
@@ -147,3 +148,63 @@ mark {
 [data-theme="light"] .b-coral { background: rgba(194,65,12,.1); color: #9a3412; }
 [data-theme="light"] .b-plum { background: rgba(126,34,206,.1); color: #7e22ce; }
 [data-theme="light"] .b-gold { background: rgba(161,98,7,.1); color: #92400e; }
+
+/* ─────────────────────────────────────────────────────────────
+   칸반 탭 전용 shadcn 테마 (SPEC §3 테마 병합 / §3.1 비침범)
+   - shadcn 시맨틱 토큰을 session_board 전역 변수(--bg/--tx/--ac …)에 매핑.
+   - @theme inline 이므로 --color-* 값은 :root에 방출되지 않고 유틸리티에 인라인됨
+     → 전역 UI에 새 변수/유틸을 강제하지 않는다.
+   - 실제 값(--background 등)은 .kanban-scope 아래에서만 정의되므로,
+     bg-primary 등 shadcn 유틸리티는 칸반 서브트리 밖에서 해석되지 않는다.
+   - .kanban-scope 는 session_board 변수를 참조하므로 data-theme(dark/light)를 자동 추종.
+   ───────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+.kanban-scope {
+  --background: var(--bg);
+  --foreground: var(--tx);
+  --card: var(--s1);
+  --card-foreground: var(--tx);
+  --popover: var(--s2);
+  --popover-foreground: var(--tx);
+  --primary: var(--ac);
+  --primary-foreground: var(--bg);
+  --secondary: var(--s3);
+  --secondary-foreground: var(--tx);
+  --muted: var(--s2);
+  --muted-foreground: var(--tx2);
+  --accent: var(--s3);
+  --accent-foreground: var(--tx);
+  --destructive: var(--rd);
+  --destructive-foreground: var(--bg);
+  --border: var(--bd);
+  --input: var(--bd2);
+  --ring: var(--ac);
+  --radius: var(--r);
+
+  color: var(--tx);
+}
