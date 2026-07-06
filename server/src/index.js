@@ -14,6 +14,7 @@ import conversationRouter from './routes/conversation.js';
 import reportsRouter from './routes/reports.js';
 import timelineRouter from './routes/timeline.js';
 import objectivesRouter from './routes/objectives.js';
+import kanbanRouter from './routes/kanban.js';
 import cron from 'node-cron';
 import { buildDateIndex } from './services/projectScanner.js';
 import { initWatcher } from './services/sessionMonitor.js';
@@ -35,6 +36,7 @@ app.use('/api/conversation', conversationRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/objectives', objectivesRouter);
+app.use('/api/kanban', kanbanRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
