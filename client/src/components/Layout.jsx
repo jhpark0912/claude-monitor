@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 const THEME_KEY = 'dashboard-theme';
 const FONTSIZE_KEY = 'dashboard-fontsize';
 
-export default function Layout({ children }) {
+export default function Layout({ children, showKanban = false }) {
   const project = 'all';
   const location = useLocation();
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ export default function Layout({ children }) {
   const isAnalytics = location.pathname === '/analytics';
   const isReports = location.pathname.startsWith('/reports');
   const isMonitor = location.pathname === '/monitor';
+  const isKanban = location.pathname.startsWith('/kanban');
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -49,6 +50,12 @@ export default function Layout({ children }) {
           <NavTab active={isMonitor} onClick={() => navigate('/monitor')}>
             모니터링
           </NavTab>
+          {/* 게이트1: available=true 확정 시에만 렌더 (로딩 중 미렌더 → 깜빡임 방지) */}
+          {showKanban && (
+            <NavTab active={isKanban} onClick={() => navigate('/kanban')}>
+              칸반
+            </NavTab>
+          )}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

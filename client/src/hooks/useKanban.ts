@@ -9,6 +9,24 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+/**
+ * SPEC §2.2 게이트: /api/kanban/available 1회 조회. 조회 실패(네트워크·서버 미기동)는
+ * fail-closed로 available:false 처리 → 칸반 UI 미노출. loading 중엔 확정 전이라 탭/라우트 미렌더.
+ */
+export function useKanbanAvailable() {
+  const [available, setAvailable] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJson<{ available: boolean }>(`${API_BASE}/available`)
+      .then((r) => setAvailable(Boolean(r.available)))
+      .catch(() => setAvailable(false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { available, loading };
+}
+
 export function useTeams() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
