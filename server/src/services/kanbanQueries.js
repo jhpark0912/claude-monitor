@@ -17,7 +17,59 @@ async function getProject(projectId) {
 }
 
 export async function getProjects() {
-  return query('SELECT id, name, created_at FROM projects ORDER BY created_at ASC');
+  const projects = await query('SELECT id, name, created_at FROM projects ORDER BY created_at ASC');
+  if (!projects.length) return projects;
+
+  const planStates = await getProjectPlanStates();
+  const inProgRows = await query(
+    "SELECT project_id, COUNT(*) AS cnt FROM tasks WHERE status='InProgress' GROUP BY project_id",
+  );
+  const inProgMap = {};
+  for (const r of inProgRows) inProgMap[r.project_id] = Number(r.cnt);
+
+  return projects.map((p) => ({
+    ...p,
+    status: deriveProjectStatus(planStates[p.id]),
+    in_progress_count: inProgMap[p.id] ?? 0,
+  }));
+}
+
+// 프로젝트별 소속 플랜들의 derived_state 목록을 반환 (project_id -> string[])
+async function getProjectPlanStates() {
+  const plans = await query('SELECT id, project_id FROM plans');
+  if (!plans.length) return {};
+
+  const blockedVal = isPg() ? true : 1;
+  const statRows = await query(
+    `SELECT plan_id, status, COUNT(*) AS cnt,
+            SUM(CASE WHEN is_blocked=? THEN 1 ELSE 0 END) AS blk
+     FROM tasks
+     GROUP BY plan_id, status`,
+    [blockedVal],
+  );
+  const stats = {};
+  for (const r of statRows) {
+    const s = stats[r.plan_id] ??= { counts: {}, blocked: 0 };
+    s.counts[r.status] = Number(r.cnt);
+    s.blocked += Number(r.blk) || 0;
+  }
+
+  const byProject = {};
+  for (const p of plans) {
+    const st = stats[p.id] ?? { counts: {}, blocked: 0 };
+    const state = derivePlanState(st.counts, st.blocked);
+    (byProject[p.project_id] ??= []).push(state);
+  }
+  return byProject;
+}
+
+// 플랜 상태 목록을 프로젝트 단위 status(active/blocked/planned/completed/empty)로 집계
+function deriveProjectStatus(states) {
+  if (!states || states.length === 0) return 'empty';
+  if (states.includes('blocked')) return 'blocked';
+  if (states.includes('active')) return 'active';
+  if (states.every((s) => s === 'completed')) return 'completed';
+  return 'planned';
 }
 
 // ── Plans ─────────────────────────────────────────────────────────────────
