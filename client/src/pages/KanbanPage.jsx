@@ -92,26 +92,28 @@ export default function KanbanPage() {
     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 40px' }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 750, letterSpacing: '-.4px' }}>칸반</h1>
-          <ProjectSelect projects={projects} value={activeProjectId} onChange={setSelectedProjectId} />
-          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-            {STAT_PILL_KEYS.map((st) => {
-              const cfg = PLAN_STATE_CONFIG[st];
-              return (
-                <div key={st} style={statPillStyle}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.color }} />
-                  {cfg.label} <span style={{ fontWeight: 750, color: 'var(--tx)' }}>{stateCounts[st] ?? 0}</span>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12, flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 750, letterSpacing: '-.4px' }}>칸반</h1>
+            <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+              {STAT_PILL_KEYS.map((st) => {
+                const cfg = PLAN_STATE_CONFIG[st];
+                return (
+                  <div key={st} style={statPillStyle}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.color }} />
+                    {cfg.label} <span style={{ fontWeight: 750, color: 'var(--tx)' }}>{stateCounts[st] ?? 0}</span>
+                  </div>
+                );
+              })}
+              {blockerCount > 0 && (
+                <div style={statPillStyle}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rd)' }} />
+                  블로커 <span style={{ fontWeight: 750, color: 'var(--rd)' }}>{blockerCount}</span>
                 </div>
-              );
-            })}
-            {blockerCount > 0 && (
-              <div style={statPillStyle}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rd)' }} />
-                블로커 <span style={{ fontWeight: 750, color: 'var(--rd)' }}>{blockerCount}</span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+          <ProjectSelect projects={projects} value={activeProjectId} onChange={setSelectedProjectId} />
         </div>
 
         {sortedPlans.map((plan) => (
