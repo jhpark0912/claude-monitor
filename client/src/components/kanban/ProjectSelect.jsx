@@ -26,9 +26,6 @@ export default function ProjectSelect({ projects, value, onChange }) {
         {alwaysShown.map((p) => (
           <ProjectChip key={p.id} project={p} selected={p.id === value} onClick={() => onChange(p.id)} />
         ))}
-        {promoted && (
-          <ProjectChip project={promoted} selected onClick={() => onChange(promoted.id)} />
-        )}
         {rest.length > 0 && (
           <button
             onClick={() => setMoreOpen((v) => !v)}
@@ -38,7 +35,14 @@ export default function ProjectSelect({ projects, value, onChange }) {
               color: 'var(--mt)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            더보기 <b style={{ color: 'var(--tx2)' }}>{rest.length}</b>
+            {promoted ? (
+              <>
+                <span className={`c-${getProjectColor(promoted.name)}`} style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0 }} />
+                <span style={{ color: 'var(--tx2)' }}>{promoted.name}</span>
+              </>
+            ) : (
+              <>더보기 <b style={{ color: 'var(--tx2)' }}>{rest.length}</b></>
+            )}
             <span style={{ fontSize: 11 }}>{moreOpen ? '▴' : '▾'}</span>
           </button>
         )}
@@ -51,8 +55,8 @@ export default function ProjectSelect({ projects, value, onChange }) {
         }}>
           <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--mt)',
             textTransform: 'uppercase', letterSpacing: '.4px' }}>진행 없음</span>
-          {rest.filter((p) => p.id !== value).map((p) => (
-            <ProjectChip key={p.id} project={p} muted onClick={() => onChange(p.id)} />
+          {rest.map((p) => (
+            <ProjectChip key={p.id} project={p} selected={p.id === value} muted={p.id !== value} onClick={() => onChange(p.id)} />
           ))}
         </div>
       )}
