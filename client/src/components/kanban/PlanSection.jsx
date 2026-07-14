@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ALL_STATUSES, STATUS_CONFIG, PRIORITY_CONFIG, PLAN_STATE_CONFIG, STATUS_DONE, STATUS_REJECTED } from '../../constants/kanban';
+import { ALL_STATUSES, STATUS_CONFIG, PRIORITY_CONFIG, PLAN_STATE_CONFIG, STATUS_DONE, STATUS_REJECTED, STATUS_IN_PROGRESS, STATUS_REVIEW } from '../../constants/kanban';
 import { daysBetween } from '../../utils/datetime';
 
 function computeMeta(plan) {
@@ -17,16 +17,16 @@ export default function PlanSection({ plan, tasks, defaultExpanded, onTaskClick 
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const stCfg = PLAN_STATE_CONFIG[plan.derived_state] ?? PLAN_STATE_CONFIG.planned;
-  const pct = plan.task_total > 0 ? Math.round((plan.task_done / plan.task_total) * 100) : 0;
 
-  const { grouped, blockers } = useMemo(() => {
+  const { grouped, blockers, nowTasks } = useMemo(() => {
     const g = {};
     const b = [];
     for (const t of tasks) {
       (g[t.status] ??= []).push(t);
       if (t.is_blocked) b.push(t);
     }
-    return { grouped: g, blockers: b };
+    const now = [...(g[STATUS_IN_PROGRESS] ?? []), ...(g[STATUS_REVIEW] ?? [])];
+    return { grouped: g, blockers: b, nowTasks: now };
   }, [tasks]);
 
   const meta = computeMeta(plan);
@@ -36,31 +36,31 @@ export default function PlanSection({ plan, tasks, defaultExpanded, onTaskClick 
       <div
         onClick={() => setExpanded(!expanded)}
         style={{
-          display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+          padding: '12px 16px',
           background: 'var(--s1)', border: '1px solid var(--bd)', cursor: 'pointer',
           borderRadius: expanded ? '12px 12px 0 0' : 12,
           borderBottomColor: expanded ? 'transparent' : undefined,
           transition: 'all .15s', userSelect: 'none',
         }}
       >
-        <span style={{ fontSize: 10, color: 'var(--dm)', transition: 'transform .2s',
-          transform: expanded ? 'rotate(90deg)' : 'none', width: 16, textAlign: 'center' }}>▶</span>
-        <span style={{
-          fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 5,
-          letterSpacing: '.3px', textTransform: 'uppercase',
-          background: stCfg.bg, color: stCfg.color,
-        }}>{stCfg.label}</span>
-        <span style={{ fontSize: 14, fontWeight: 650, flex: 1, overflow: 'hidden',
-          textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan.title}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <div style={{ width: 80, height: 5, background: 'var(--s3)', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 3, width: `${pct}%`, background: stCfg.color }} />
-          </div>
-          <span style={{ fontSize: 11, color: 'var(--mt)', fontWeight: 600, minWidth: 32, textAlign: 'right' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 10, color: 'var(--dm)', transition: 'transform .2s',
+            transform: expanded ? 'rotate(90deg)' : 'none', width: 16, textAlign: 'center' }}>▶</span>
+          <span style={{
+            fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 5,
+            letterSpacing: '.3px', textTransform: 'uppercase',
+            background: stCfg.bg, color: stCfg.color,
+          }}>{stCfg.label}</span>
+          <span style={{ fontSize: 14, fontWeight: 650, flex: 1, overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan.title}</span>
+          <span style={{ fontSize: 11, color: 'var(--mt)', fontWeight: 600, minWidth: 32, textAlign: 'right', flexShrink: 0 }}>
             {plan.task_done}/{plan.task_total}
           </span>
+          <span style={{ fontSize: 11, color: 'var(--dm)', flexShrink: 0, whiteSpace: 'nowrap' }}>{meta}</span>
         </div>
-        <span style={{ fontSize: 11, color: 'var(--dm)', flexShrink: 0, whiteSpace: 'nowrap' }}>{meta}</span>
+        <StackBar counts={plan.counts ?? {}} total={plan.task_total} />
+        <Legend counts={plan.counts ?? {}} />
+        <NowPreview tasks={nowTasks} />
       </div>
 
       {expanded && (
@@ -179,5 +179,58 @@ function Badge({ bg, color, children }) {
       fontSize: 8, fontWeight: 800, padding: '2px 7px', borderRadius: 4,
       letterSpacing: '.3px', flexShrink: 0, whiteSpace: 'nowrap', background: bg, color,
     }}>{children}</span>
+  );
+}
+
+function StackBar({ counts, total }) {
+  if (!total) return null;
+  return (
+    <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden',
+      marginTop: 10, background: 'var(--s3)' }}>
+      {ALL_STATUSES.filter((s) => counts[s] > 0).map((s) => (
+        <div key={s} style={{ height: '100%', width: `${(counts[s] / total) * 100}%`,
+          background: STATUS_CONFIG[s].dot }} />
+      ))}
+    </div>
+  );
+}
+
+function Legend({ counts }) {
+  const entries = ALL_STATUSES.filter((s) => counts[s] > 0);
+  if (!entries.length) return null;
+  return (
+    <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+      {entries.map((s) => (
+        <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 5,
+          fontSize: 10.5, color: 'var(--tx2)', fontWeight: 600 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 2, background: STATUS_CONFIG[s].dot }} />
+          {STATUS_CONFIG[s].label} {counts[s]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function NowPreview({ tasks }) {
+  if (!tasks.length) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--mt)',
+        textTransform: 'uppercase', letterSpacing: '.4px' }}>지금</span>
+      {tasks.map((t) => (
+        <span key={t.id} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 14,
+          background: t.is_blocked ? 'rgba(248,113,113,.06)' : 'var(--s2)',
+          border: `1px solid ${t.is_blocked ? 'rgba(248,113,113,.4)' : 'var(--bd)'}`,
+          fontSize: 11.5, color: 'var(--tx)', fontWeight: 500, maxWidth: 240, overflow: 'hidden',
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+            background: t.is_blocked ? 'var(--rd)' : STATUS_CONFIG[t.status].dot }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {t.is_blocked ? '⛔ ' : ''}{t.title}
+          </span>
+        </span>
+      ))}
+    </div>
   );
 }
