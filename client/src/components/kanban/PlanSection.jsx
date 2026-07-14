@@ -39,7 +39,7 @@ export default function PlanSection({ plan, tasks, defaultExpanded, onTaskClick 
           padding: '12px 16px',
           background: 'var(--s1)', border: '1px solid var(--bd)', cursor: 'pointer',
           borderRadius: expanded ? '12px 12px 0 0' : 12,
-          borderBottomColor: expanded ? 'transparent' : undefined,
+          borderBottomColor: expanded ? 'transparent' : 'var(--bd)',
           transition: 'all .15s', userSelect: 'none',
         }}
       >
