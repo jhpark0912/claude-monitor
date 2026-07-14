@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 보드 · V2 글래스모피즘</title>
+<style>
+  :root, [data-theme="dark"] {
+    --bg:#0a0a12; --tx:#eef0f7; --tx2:#b6b9cc; --mt:#7a7d95; --dm:#4a4d63;
+    --ac:#818cf8; --gn:#4ade80; --yw:#fbbf24; --rd:#fb7185; --pr:#c084fc; --bl:#60a5fa;
+    --glass:rgba(255,255,255,.05); --glass2:rgba(255,255,255,.08);
+    --gbd:rgba(255,255,255,.1); --gbd2:rgba(255,255,255,.16);
+    --a1:#6366f1; --a2:#a855f7; --a3:#ec4899; --a4:#22d3ee;
+  }
+  [data-theme="light"] {
+    --bg:#eef1f8; --tx:#1e2030; --tx2:#4a4d63; --mt:#8488a0; --dm:#b4b7c9;
+    --ac:#5b5bd6; --gn:#16a34a; --yw:#d97706; --rd:#e11d48; --pr:#9333ea; --bl:#2563eb;
+    --glass:rgba(255,255,255,.55); --glass2:rgba(255,255,255,.7);
+    --gbd:rgba(255,255,255,.6); --gbd2:rgba(120,120,150,.18);
+    --a1:#a5b4fc; --a2:#d8b4fe; --a3:#f9a8d4; --a4:#a5f3fc;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; min-width:0; }
+  body {
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--tx); height:100vh; overflow:hidden;
+    -webkit-font-smoothing:antialiased; position:relative;
+  }
+  /* 오로라 그라디언트 배경 */
+  .aurora { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .blob { position:absolute; border-radius:50%; filter:blur(90px); opacity:.55; }
+  .b1 { width:520px; height:520px; background:var(--a1); top:-160px; left:-80px; }
+  .b2 { width:460px; height:460px; background:var(--a2); top:-100px; right:10%; }
+  .b3 { width:400px; height:400px; background:var(--a3); bottom:-160px; left:30%; opacity:.4; }
+  .b4 { width:380px; height:380px; background:var(--a4); bottom:-120px; right:-60px; opacity:.35; }
+
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--gbd2); border-radius:5px; }
+
+  .app { position:relative; z-index:2; height:100vh; display:flex; flex-direction:column; }
+
+  header { height:56px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 22px; margin:12px 14px 0; border-radius:18px;
+    background:var(--glass); backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid var(--gbd); box-shadow:0 8px 32px rgba(0,0,0,.18); }
+  .logo { font-size:14px; font-weight:700; display:flex; align-items:center; gap:10px; letter-spacing:-.2px; }
+  .logo .mark { width:26px; height:26px; border-radius:9px;
+    background:linear-gradient(135deg,#818cf8,#ec4899); display:flex; align-items:center;
+    justify-content:center; font-size:13px; font-weight:800; color:#fff; box-shadow:0 4px 14px rgba(129,140,248,.5); }
+  nav { display:flex; gap:3px; padding:3px; border-radius:12px; background:var(--glass); border:1px solid var(--gbd); }
+  .tab { padding:6px 14px; border:none; background:transparent; color:var(--mt);
+    cursor:pointer; font-size:12.5px; font-family:inherit; border-radius:9px; transition:all .18s; font-weight:500; }
+  .tab:hover { color:var(--tx2); }
+  .tab.active { color:#fff; background:linear-gradient(135deg,var(--a1),var(--a2)); box-shadow:0 4px 14px rgba(129,140,248,.4); }
+  [data-theme="light"] .tab.active { color:#fff; }
+  .ibtn { width:34px; height:34px; border-radius:11px; border:1px solid var(--gbd);
+    background:var(--glass); color:var(--tx2); cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; backdrop-filter:blur(12px); }
+
+  main { flex:1; display:flex; flex-direction:column; padding:16px 14px 14px; overflow:hidden; }
+
+  .subhead { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:0 4px; }
+  .team { display:flex; align-items:center; gap:10px; }
+  .team .glasspill { display:flex; align-items:center; gap:8px; padding:8px 15px; border-radius:13px;
+    background:var(--glass2); backdrop-filter:blur(16px); border:1px solid var(--gbd); font-size:13.5px; font-weight:650; }
+  .team .glasspill .dot { width:8px; height:8px; border-radius:50%;
+    background:var(--gn); box-shadow:0 0 10px var(--gn); }
+  .team .sub { font-size:12px; color:var(--tx2); }
+  .team .sub b { color:var(--tx); }
+  .filters { display:flex; gap:8px; }
+  .fchip { padding:7px 14px; border-radius:12px; border:1px solid var(--gbd); background:var(--glass);
+    backdrop-filter:blur(12px); color:var(--tx2); font-size:12px; cursor:pointer; font-family:inherit; font-weight:500; }
+  .fchip.on { background:linear-gradient(135deg,rgba(129,140,248,.35),rgba(168,85,247,.3));
+    border-color:rgba(168,85,247,.5); color:var(--tx); }
+
+  .board { flex:1; display:flex; gap:14px; overflow-x:auto; overflow-y:hidden; align-items:flex-start; padding:2px; }
+  .col { width:280px; min-width:280px; flex-shrink:0; display:flex; flex-direction:column; max-height:100%;
+    border-radius:20px; background:var(--glass); backdrop-filter:blur(20px) saturate(140%);
+    border:1px solid var(--gbd); box-shadow:0 8px 32px rgba(0,0,0,.14); overflow:hidden; }
+  .col-head { display:flex; align-items:center; gap:9px; padding:15px 16px 12px; }
+  .col-head .ring { width:11px; height:11px; border-radius:50%; }
+  .col-head .nm { font-size:13.5px; font-weight:650; }
+  .col-head .ct { margin-left:auto; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
+    background:var(--glass2); border:1px solid var(--gbd); color:var(--tx2); }
+  .col-body { overflow-y:auto; padding:2px 12px 14px; display:flex; flex-direction:column; gap:10px; }
+
+  .card { border-radius:15px; padding:13px 14px; cursor:pointer; transition:all .2s;
+    background:var(--glass2); border:1px solid var(--gbd); }
+  .card:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.2); border-color:var(--gbd2); }
+  .card.blk { background:linear-gradient(135deg,rgba(251,113,133,.16),var(--glass2)); border-color:rgba(251,113,133,.4); }
+  .c1 { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+  .pri { font-size:9.5px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; padding:2px 8px; border-radius:7px; }
+  .pri.crit{background:rgba(251,113,133,.2);color:var(--rd);}
+  .pri.high{background:rgba(251,146,60,.2);color:#fb923c;}
+  .pri.med{background:rgba(96,165,250,.2);color:var(--bl);}
+  .pri.low{background:var(--glass);color:var(--mt);}
+  .tag { font-size:8.5px; font-weight:800; padding:2px 7px; border-radius:6px; letter-spacing:.3px; }
+  .t-blk{background:rgba(251,113,133,.22);color:var(--rd);}
+  .t-hand{background:rgba(192,132,252,.22);color:var(--pr);}
+  .id { margin-left:auto; font-size:10px; color:var(--dm); }
+  .title { font-size:13.5px; font-weight:550; line-height:1.4; }
+  .c2 { display:flex; align-items:center; gap:8px; margin-top:11px; }
+  .av { width:22px; height:22px; border-radius:50%; font-size:9px; font-weight:700; color:#fff;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .meta { font-size:11px; color:var(--tx2); }
+
+  .caption { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); z-index:5;
+    font-size:11px; color:var(--tx2); padding:6px 16px; border-radius:20px;
+    background:var(--glass2); backdrop-filter:blur(16px); border:1px solid var(--gbd); }
+</style>
+</head>
+<body>
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+
+<div class="app">
+  <header>
+    <div class="logo"><div class="mark">C</div> Claude Session Dashboard</div>
+    <nav>
+      <button class="tab">타임라인</button>
+      <button class="tab">분석</button>
+      <button class="tab">보고서</button>
+      <button class="tab">모니터링</button>
+      <button class="tab active">에이전트</button>
+    </nav>
+    <button class="ibtn" onclick="tt()">◐</button>
+  </header>
+
+  <main>
+    <div class="subhead">
+      <div class="team">
+        <div class="glasspill"><span class="dot"></span> migration-squad</div>
+        <div class="sub">에이전트 <b>4</b> · 진행중 <b>3</b> · 블로커 <b>1</b></div>
+      </div>
+      <div class="filters">
+        <button class="fchip on">전체</button>
+        <button class="fchip">Critical</button>
+        <button class="fchip">담당자 ▾</button>
+        <button class="fchip">⚑ 블로커</button>
+        <button class="fchip">⌕ 검색</button>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="col">
+        <div class="col-head"><span class="ring" style="background:var(--mt)"></span><span class="nm">Backlog</span><span class="ct">3</span></div>
+        <div class="col-body">
+          <div class="card"><div class="c1"><span class="pri low">low</span><span class="id">T-118</span></div><div class="title">레거시 리포트 SP 목록 정리</div><div class="c2"><span class="meta">미할당</span></div></div>
+          <div class="card"><div class="c1"><span class="pri med">med</span><span class="id">T-121</span></div><div class="title">공통 예외 코드 매핑 테이블 작성</div><div class="c2"><span class="meta">미할당</span></div></div>
+          <div class="card"><div class="c1"><span class="pri low">low</span><span class="id">T-124</span></div><div class="title">Swagger 문서 자동화 검토</div><div class="c2"><span class="meta">미할당</span></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="ring" style="background:var(--yw)"></span><span class="nm">Todo</span><span class="ct">2</span></div>
+        <div class="col-body">
+          <div class="card"><div class="c1"><span class="pri high">high</span><span class="id">T-092</span></div><div class="title">User 도메인 Entity 상속 구조 변환</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#818cf8,#6366f1)">AN</span><span class="meta">analyzer</span></div></div>
+          <div class="card"><div class="c1"><span class="pri med">med</span><span class="id">T-095</span></div><div class="title">Order 연관관계 FK 매핑</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#a78bfa,#a855f7)">PL</span><span class="meta">planner</span></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="ring" style="background:var(--bl)"></span><span class="nm">InProgress</span><span class="ct">3</span></div>
+        <div class="col-body">
+          <div class="card blk"><div class="c1"><span class="pri crit">critical</span><span class="tag t-blk">BLOCKED</span><span class="id">T-071</span></div><div class="title">결제 SP → Service 이관 (트랜잭션 경계)</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#fb7185,#ef4444)">IM</span><span class="meta">커넥션 풀 대기</span></div></div>
+          <div class="card"><div class="c1"><span class="pri high">high</span><span class="id">T-083</span></div><div class="title">Enum 변환 및 Converter 생성 (4/7)</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#34d399,#10b981)">IM</span><span class="meta">implementer</span></div></div>
+          <div class="card"><div class="c1"><span class="pri med">med</span><span class="id">T-088</span></div><div class="title">Repository 커스텀 쿼리 이식</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#818cf8,#6366f1)">IM</span><span class="meta">QueryDSL 전환</span></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="ring" style="background:var(--pr)"></span><span class="nm">Review</span><span class="ct">2</span></div>
+        <div class="col-body">
+          <div class="card"><div class="c1"><span class="pri high">high</span><span class="tag t-hand">HANDOFF</span><span class="id">T-064</span></div><div class="title">Product 도메인 Controller 검증</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#c084fc,#a855f7)">RV</span><span class="meta">reviewer</span></div></div>
+          <div class="card"><div class="c1"><span class="pri med">med</span><span class="id">T-069</span></div><div class="title">DTO 매핑 정합성 리뷰</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#c084fc,#a855f7)">RV</span><span class="meta">MapStruct 검토</span></div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="ring" style="background:var(--gn)"></span><span class="nm">Done</span><span class="ct">5</span></div>
+        <div class="col-body">
+          <div class="card" style="opacity:.6"><div class="c1"><span class="pri high">high</span><span class="id">T-012</span></div><div class="title">프로젝트 스캐폴딩 · 의존성 구성</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#34d399,#10b981)">IM</span><span class="meta">완료</span></div></div>
+          <div class="card" style="opacity:.6"><div class="c1"><span class="pri med">med</span><span class="id">T-018</span></div><div class="title">공통 응답 래퍼 정의</div><div class="c2"><span class="av" style="background:linear-gradient(135deg,#818cf8,#6366f1)">IM</span><span class="meta">완료</span></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="caption">V2 · 글래스모피즘 + 오로라 — 프로스티드 패널 · 그라디언트 글로우</div>
+<script>function tt(){const e=document.documentElement;e.dataset.theme=e.dataset.theme==='dark'?'light':'dark';}</script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark" data-fontsize="medium">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 보드 재설계 목업</title>
+<style>
+  /* ── session_board 디자인 토큰 (index.css 발췌) ─────────── */
+  :root, [data-theme="dark"] {
+    --bg:#08080a; --s1:#0f0f12; --s2:#141418; --s3:#1a1a20;
+    --bd:#1f1f28; --bd2:#2a2a35; --bd-h:#35354a;
+    --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --dm:#3a3a4a;
+    --ac:#818cf8; --ac2:#a78bfa;
+    --ac-bg:rgba(129,140,248,.08); --ac-bd:rgba(129,140,248,.2);
+    --gn:#4ade80; --yw:#fbbf24; --rd:#f87171; --pr:#c084fc;
+    --shadow:0 2px 8px rgba(0,0,0,.3); --shadow-h:0 8px 24px rgba(0,0,0,.4);
+    --glass:rgba(15,15,18,.8); --glass-bd:rgba(255,255,255,.06);
+    --r:14px; --rs:10px; --rx:6px;
+  }
+  [data-theme="light"] {
+    --bg:#ffffff; --s1:#ffffff; --s2:#f7f6f3; --s3:#e3e3e0;
+    --bd:#e3e3e0; --bd2:#d4d4d0; --bd-h:#c8c8c4;
+    --tx:#37352f; --tx2:#6b6b65; --mt:#9b9a97; --dm:#c0bfbc;
+    --ac:#2e7d9a; --ac2:#9065b0;
+    --ac-bg:rgba(46,125,154,.08); --ac-bd:rgba(46,125,154,.2);
+    --gn:#448361; --yw:#cf9f23; --rd:#c4554d; --pr:#9065b0;
+    --shadow:0 1px 4px rgba(0,0,0,.06); --shadow-h:0 4px 16px rgba(0,0,0,.1);
+    --glass:rgba(255,255,255,.88); --glass-bd:rgba(55,53,47,.08);
+    --r:14px; --rs:10px; --rx:6px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; min-width:0; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--tx); height:100vh; overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+
+  /* 태그 배지 */
+  .b-indigo{background:rgba(129,140,248,.12);color:#818cf8;}
+  .b-red{background:rgba(248,113,113,.12);color:#f87171;}
+  .b-orange{background:rgba(251,146,60,.12);color:#fb923c;}
+  .b-blue{background:rgba(96,165,250,.12);color:#60a5fa;}
+  .b-slate{background:rgba(148,163,184,.12);color:#94a3b8;}
+  .b-yellow{background:rgba(250,204,21,.12);color:#facc15;}
+  .b-violet{background:rgba(167,139,250,.12);color:#a78bfa;}
+  .b-emerald{background:rgba(52,211,153,.12);color:#34d399;}
+
+  /* ── 헤더 ─────────── */
+  header {
+    position:fixed; top:0; left:0; right:0; z-index:100; height:52px;
+    background:var(--glass); backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--glass-bd);
+    padding:0 24px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo { font-size:15px; font-weight:700; letter-spacing:-.3px; display:flex; align-items:center; gap:10px; }
+  .logo .mark {
+    width:28px; height:28px; border-radius:8px;
+    background:linear-gradient(135deg,#818cf8,#a78bfa);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:800; color:#fff;
+  }
+  .logo .ac { color:var(--ac); }
+  nav { display:flex; gap:0; }
+  .tab {
+    padding:8px 18px; border:none; background:transparent; color:var(--mt);
+    cursor:pointer; font-size:13px; font-weight:400; font-family:inherit;
+    transition:all .15s; border-bottom:2px solid transparent; margin-bottom:-1px;
+  }
+  .tab:hover { color:var(--tx); }
+  .tab.active { color:var(--tx); font-weight:600; border-bottom-color:var(--ac); }
+  .hdr-right { display:flex; align-items:center; gap:10px; }
+  .icon-btn {
+    width:32px; height:32px; border-radius:var(--rx); border:1px solid var(--bd);
+    background:transparent; cursor:pointer; color:var(--mt); font-size:15px;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .icon-btn:hover { background:var(--s2); color:var(--tx); }
+
+  /* ── 메인 ─────────── */
+  main { margin-top:52px; height:calc(100vh - 52px); display:flex; flex-direction:column; overflow:hidden; }
+
+  /* 서브헤더 (TimelinePage 패턴) */
+  .subhead {
+    background:var(--s1); border-bottom:1px solid var(--bd);
+    padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  }
+  .subhead-left { display:flex; align-items:center; gap:14px; }
+  .team-select {
+    display:flex; align-items:center; gap:8px; padding:6px 12px;
+    background:var(--s2); border:1px solid var(--bd); border-radius:var(--rs);
+    font-size:13px; font-weight:600; color:var(--tx); cursor:pointer;
+  }
+  .team-select .dot { width:8px; height:8px; border-radius:50%; background:var(--ac); }
+  .team-select .chev { color:var(--mt); font-size:11px; }
+  .subtitle { font-size:12px; color:var(--mt); }
+  .subtitle b { color:var(--tx2); font-weight:600; }
+
+  .subhead-right { display:flex; align-items:center; gap:10px; }
+  .filters { display:flex; gap:6px; }
+  .chip {
+    padding:5px 11px; border-radius:var(--rx); border:1px solid var(--bd);
+    background:transparent; color:var(--mt); font-size:12px; font-weight:500;
+    cursor:pointer; font-family:inherit; transition:all .15s; display:flex; align-items:center; gap:5px;
+  }
+  .chip:hover { background:var(--s2); color:var(--tx); }
+  .chip.active { background:var(--ac-bg); border-color:var(--ac-bd); color:var(--ac); }
+  .search {
+    display:flex; align-items:center; gap:6px; padding:5px 11px;
+    background:var(--s2); border:1px solid var(--bd); border-radius:var(--rx); width:180px;
+  }
+  .search input { background:transparent; border:none; outline:none; color:var(--tx); font-size:12px; font-family:inherit; width:100%; }
+  .search input::placeholder { color:var(--mt); }
+  .mini-stats { display:flex; gap:8px; }
+  .mini-stat {
+    background:var(--s2); border:1px solid var(--bd); border-radius:var(--rs);
+    padding:5px 13px; text-align:center;
+  }
+  .mini-stat .v { font-size:14px; font-weight:700; color:var(--tx); }
+  .mini-stat .l { font-size:9px; color:var(--mt); text-transform:uppercase; letter-spacing:.3px; }
+
+  /* 본문 스플릿: 보드 + 우측 기록 패널 */
+  .body { flex:1; display:flex; overflow:hidden; }
+
+  /* 칸반 보드 */
+  .board {
+    flex:1; display:flex; gap:12px; padding:18px 20px; overflow-x:auto; overflow-y:hidden; align-items:flex-start;
+  }
+  .col { width:272px; min-width:272px; flex-shrink:0; display:flex; flex-direction:column; max-height:100%; }
+  .col-head {
+    display:flex; align-items:center; gap:8px; padding:9px 12px;
+    background:var(--s1); border:1px solid var(--bd);
+    border-radius:var(--rs) var(--rs) 0 0; border-bottom:none;
+  }
+  .col-head .sdot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+  .col-head .label { font-size:13px; font-weight:600; color:var(--tx); }
+  .col-head .count {
+    margin-left:auto; font-size:11px; font-weight:600; padding:1px 8px; border-radius:20px;
+    background:var(--s3); color:var(--tx2);
+  }
+  .col-body {
+    background:var(--bg); border:1px solid var(--bd); border-top:none;
+    border-radius:0 0 var(--rs) var(--rs); padding:8px;
+    display:flex; flex-direction:column; gap:8px; overflow-y:auto;
+  }
+
+  /* 태스크 카드 */
+  .card {
+    background:var(--s1); border:1px solid var(--bd); border-radius:var(--rx);
+    padding:10px 11px; cursor:pointer; transition:all .15s;
+  }
+  .card:hover { border-color:var(--bd-h); background:var(--s2); }
+  .card.blocked { border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.04); }
+  .card-top { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .prio { font-size:10px; font-weight:700; letter-spacing:.2px; }
+  .prio.crit { color:var(--rd); } .prio.high { color:#fb923c; }
+  .prio.med { color:#60a5fa; } .prio.low { color:var(--mt); }
+  .badge { font-size:9px; font-weight:700; padding:1px 6px; border-radius:4px; letter-spacing:.3px; }
+  .card-title { font-size:13px; font-weight:500; color:var(--tx); line-height:1.35; margin-bottom:8px; }
+  .card-foot { display:flex; align-items:center; gap:7px; }
+  .avatar {
+    width:20px; height:20px; border-radius:50%; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+  }
+  .card-note {
+    font-size:11px; color:var(--mt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+  }
+  .card-id { font-size:10px; color:var(--dm); margin-left:auto; font-variant-numeric:tabular-nums; }
+
+  /* 우측 기록(활동) 패널 — "기록" 정체성 강조 */
+  .records {
+    width:300px; flex-shrink:0; border-left:1px solid var(--bd);
+    background:var(--s1); display:flex; flex-direction:column; overflow:hidden;
+    transition:width .2s ease, opacity .15s ease;
+  }
+  /* 닫힘 상태: 폭 0으로 접힘 */
+  .records.collapsed { width:0; opacity:0; border-left:none; }
+
+  /* 닫혔을 때 보드 우측에 나타나는 재열기 손잡이 */
+  .rec-reopen {
+    display:none; flex-shrink:0; width:40px; border-left:1px solid var(--bd);
+    background:var(--s1); cursor:pointer; align-items:flex-start; justify-content:center;
+    padding-top:18px; color:var(--mt); transition:all .15s;
+  }
+  .rec-reopen:hover { background:var(--s2); color:var(--tx); }
+  .rec-reopen .v {
+    writing-mode:vertical-rl; font-size:12px; font-weight:600; letter-spacing:1px;
+    display:flex; align-items:center; gap:8px;
+  }
+  body.records-closed .rec-reopen { display:flex; }
+
+  .rec-close {
+    width:22px; height:22px; border-radius:var(--rx); border:1px solid var(--bd);
+    background:transparent; color:var(--mt); cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .rec-close:hover { background:var(--s2); color:var(--tx); }
+  .rec-head { padding:14px 16px 10px; border-bottom:1px solid var(--bd); }
+  .rec-head .t { font-size:13px; font-weight:700; color:var(--tx); display:flex; align-items:center; gap:7px; }
+  .rec-head .s { font-size:11px; color:var(--mt); margin-top:3px; }
+  .rec-list { flex:1; overflow-y:auto; padding:8px 12px; display:flex; flex-direction:column; gap:2px; }
+  .rec {
+    display:flex; gap:10px; padding:9px 4px; position:relative;
+  }
+  .rec .rail { display:flex; flex-direction:column; align-items:center; }
+  .rec .avatar { width:22px; height:22px; }
+  .rec .line { width:1px; flex:1; background:var(--bd); margin-top:4px; }
+  .rec:last-child .line { display:none; }
+  .rec .body { flex:1; padding-bottom:4px; }
+  .rec .meta { display:flex; align-items:center; gap:6px; margin-bottom:3px; flex-wrap:wrap; }
+  .rec .who { font-size:11px; font-weight:600; color:var(--tx2); }
+  .rec .type { font-size:8px; font-weight:700; padding:1px 5px; border-radius:3px; letter-spacing:.3px; text-transform:uppercase; }
+  .rec .when { font-size:10px; color:var(--dm); margin-left:auto; }
+  .rec .content { font-size:12px; color:var(--tx); line-height:1.4; }
+  .rec .task-ref { font-size:10px; color:var(--mt); margin-top:2px; }
+
+  /* 라벨/노트 */
+  .caption { position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:var(--mt); background:var(--s1); border:1px solid var(--bd);
+    padding:5px 14px; border-radius:20px; z-index:200; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="mark">C</div>
+    <span><span class="ac">Claude</span> Session Dashboard</span>
+  </div>
+  <nav>
+    <button class="tab">타임라인</button>
+    <button class="tab">분석</button>
+    <button class="tab">보고서</button>
+    <button class="tab">모니터링</button>
+    <button class="tab active">에이전트</button>
+  </nav>
+  <div class="hdr-right">
+    <button class="icon-btn" onclick="toggleTheme()" title="테마 전환">◐</button>
+    <div style="display:flex;gap:1px;background:var(--s1);border-radius:var(--rx);padding:2px;border:1px solid var(--bd);">
+      <button class="icon-btn" style="width:24px;height:24px;border:none;font-size:10px;">S</button>
+      <button class="icon-btn" style="width:24px;height:24px;border:none;font-size:10px;background:var(--ac);color:#fff;">M</button>
+      <button class="icon-btn" style="width:24px;height:24px;border:none;font-size:10px;">L</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 서브헤더 -->
+  <div class="subhead">
+    <div class="subhead-left">
+      <div class="team-select">
+        <span class="dot"></span>
+        migration-squad
+        <span class="chev">▾</span>
+      </div>
+      <div class="subtitle">
+        에이전트 <b>4</b> · 진행중 <b>3</b> · 블로커 <b>1</b>
+      </div>
+    </div>
+    <div class="subhead-right">
+      <div class="filters">
+        <button class="chip active">전체</button>
+        <button class="chip">Critical</button>
+        <button class="chip">담당자 ▾</button>
+        <button class="chip">⚑ 블로커</button>
+      </div>
+      <div class="search">
+        <span style="color:var(--mt);font-size:12px;">⌕</span>
+        <input placeholder="태스크 검색…">
+      </div>
+      <button class="chip active" id="recToggle" onclick="toggleRecords()" title="에이전트 기록 열기/닫기">
+        <span style="font-size:13px;">◷</span> 기록
+      </button>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 보드 -->
+    <div class="board">
+
+      <!-- Backlog -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:var(--mt);"></span>
+          <span class="label">Backlog</span>
+          <span class="count">3</span>
+        </div>
+        <div class="col-body">
+          <div class="card">
+            <div class="card-top"><span class="prio low">LOW</span></div>
+            <div class="card-title">레거시 리포트 SP 목록 정리</div>
+            <div class="card-foot"><span class="card-note">아직 담당 없음</span><span class="card-id">#T-118</span></div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio med">MEDIUM</span></div>
+            <div class="card-title">공통 예외 코드 매핑 테이블 작성</div>
+            <div class="card-foot"><span class="card-note">아직 담당 없음</span><span class="card-id">#T-121</span></div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio low">LOW</span></div>
+            <div class="card-title">Swagger 문서 자동화 검토</div>
+            <div class="card-foot"><span class="card-note">아직 담당 없음</span><span class="card-id">#T-124</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Todo -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:var(--yw);"></span>
+          <span class="label">Todo</span>
+          <span class="count">2</span>
+        </div>
+        <div class="col-body">
+          <div class="card">
+            <div class="card-top"><span class="prio high">HIGH</span></div>
+            <div class="card-title">User 도메인 Entity 상속 구조 변환</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#818cf8;">AN</span>
+              <span class="card-note">analyzer 대기열</span><span class="card-id">#T-092</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio med">MEDIUM</span></div>
+            <div class="card-title">Order 연관관계 FK 매핑</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#a78bfa;">PL</span>
+              <span class="card-note">planner 대기열</span><span class="card-id">#T-095</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- InProgress -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:#60a5fa;"></span>
+          <span class="label">InProgress</span>
+          <span class="count">3</span>
+        </div>
+        <div class="col-body">
+          <div class="card blocked">
+            <div class="card-top">
+              <span class="prio crit">CRITICAL</span>
+              <span class="badge b-red">BLOCKED</span>
+            </div>
+            <div class="card-title">결제 SP → Service 이관 (트랜잭션 경계)</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#f87171;">IM</span>
+              <span class="card-note">DB 커넥션 풀 설정 대기중</span><span class="card-id">#T-071</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio high">HIGH</span></div>
+            <div class="card-title">Enum 변환 및 Converter 생성</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#34d399;">IM</span>
+              <span class="card-note">7개 Enum 중 4개 완료</span><span class="card-id">#T-083</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio med">MEDIUM</span></div>
+            <div class="card-title">Repository 커스텀 쿼리 이식</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#818cf8;">IM</span>
+              <span class="card-note">QueryDSL 전환 중</span><span class="card-id">#T-088</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:var(--pr);"></span>
+          <span class="label">Review</span>
+          <span class="count">2</span>
+        </div>
+        <div class="col-body">
+          <div class="card">
+            <div class="card-top">
+              <span class="prio high">HIGH</span>
+              <span class="badge b-violet">HANDOFF</span>
+            </div>
+            <div class="card-title">Product 도메인 Controller 검증</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#c084fc;">RV</span>
+              <span class="card-note">reviewer 확인 중</span><span class="card-id">#T-064</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-top"><span class="prio med">MEDIUM</span></div>
+            <div class="card-title">DTO 매핑 정합성 리뷰</div>
+            <div class="card-foot">
+              <span class="avatar" style="background:#c084fc;">RV</span>
+              <span class="card-note">MapStruct 검토</span><span class="card-id">#T-069</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Done -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:var(--gn);"></span>
+          <span class="label">Done</span>
+          <span class="count">5</span>
+        </div>
+        <div class="col-body">
+          <div class="card" style="opacity:.72;">
+            <div class="card-top"><span class="prio high">HIGH</span></div>
+            <div class="card-title">프로젝트 스캐폴딩 · 의존성 구성</div>
+            <div class="card-foot"><span class="avatar" style="background:#34d399;">IM</span><span class="card-note">완료</span><span class="card-id">#T-012</span></div>
+          </div>
+          <div class="card" style="opacity:.72;">
+            <div class="card-top"><span class="prio med">MEDIUM</span></div>
+            <div class="card-title">공통 응답 래퍼 정의</div>
+            <div class="card-foot"><span class="avatar" style="background:#818cf8;">IM</span><span class="card-note">완료</span><span class="card-id">#T-018</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rejected -->
+      <div class="col">
+        <div class="col-head">
+          <span class="sdot" style="background:var(--rd);"></span>
+          <span class="label">Rejected</span>
+          <span class="count">1</span>
+        </div>
+        <div class="col-body">
+          <div class="card" style="opacity:.6;">
+            <div class="card-top"><span class="prio low">LOW</span></div>
+            <div class="card-title">MyBatis 병행 유지 제안</div>
+            <div class="card-foot"><span class="card-note">범위 외로 반려</span><span class="card-id">#T-055</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 우측 기록 패널: 에이전트 협업 타임라인 -->
+    <aside class="records">
+      <div class="rec-head">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div class="t">◷ 에이전트 기록</div>
+          <button class="rec-close" onclick="toggleRecords()" title="패널 닫기">✕</button>
+        </div>
+        <div class="s">최근 8시간 · 협업 흐름</div>
+      </div>
+      <div class="rec-list">
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#f87171;">IM</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">implementer</span>
+              <span class="type b-red">blocker</span>
+              <span class="when">3분 전</span>
+            </div>
+            <div class="content">결제 SP 이관 중 커넥션 풀 부족으로 통합 테스트 실패. 인프라 설정 필요.</div>
+            <div class="task-ref">↳ #T-071 결제 SP → Service 이관</div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#c084fc;">RV</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">reviewer</span>
+              <span class="type b-violet">handoff</span>
+              <span class="when">21분 전</span>
+            </div>
+            <div class="content">Product Controller 검증 완료 → implementer에게 DTO 매핑 재확인 요청.</div>
+            <div class="task-ref">↳ #T-064 Product 도메인 Controller 검증</div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#34d399;">IM</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">implementer</span>
+              <span class="type b-blue">progress</span>
+              <span class="when">42분 전</span>
+            </div>
+            <div class="content">Enum 4/7 변환 완료. OrderStatus·PayType Converter 등록.</div>
+            <div class="task-ref">↳ #T-083 Enum 변환 및 Converter 생성</div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#818cf8;">AN</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">analyzer</span>
+              <span class="type b-emerald">review</span>
+              <span class="when">1시간 전</span>
+            </div>
+            <div class="content">User 도메인 상속 구조 분석 완료. 검증 매트릭스 12건 생성.</div>
+            <div class="task-ref">↳ #T-092 User 도메인 Entity 상속 구조 변환</div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#a78bfa;">PL</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">planner</span>
+              <span class="type b-slate">system</span>
+              <span class="when">2시간 전</span>
+            </div>
+            <div class="content">migration-squad 팀에 태스크 6건 배정. 우선순위 재조정.</div>
+            <div class="task-ref">↳ 팀 전체</div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rail"><span class="avatar" style="background:#818cf8;">IM</span><span class="line"></span></div>
+          <div class="body">
+            <div class="meta">
+              <span class="who">implementer</span>
+              <span class="type b-blue">progress</span>
+              <span class="when">3시간 전</span>
+            </div>
+            <div class="content">공통 응답 래퍼 정의 및 전역 예외 핸들러 완료.</div>
+            <div class="task-ref">↳ #T-018 공통 응답 래퍼 정의</div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 패널이 닫혔을 때만 보이는 재열기 손잡이 -->
+    <div class="rec-reopen" onclick="toggleRecords()" title="에이전트 기록 열기">
+      <span class="v">◷ 에이전트 기록</span>
+    </div>
+  </div>
+</main>
+
+<div class="caption">목업 · 기존 session_board 디자인 토큰 적용 · 헤더의 테마(◐) 버튼으로 다크/라이트 전환</div>
+
+<script>
+  function toggleTheme() {
+    const el = document.documentElement;
+    el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  }
+  function toggleRecords() {
+    const panel = document.querySelector('.records');
+    const chip = document.getElementById('recToggle');
+    const closed = panel.classList.toggle('collapsed');
+    document.body.classList.toggle('records-closed', closed);
+    chip.classList.toggle('active', !closed);
+  }
+</script>
+</body>
+</html>

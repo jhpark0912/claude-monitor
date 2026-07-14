@@ -6,14 +6,18 @@ const PALETTE = [
 
 const cache = new Map();
 
+/** 문자열 해시로 팔레트에서 항목 하나를 고정 배정 (동일 입력 → 항상 동일 출력). */
+export function hashPick(str, palette) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return palette[Math.abs(hash) % palette.length];
+}
+
 export function getProjectColor(projectName) {
   if (cache.has(projectName)) return cache.get(projectName);
-
-  let hash = 0;
-  for (let i = 0; i < projectName.length; i++) {
-    hash = ((hash << 5) - hash + projectName.charCodeAt(i)) | 0;
-  }
-  const color = PALETTE[Math.abs(hash) % PALETTE.length];
+  const color = hashPick(projectName, PALETTE);
   cache.set(projectName, color);
   return color;
 }

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Dashboard — Plan-Centric Approaches</title>
+<style>
+/* ─── Design Tokens ─── */
+:root, [data-theme="dark"] {
+  --bg:#08080a; --s1:#0f0f12; --s2:#141418; --s3:#1a1a20;
+  --bd:#1f1f28; --bd2:#2a2a35; --bd-h:#35354a;
+  --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --dm:#3a3a4a;
+  --ac:#818cf8; --ac-bg:rgba(129,140,248,.08); --ac-bd:rgba(129,140,248,.25);
+  --gn:#4ade80; --yw:#fbbf24; --rd:#f87171; --pr:#c084fc; --bl:#60a5fa;
+}
+[data-theme="light"] {
+  --bg:#f6f6f4; --s1:#ffffff; --s2:#faf9f7; --s3:#efeee9;
+  --bd:#e7e6e1; --bd2:#dcdbd5; --bd-h:#cbcac4;
+  --tx:#37352f; --tx2:#6b6b65; --mt:#9b9a97; --dm:#c4c3bf;
+  --ac:#5b5bd6; --ac-bg:rgba(91,91,214,.06); --ac-bd:rgba(91,91,214,.2);
+  --gn:#448361; --yw:#cf9f23; --rd:#c4554d; --pr:#9065b0; --bl:#2563eb;
+}
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--tx);
+  line-height: 1.5; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+a { color: var(--ac); text-decoration: none; }
+
+/* ─── Global Header ─── */
+.g-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 24px; height: 52px;
+  background: var(--s1); border-bottom: 1px solid var(--bd);
+  flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+}
+.g-logo {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--ac), var(--pr));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0;
+}
+.g-title { font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--tx2); }
+.g-nav { display: flex; gap: 2px; margin-left: 16px; }
+.g-nav button {
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; color: var(--tx2);
+  transition: all .15s;
+}
+.g-nav button:hover { background: var(--s3); color: var(--tx); }
+.g-nav button.active { background: var(--ac-bg); color: var(--ac); font-weight: 500; }
+.g-spacer { flex: 1; }
+
+/* Approach Selector */
+.approach-sel {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--s2); border-radius: 8px; padding: 2px;
+  border: 1px solid var(--bd);
+}
+.approach-sel button {
+  padding: 4px 12px; border-radius: 6px; font-size: 12px;
+  font-weight: 600; color: var(--mt); transition: all .15s;
+}
+.approach-sel button:hover { color: var(--tx2); }
+.approach-sel button.active {
+  background: var(--ac); color: #fff; box-shadow: 0 1px 4px rgba(129,140,248,.3);
+}
+
+/* Theme Toggle */
+.theme-btn {
+  width: 32px; height: 32px; border-radius: 8px; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--bd); transition: all .15s;
+}
+.theme-btn:hover { background: var(--s3); border-color: var(--bd2); }
+
+/* ─── Approach Description Bar ─── */
+.approach-desc {
+  padding: 8px 24px; background: var(--s1); border-bottom: 1px solid var(--bd);
+  font-size: 12px; color: var(--mt); display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+.approach-desc .label {
+  font-weight: 600; color: var(--ac); padding: 2px 8px;
+  background: var(--ac-bg); border-radius: 4px;
+}
+
+/* ─── Main Container ─── */
+.main-wrap { flex: 1; display: flex; overflow: hidden; }
+
+/* ─── Shared Components ─── */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+  white-space: nowrap;
+}
+.pill-active { background: rgba(129,140,248,.15); color: var(--ac); }
+.pill-completed { background: rgba(74,222,128,.12); color: var(--gn); }
+.pill-planned { background: rgba(160,160,176,.1); color: var(--tx2); }
+.pill-blocked { background: rgba(248,113,113,.12); color: var(--rd); }
+.pill-rejected { background: rgba(248,113,113,.08); color: var(--rd); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
+}
+.badge-qa { background: rgba(248,113,113,.12); color: var(--rd); }
+.badge-block { background: rgba(248,113,113,.15); color: var(--rd); border: 1px solid rgba(248,113,113,.2); }
+.badge-human { background: rgba(251,191,36,.12); color: var(--yw); }
+
+.priority { font-size: 10px; font-weight: 700; letter-spacing: .5px; }
+.priority-CRIT { color: var(--rd); }
+.priority-HIGH { color: var(--yw); }
+.priority-MED { color: var(--tx2); }
+.priority-LOW { color: var(--mt); }
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-InProgress { background: var(--ac); }
+.dot-Review { background: var(--pr); }
+.dot-Done { background: var(--gn); }
+.dot-Todo { background: var(--yw); }
+.dot-Backlog { background: var(--dm); }
+.dot-Rejected { background: var(--rd); }
+
+.progress-bar {
+  height: 4px; background: var(--bd); border-radius: 2px; overflow: hidden;
+  flex: 1; max-width: 120px;
+}
+.progress-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+.fill-active { background: var(--ac); }
+.fill-completed { background: var(--gn); }
+.fill-planned { background: var(--dm); }
+
+.avatar {
+  width: 22px; height: 22px; border-radius: 6px; font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-weight: 600;
+}
+.avatar-front { background: rgba(96,165,250,.15); color: var(--bl); }
+.avatar-back { background: rgba(74,222,128,.12); color: var(--gn); }
+.avatar-design { background: rgba(192,132,252,.12); color: var(--pr); }
+
+/* ─── Approach Panels ─── */
+.approach-panel { display: none; width: 100%; height: 100%; }
+.approach-panel.active { display: flex; }
+
+/* ────────────────────────────────────────
+   APPROACH A — Linear / Height style
+   ──────────────────────────────────────── */
+.a-wrap { display: flex; width: 100%; height: 100%; }
+
+/* Sidebar */
+.a-sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--s1); border-right: 1px solid var(--bd);
+  display: flex; flex-direction: column; overflow-y: auto;
+  transition: width .2s;
+}
+.a-sidebar.collapsed { width: 0; overflow: hidden; }
+.a-sidebar-head {
+  padding: 16px; border-bottom: 1px solid var(--bd);
+}
+.a-sidebar-head h2 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.a-sidebar-head .sub { font-size: 11px; color: var(--mt); }
+.a-sidebar-section { padding: 8px; }
+.a-sidebar-section .sec-label {
+  font-size: 10px; font-weight: 700; color: var(--mt);
+  text-transform: uppercase; letter-spacing: .8px;
+  padding: 8px 8px 4px;
+}
+.a-plan-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; border-radius: 6px; cursor: pointer;
+  transition: all .1s; width: 100%;
+  text-align: left;
+}
+.a-plan-item:hover { background: var(--s3); }
+.a-plan-item.active { background: var(--ac-bg); }
+.a-plan-item .plan-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.a-plan-item .plan-name {
+  flex: 1; font-size: 13px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.a-plan-item .plan-prog { font-size: 11px; color: var(--mt); flex-shrink: 0; }
+.a-plan-item.completed .plan-name { color: var(--mt); }
+
+.a-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; color: var(--tx2); width: 100%; text-align: left;
+}
+.a-nav-item:hover { background: var(--s3); }
+.a-nav-item .nav-icon { font-size: 14px; width: 20px; text-align: center; }
+
+/* Main content */
+.a-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.a-topbar {
+  padding: 12px 24px; border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; gap: 8px;
+}
+.a-toggle-sidebar {
+  width: 28px; height: 28px; border-radius: 6px; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--bd);
+}
+.a-toggle-sidebar:hover { background: var(--s3); }
+.a-filter-chip {
+  padding: 3px 10px; border-radius: 12px; font-size: 11px;
+  border: 1px solid var(--bd); color: var(--tx2); transition: all .15s;
+}
+.a-filter-chip:hover { border-color: var(--bd-h); }
+.a-filter-chip.active { border-color: var(--ac-bd); background: var(--ac-bg); color: var(--ac); }
+.a-search {
+  margin-left: auto; padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--bd); background: var(--s2); color: var(--tx);
+  font-size: 12px; width: 160px;
+}
+.a-search:focus { outline: none; border-color: var(--ac-bd); }
+
+.a-content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+/* Plan header */
+.a-plan-header { margin-bottom: 20px; }
+.a-plan-header h1 {
+  font-size: 20px; font-weight: 700; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 10px;
+}
+.a-plan-meta {
+  display: flex; align-items: center; gap: 16px;
+  font-size: 12px; color: var(--tx2); margin-bottom: 8px;
+}
+.a-plan-goal {
+  font-size: 13px; color: var(--tx2); padding: 10px 12px;
+  background: var(--s2); border-radius: 8px; border: 1px solid var(--bd);
+  margin-top: 8px; cursor: pointer; position: relative;
+}
+.a-plan-goal .goal-toggle {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 11px; color: var(--mt);
+}
+.a-plan-goal .scope { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bd); }
+.a-plan-goal.expanded .scope { display: block; }
+.a-plan-goal .scope-label { font-size: 11px; color: var(--mt); font-weight: 600; }
+.a-plan-goal .scope-text { font-size: 12px; margin-bottom: 4px; }
+
+/* Task groups */
+.a-group { margin-bottom: 20px; }
+.a-group-header {
+  font-size: 11px; font-weight: 700; color: var(--mt);
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 4px 0; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
+}
+.a-task-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--bd);
+  font-size: 13px;
+}
+.a-task-row:last-child { border-bottom: none; }
+.a-task-row.done { color: var(--mt); }
+.a-task-id { font-size: 11px; color: var(--mt); width: 28px; flex-shrink: 0; }
+.a-task-title { flex: 1; }
+.a-task-badges { display: flex; gap: 4px; flex-shrink: 0; }
+.a-task-assignee { flex-shrink: 0; }
+.a-task-time { font-size: 11px; color: var(--dm); flex-shrink: 0; }
+
+/* Retro/Lessons view */
+.a-special-view { padding: 24px; }
+.a-special-view h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.a-retro-card, .a-lesson-card {
+  background: var(--s2); border: 1px solid var(--bd); border-radius: 8px;
+  padding: 16px; margin-bottom: 12px;
+}
+.a-retro-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.a-retro-card .stats { display: flex; gap: 16px; font-size: 12px; color: var(--tx2); }
+.a-lesson-item { font-size: 13px; color: var(--tx2); padding: 6px 0; }
+.a-lesson-item::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--yw); margin-right: 8px; vertical-align: middle; }
+.a-rejected-card {
+  background: rgba(248,113,113,.04); border: 1px solid rgba(248,113,113,.15); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 12px; font-size: 13px;
+}
+
+/* ────────────────────────────────────────
+   APPROACH B — Card Dashboard
+   ──────────────────────────────────────── */
+.b-wrap {
+  flex: 1; overflow-y: auto; padding: 24px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.b-hero {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--s1);
+  border: 1px solid var(--bd); border-radius: 10px;
+  font-size: 13px; color: var(--tx2);
+}
+.b-hero .sep { color: var(--dm); }
+.b-hero .blocker-alert { color: var(--rd); font-weight: 600; }
+.b-hero .dot-stat {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+.b-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+}
+@media (max-width: 900px) { .b-grid { grid-template-columns: 1fr; } }
+
+.b-card {
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: 12px; padding: 20px; transition: border-color .15s;
+}
+.b-card:hover { border-color: var(--bd-h); }
+.b-card-active { grid-column: 1 / -1; }
+
+.b-card-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.b-card-head h3 { font-size: 16px; font-weight: 700; flex: 1; }
+.b-card-progress { margin-bottom: 14px; }
+.b-card-progress .bar {
+  height: 6px; background: var(--bd); border-radius: 3px;
+  overflow: hidden; margin-bottom: 4px;
+}
+.b-card-progress .bar-fill { height: 100%; border-radius: 3px; }
+.b-card-progress .pct { font-size: 11px; color: var(--mt); text-align: right; }
+.b-card-goal {
+  font-size: 12px; color: var(--tx2); margin-bottom: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.b-status-bar {
+  display: flex; gap: 12px; margin-bottom: 14px; font-size: 12px; color: var(--tx2);
+}
+.b-status-bar .s-item { display: flex; align-items: center; gap: 4px; }
+
+.b-blocker-strip {
+  background: rgba(248,113,113,.06); border: 1px solid rgba(248,113,113,.15);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+  font-size: 12px;
+}
+.b-blocker-strip .blk-title { font-weight: 600; color: var(--rd); margin-bottom: 2px; }
+.b-blocker-strip .blk-desc { color: var(--tx2); }
+
+.b-task-preview { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.b-task-preview-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px; background: var(--s2);
+  font-size: 12px;
+}
+.b-task-preview-row .t-title { flex: 1; }
+
+.b-agents {
+  display: flex; gap: 6px; font-size: 11px;
+  padding-top: 10px; border-top: 1px solid var(--bd);
+}
+.b-agent-chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 10px; background: var(--s2);
+}
+.b-agent-chip .online-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.b-agent-chip .online-dot.working { background: var(--gn); }
+.b-agent-chip .online-dot.idle { background: var(--dm); }
+
+/* Completed card */
+.b-card-completed {
+  background: var(--s2); border-color: var(--bd);
+}
+.b-card-completed h3 { font-size: 14px; }
+.b-done-summary {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12px; color: var(--tx2);
+}
+.b-done-check { color: var(--gn); font-weight: 700; }
+
+/* Planned card */
+.b-card-planned {
+  border-style: dashed; background: transparent;
+}
+.b-card-planned h3 { font-size: 14px; color: var(--tx2); }
+.b-planned-info { font-size: 12px; color: var(--mt); }
+
+/* Bottom section */
+.b-bottom {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media (max-width: 900px) { .b-bottom { grid-template-columns: 1fr; } }
+.b-accordion {
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 10px;
+  overflow: hidden;
+}
+.b-accordion-head {
+  padding: 14px 16px; display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 14px; font-weight: 600;
+}
+.b-accordion-head:hover { background: var(--s2); }
+.b-accordion-head .arr { font-size: 11px; color: var(--mt); transition: transform .2s; margin-left: auto; }
+.b-accordion-body {
+  padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height .25s, padding .25s;
+}
+.b-accordion.open .b-accordion-body { max-height: 300px; padding: 0 16px 16px; }
+.b-accordion.open .arr { transform: rotate(90deg); }
+
+/* ────────────────────────────────────────
+   APPROACH C — Activity Stream
+   ──────────────────────────────────────── */
+.c-wrap { display: flex; flex: 1; overflow: hidden; }
+.c-main { flex: 1; overflow-y: auto; padding: 24px; min-width: 0; }
+.c-sidebar-r {
+  width: 280px; flex-shrink: 0; border-left: 1px solid var(--bd);
+  background: var(--s1); padding: 20px; overflow-y: auto;
+}
+
+/* Stream threads */
+.c-thread { margin-bottom: 24px; }
+.c-thread-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--s1); border: 1px solid var(--bd);
+  border-radius: 10px; cursor: pointer; transition: border-color .15s;
+  margin-bottom: 2px;
+}
+.c-thread-head:hover { border-color: var(--bd-h); }
+.c-thread-head h3 { flex: 1; font-size: 15px; font-weight: 600; }
+.c-thread-head .prog-text { font-size: 12px; color: var(--mt); }
+.c-thread-head .expand-icon {
+  font-size: 11px; color: var(--mt); transition: transform .2s;
+}
+.c-thread.expanded .expand-icon { transform: rotate(90deg); }
+
+.c-events {
+  border-left: 2px solid var(--bd); margin-left: 20px;
+  padding-left: 16px; padding-top: 8px;
+  max-height: 0; overflow: hidden; transition: max-height .3s;
+}
+.c-thread.expanded .c-events { max-height: 1000px; }
+
+.c-event {
+  position: relative; padding: 8px 0; font-size: 13px; color: var(--tx2);
+}
+.c-event::before {
+  content: ""; position: absolute; left: -21px; top: 14px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bd2); border: 2px solid var(--s1);
+}
+.c-event.ev-progress::before { background: var(--ac); }
+.c-event.ev-done::before { background: var(--gn); }
+.c-event.ev-fail::before { background: var(--rd); }
+.c-event.ev-review::before { background: var(--pr); }
+.c-event.ev-wait::before { background: var(--yw); }
+
+.c-event .ev-text { line-height: 1.6; }
+.c-event .ev-time { font-size: 11px; color: var(--dm); margin-top: 2px; }
+.c-event .ev-highlight { font-weight: 600; color: var(--tx); }
+.c-event .ev-task-ref { color: var(--ac); font-weight: 500; }
+.c-event .ev-fail-text { color: var(--rd); font-weight: 600; }
+.c-event .ev-done-text { color: var(--gn); }
+
+/* Collapsed completed */
+.c-thread-collapsed {
+  padding: 10px 14px; background: var(--s2); border: 1px solid var(--bd);
+  border-radius: 10px; font-size: 13px; color: var(--tx2);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.c-thread-collapsed .check { color: var(--gn); font-weight: 700; }
+
+/* Right sidebar */
+.c-sidebar-section { margin-bottom: 24px; }
+.c-sidebar-section h4 {
+  font-size: 11px; font-weight: 700; color: var(--mt);
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+}
+
+.c-health-ring {
+  width: 80px; height: 80px; margin: 0 auto 12px;
+  position: relative;
+}
+.c-health-ring svg { transform: rotate(-90deg); }
+.c-health-ring .ring-text {
+  position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+}
+
+.c-agent-list { display: flex; flex-direction: column; gap: 6px; }
+.c-agent-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--s2); border-radius: 8px;
+  font-size: 12px;
+}
+.c-agent-row .agent-status {
+  padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  margin-left: auto;
+}
+.c-agent-row .status-working { background: rgba(74,222,128,.12); color: var(--gn); }
+.c-agent-row .status-idle { background: rgba(90,90,112,.15); color: var(--mt); }
+
+.c-blocker-count {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px; background: rgba(248,113,113,.06);
+  border: 1px solid rgba(248,113,113,.12); border-radius: 8px;
+  font-size: 13px; color: var(--rd); font-weight: 600;
+}
+
+.c-quick-links { display: flex; flex-direction: column; gap: 4px; }
+.c-quick-link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 6px; font-size: 12px; color: var(--tx2);
+}
+.c-quick-link:hover { background: var(--s2); }
+
+/* ────────────────────────────────────────
+   APPROACH D — Focus / Document mode
+   ──────────────────────────────────────── */
+.d-wrap { flex: 1; overflow-y: auto; display: flex; justify-content: center; }
+.d-content {
+  max-width: 800px; width: 100%; padding: 40px 24px 80px;
+  line-height: 1.7;
+}
+
+.d-project-header {
+  margin-bottom: 32px;
+}
+.d-project-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.d-project-stats { display: flex; gap: 8px; }
+.d-stat-pill {
+  padding: 3px 10px; border-radius: 10px; font-size: 12px;
+  border: 1px solid var(--bd);
+}
+
+.d-section { margin-bottom: 36px; }
+.d-section-head {
+  font-size: 11px; font-weight: 700; color: var(--mt);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--bd);
+}
+
+/* Plan block */
+.d-plan-block {
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: 12px; padding: 24px; margin-bottom: 16px;
+}
+.d-plan-block h2 {
+  font-size: 20px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.d-plan-progress {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.d-plan-progress .bar {
+  flex: 1; max-width: 200px; height: 6px;
+  background: var(--bd); border-radius: 3px; overflow: hidden;
+}
+.d-plan-progress .bar-fill { height: 100%; border-radius: 3px; }
+.d-plan-progress .pct { font-size: 12px; color: var(--mt); }
+
+.d-plan-desc {
+  cursor: pointer; padding: 12px; background: var(--s2);
+  border-radius: 8px; border: 1px solid var(--bd); margin-bottom: 16px;
+}
+.d-plan-desc .desc-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--tx2);
+}
+.d-plan-desc .desc-head .toggle { font-size: 11px; color: var(--mt); }
+.d-plan-desc .desc-body {
+  display: none; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--bd); font-size: 12px; color: var(--tx2);
+}
+.d-plan-desc.expanded .desc-body { display: block; }
+
+/* Blocker callout */
+.d-blocker-callout {
+  background: rgba(248,113,113,.05); border: 1px solid rgba(248,113,113,.15);
+  border-left: 3px solid var(--rd); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 16px;
+}
+.d-blocker-callout .callout-title {
+  font-size: 13px; font-weight: 700; color: var(--rd); margin-bottom: 4px;
+}
+.d-blocker-callout .callout-text { font-size: 12px; color: var(--tx2); }
+
+/* Embedded task table */
+.d-task-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.d-task-table th {
+  text-align: left; font-size: 10px; font-weight: 700;
+  color: var(--mt); text-transform: uppercase; letter-spacing: .5px;
+  padding: 6px 8px; border-bottom: 1px solid var(--bd);
+}
+.d-task-table td { padding: 8px; border-bottom: 1px solid var(--bd); vertical-align: middle; }
+.d-task-table tr:last-child td { border-bottom: none; }
+.d-task-table tr.done td { color: var(--mt); }
+
+.d-agent-chips {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--bd);
+}
+.d-agent-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 10px; font-size: 11px;
+  background: var(--s2); border: 1px solid var(--bd);
+}
+.d-agent-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Completed plan accordion */
+.d-completed-item {
+  border: 1px solid var(--bd); border-radius: 8px;
+  margin-bottom: 8px; overflow: hidden;
+}
+.d-completed-head {
+  padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 14px;
+}
+.d-completed-head:hover { background: var(--s2); }
+.d-completed-head .check { color: var(--gn); font-weight: 700; }
+.d-completed-head .arr { font-size: 11px; color: var(--mt); margin-left: auto; transition: transform .2s; }
+.d-completed-body {
+  max-height: 0; overflow: hidden; transition: max-height .25s;
+}
+.d-completed-item.open .d-completed-body { max-height: 500px; }
+.d-completed-item.open .arr { transform: rotate(90deg); }
+.d-completed-inner { padding: 0 16px 16px; }
+.d-completed-stats {
+  display: flex; gap: 16px; font-size: 12px; color: var(--tx2);
+  margin-bottom: 8px;
+}
+
+/* Planned list */
+.d-planned-list { display: flex; flex-direction: column; gap: 8px; }
+.d-planned-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border: 1px dashed var(--bd);
+  border-radius: 8px; font-size: 14px; color: var(--tx2);
+}
+.d-planned-item .task-count { font-size: 12px; color: var(--mt); margin-left: auto; }
+
+/* Retro/Lessons sections */
+.d-retro-entry {
+  border: 1px solid var(--bd); border-radius: 8px;
+  margin-bottom: 8px; overflow: hidden;
+}
+.d-retro-head {
+  padding: 14px 16px; cursor: pointer; font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+}
+.d-retro-head:hover { background: var(--s2); }
+.d-retro-head .arr { font-size: 11px; color: var(--mt); margin-left: auto; transition: transform .2s; }
+.d-retro-body { max-height: 0; overflow: hidden; transition: max-height .25s; }
+.d-retro-entry.open .d-retro-body { max-height: 300px; }
+.d-retro-entry.open .arr { transform: rotate(90deg); }
+.d-retro-inner { padding: 0 16px 16px; font-size: 13px; color: var(--tx2); }
+
+.d-lesson-list { list-style: none; }
+.d-lesson-list li {
+  padding: 8px 0; font-size: 13px; color: var(--tx2);
+  border-bottom: 1px solid var(--bd);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.d-lesson-list li:last-child { border-bottom: none; }
+.d-lesson-list li::before {
+  content: ""; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--yw); flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* ─── Footer Caption ─── */
+.g-footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 8px 24px; background: var(--s1);
+  border-top: 1px solid var(--bd);
+  font-size: 11px; color: var(--mt);
+  display: flex; align-items: center; gap: 8px; z-index: 100;
+}
+.g-footer .f-label { font-weight: 600; color: var(--ac); }
+</style>
+</head>
+<body>
+
+<!-- ═══ Global Header ═══ -->
+<header class="g-header">
+  <div class="g-logo">C</div>
+  <span class="g-title">Claude Session Dashboard</span>
+  <nav class="g-nav">
+    <button>타임라인</button>
+    <button>분석</button>
+    <button>보고서</button>
+    <button>모니터링</button>
+    <button class="active">에이전트</button>
+  </nav>
+  <div class="g-spacer"></div>
+  <div class="approach-sel" id="approachSel">
+    <button class="active" data-approach="A">A</button>
+    <button data-approach="B">B</button>
+    <button data-approach="C">C</button>
+    <button data-approach="D">D</button>
+  </div>
+  <button class="theme-btn" id="themeToggle" title="테마 전환">◐</button>
+</header>
+
+<!-- Approach Description -->
+<div class="approach-desc" id="approachDesc">
+  <span class="label" id="descLabel">A: 리니어</span>
+  <span id="descText">Linear/Height 스타일 — 사이드바 플랜 탐색 + 클린 태스크 리스트</span>
+</div>
+
+<div class="main-wrap">
+
+<!-- ═══════════════════════════════════════
+     APPROACH A — Linear
+     ═══════════════════════════════════════ -->
+<div class="approach-panel active" id="panelA">
+<div class="a-wrap">
+  <!-- Sidebar -->
+  <aside class="a-sidebar" id="aSidebar">
+    <div class="a-sidebar-head">
+      <h2>Stock Diary Dev Team</h2>
+      <div class="sub">3 플랜 · 16 태스크</div>
+    </div>
+    <div class="a-sidebar-section">
+      <div class="sec-label">플랜</div>
+      <button class="a-plan-item active" data-plan="a-plan1" onclick="selectPlanA(this,'a-plan1')">
+        <span class="plan-dot" style="background:var(--ac)"></span>
+        <span class="plan-name" style="font-weight:600">실시간 시세 시스템</span>
+        <span class="plan-prog">5/8</span>
+      </button>
+      <button class="a-plan-item completed" data-plan="a-plan2" onclick="selectPlanA(this,'a-plan2')">
+        <span class="plan-dot" style="background:var(--gn)"></span>
+        <span class="plan-name">인증 및 기반 인프라</span>
+        <span class="plan-prog">5/5</span>
+      </button>
+      <button class="a-plan-item" data-plan="a-plan3" onclick="selectPlanA(this,'a-plan3')">
+        <span class="plan-dot" style="background:var(--dm)"></span>
+        <span class="plan-name">UI 고도화</span>
+        <span class="plan-prog">0/3</span>
+      </button>
+    </div>
+    <div class="a-sidebar-section" style="border-top:1px solid var(--bd);margin-top:4px;padding-top:4px;">
+      <button class="a-nav-item" data-plan="a-rejected" onclick="selectPlanA(this,'a-rejected')">
+        <span class="nav-icon" style="color:var(--rd)">✕</span> 반려됨
+      </button>
+      <button class="a-nav-item" data-plan="a-retro" onclick="selectPlanA(this,'a-retro')">
+        <span class="nav-icon">↩</span> 회고
+      </button>
+      <button class="a-nav-item" data-plan="a-lessons" onclick="selectPlanA(this,'a-lessons')">
+        <span class="nav-icon">✦</span> 교훈
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="a-main">
+    <div class="a-topbar">
+      <button class="a-toggle-sidebar" onclick="toggleSidebarA()" title="사이드바 토글">☰</button>
+      <button class="a-filter-chip active">전체</button>
+      <button class="a-filter-chip">진행 중</button>
+      <button class="a-filter-chip">리뷰</button>
+      <button class="a-filter-chip">완료</button>
+      <input class="a-search" type="text" placeholder="태스크 검색…" />
+    </div>
+
+    <div class="a-content">
+      <!-- Plan 1: 실시간 시세 -->
+      <div class="a-plan-view" id="a-plan1">
+        <div class="a-plan-header">
+          <h1><span class="pill pill-active">활성</span> 실시간 시세 시스템</h1>
+          <div class="a-plan-meta">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="progress-bar" style="max-width:140px">
+                <div class="progress-fill fill-active" style="width:62.5%"></div>
+              </div>
+              <span>5/8 (62%)</span>
+            </div>
+            <span>시작: 5일 전</span>
+          </div>
+          <div class="a-plan-goal" id="aGoal1" onclick="this.classList.toggle('expanded')">
+            KIS API 기반 실시간 주식 시세 조회 + WebSocket 스트리밍
+            <span class="goal-toggle">범위 ▸</span>
+            <div class="scope">
+              <div class="scope-label">포함</div>
+              <div class="scope-text">REST 시세 API, WebSocket 연동, 차트 렌더링</div>
+              <div class="scope-label">제외</div>
+              <div class="scope-text">알림, 자동매매</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-InProgress"></span> 진행 중 (3)</div>
+          <div class="a-task-row">
+            <span class="a-task-id">#7</span>
+            <span class="status-dot dot-InProgress"></span>
+            <span class="a-task-title">WebSocket 실시간 시세 연동</span>
+            <span class="a-task-badges">
+              <span class="priority priority-CRIT">CRIT</span>
+              <span class="badge badge-block">BLOCKED</span>
+              <span class="badge badge-qa">QA-FAIL ×2</span>
+            </span>
+            <span class="a-task-assignee"><span class="avatar avatar-front">F</span></span>
+            <span class="a-task-time">방금</span>
+          </div>
+          <div class="a-task-row">
+            <span class="a-task-id">#12</span>
+            <span class="status-dot dot-InProgress"></span>
+            <span class="a-task-title">차트 렌더링 최적화</span>
+            <span class="a-task-badges">
+              <span class="priority priority-HIGH">HIGH</span>
+            </span>
+            <span class="a-task-assignee"><span class="avatar avatar-front">F</span></span>
+            <span class="a-task-time">1시간 전</span>
+          </div>
+          <div class="a-task-row">
+            <span class="a-task-id">#15</span>
+            <span class="status-dot dot-InProgress"></span>
+            <span class="a-task-title">거래 내역 무한 스크롤</span>
+            <span class="a-task-badges">
+              <span class="priority priority-MED">MED</span>
+            </span>
+            <span class="a-task-assignee"><span class="avatar avatar-front">F</span></span>
+            <span class="a-task-time">2시간 전</span>
+          </div>
+        </div>
+
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-Review"></span> 리뷰 (2)</div>
+          <div class="a-task-row">
+            <span class="a-task-id">#9</span>
+            <span class="status-dot dot-Review"></span>
+            <span class="a-task-title">포트폴리오 수익률 계산 API</span>
+            <span class="a-task-badges">
+              <span class="priority priority-HIGH">HIGH</span>
+            </span>
+            <span class="a-task-assignee"><span class="avatar avatar-back">B</span></span>
+            <span class="a-task-time">3시간 전</span>
+          </div>
+          <div class="a-task-row">
+            <span class="a-task-id">#11</span>
+            <span class="status-dot dot-Review"></span>
+            <span class="a-task-title">종목 검색 자동완성</span>
+            <span class="a-task-badges">
+              <span class="priority priority-MED">MED</span>
+              <span class="badge badge-human">사람 대기</span>
+            </span>
+            <span class="a-task-assignee"><span class="avatar avatar-front">F</span></span>
+            <span class="a-task-time">4시간 전</span>
+          </div>
+        </div>
+
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-Done"></span> 완료 (2)</div>
+          <div class="a-task-row done">
+            <span class="a-task-id">#3</span>
+            <span class="status-dot dot-Done"></span>
+            <span class="a-task-title">주식 시세 API 연동</span>
+            <span class="a-task-badges"><span class="priority priority-HIGH" style="opacity:.5">HIGH</span></span>
+            <span class="a-task-assignee"><span class="avatar avatar-front" style="opacity:.5">F</span></span>
+            <span class="a-task-time">2일 전</span>
+          </div>
+          <div class="a-task-row done">
+            <span class="a-task-id">#4</span>
+            <span class="status-dot dot-Done"></span>
+            <span class="a-task-title">DB 스키마 설계</span>
+            <span class="a-task-badges"><span class="priority priority-CRIT" style="opacity:.5">CRIT</span></span>
+            <span class="a-task-assignee"><span class="avatar avatar-back" style="opacity:.5">B</span></span>
+            <span class="a-task-time">3일 전</span>
+          </div>
+        </div>
+
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-Todo"></span> 대기 (1)</div>
+          <div class="a-task-row">
+            <span class="a-task-id">#16</span>
+            <span class="status-dot dot-Todo"></span>
+            <span class="a-task-title">알림 설정 페이지</span>
+            <span class="a-task-badges"><span class="priority priority-MED">MED</span></span>
+            <span class="a-task-assignee"><span class="avatar avatar-front">F</span></span>
+            <span class="a-task-time">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan 2: 인증 및 기반 인프라 -->
+      <div class="a-plan-view" id="a-plan2" style="display:none">
+        <div class="a-plan-header">
+          <h1><span class="pill pill-completed">완료</span> 인증 및 기반 인프라</h1>
+          <div class="a-plan-meta">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="progress-bar" style="max-width:140px">
+                <div class="progress-fill fill-completed" style="width:100%"></div>
+              </div>
+              <span>5/5 (100%)</span>
+            </div>
+            <span>완료: 3일 전 · 소요 6일</span>
+          </div>
+          <div class="a-plan-goal" onclick="this.classList.toggle('expanded')">
+            JWT 인증, CI/CD, 기본 레이아웃 구축
+            <span class="goal-toggle">범위 ▸</span>
+            <div class="scope">
+              <div class="scope-label">목표</div>
+              <div class="scope-text">JWT 인증, CI/CD, 기본 레이아웃 구축</div>
+            </div>
+          </div>
+        </div>
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-Done"></span> 완료 (5)</div>
+          <div class="a-task-row done"><span class="a-task-id">#1</span><span class="status-dot dot-Done"></span><span class="a-task-title">로그인/회원가입 UI</span><span class="a-task-badges"><span class="priority priority-HIGH" style="opacity:.5">HIGH</span></span><span class="a-task-time">완료</span></div>
+          <div class="a-task-row done"><span class="a-task-id">#2</span><span class="status-dot dot-Done"></span><span class="a-task-title">JWT 인증 미들웨어</span><span class="a-task-badges"><span class="priority priority-CRIT" style="opacity:.5">CRIT</span></span><span class="a-task-time">완료</span></div>
+          <div class="a-task-row done"><span class="a-task-id">#5</span><span class="status-dot dot-Done"></span><span class="a-task-title">포트폴리오 CRUD API</span><span class="a-task-badges"><span class="priority priority-HIGH" style="opacity:.5">HIGH</span></span><span class="a-task-time">완료</span></div>
+          <div class="a-task-row done"><span class="a-task-id">#6</span><span class="status-dot dot-Done"></span><span class="a-task-title">메인 대시보드 레이아웃</span><span class="a-task-badges"><span class="priority priority-MED" style="opacity:.5">MED</span></span><span class="a-task-time">완료</span></div>
+          <div class="a-task-row done"><span class="a-task-id">#10</span><span class="status-dot dot-Done"></span><span class="a-task-title">CI/CD 파이프라인</span><span class="a-task-badges"><span class="priority priority-MED" style="opacity:.5">MED</span></span><span class="a-task-time">완료</span></div>
+        </div>
+      </div>
+
+      <!-- Plan 3: UI 고도화 -->
+      <div class="a-plan-view" id="a-plan3" style="display:none">
+        <div class="a-plan-header">
+          <h1><span class="pill pill-planned">계획</span> UI 고도화</h1>
+          <div class="a-plan-meta">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="progress-bar" style="max-width:140px">
+                <div class="progress-fill fill-planned" style="width:0%"></div>
+              </div>
+              <span>0/3 (0%)</span>
+            </div>
+            <span>미착수</span>
+          </div>
+          <div class="a-plan-goal" onclick="this.classList.toggle('expanded')">
+            다크모드, PWA, 종목 상세 페이지
+            <span class="goal-toggle">범위 ▸</span>
+            <div class="scope">
+              <div class="scope-label">목표</div>
+              <div class="scope-text">다크모드, PWA, 종목 상세 페이지</div>
+            </div>
+          </div>
+        </div>
+        <div class="a-group">
+          <div class="a-group-header"><span class="status-dot dot-Backlog"></span> 백로그 (3)</div>
+          <div class="a-task-row"><span class="a-task-id">#8</span><span class="status-dot dot-Backlog"></span><span class="a-task-title">종목 상세 페이지</span><span class="a-task-badges"><span class="priority priority-MED">MED</span></span><span class="a-task-assignee"><span class="avatar avatar-front">F</span></span><span class="a-task-time">—</span></div>
+          <div class="a-task-row"><span class="a-task-id">#18</span><span class="status-dot dot-Backlog"></span><span class="a-task-title">다크모드 커스터마이징</span><span class="a-task-badges"><span class="priority priority-LOW">LOW</span></span><span class="a-task-assignee"><span class="avatar avatar-design">D</span></span><span class="a-task-time">—</span></div>
+          <div class="a-task-row"><span class="a-task-id">#19</span><span class="status-dot dot-Backlog"></span><span class="a-task-title">PWA 오프라인 지원</span><span class="a-task-badges"><span class="priority priority-LOW">LOW</span></span><span class="a-task-time">—</span></div>
+        </div>
+      </div>
+
+      <!-- Rejected -->
+      <div class="a-plan-view a-special-view" id="a-rejected" style="display:none">
+        <h2>반려된 태스크</h2>
+        <div class="a-rejected-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="status-dot dot-Rejected"></span>
+            <span style="font-weight:600">#14 블록체인 지갑 연동</span>
+            <span class="pill pill-rejected">반려</span>
+          </div>
+          <div style="font-size:12px;color:var(--tx2)">사유: scope 초과</div>
+        </div>
+      </div>
+
+      <!-- Retro -->
+      <div class="a-plan-view a-special-view" id="a-retro" style="display:none">
+        <h2>회고</h2>
+        <div class="a-retro-card">
+          <h3>20260705 인증 및 기반 인프라</h3>
+          <div class="stats">
+            <span>PASS율 <strong style="color:var(--gn)">80%</strong></span>
+            <span>QA 실패 <strong style="color:var(--rd)">2회</strong></span>
+            <span>블로커 <strong>0건</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lessons -->
+      <div class="a-plan-view a-special-view" id="a-lessons" style="display:none">
+        <h2>프로젝트 교훈</h2>
+        <div class="a-lesson-item">SQLite WAL 모드 주의 — 동시 쓰기 시 SQLITE_BUSY 발생 가능</div>
+        <div class="a-lesson-item">vite dev는 타입 에러 안 잡음 — tsc --noEmit 별도 실행 필요</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APPROACH B — Card Dashboard
+     ═══════════════════════════════════════ -->
+<div class="approach-panel" id="panelB">
+<div class="b-wrap">
+  <!-- Hero -->
+  <div class="b-hero">
+    <strong style="color:var(--tx)">Stock Diary Dev Team</strong>
+    <span class="sep">·</span>
+    <span class="dot-stat"><span class="status-dot dot-InProgress" style="width:6px;height:6px"></span> 3 플랜</span>
+    <span class="sep">·</span>
+    <span>활성 1</span>
+    <span class="sep">·</span>
+    <span style="color:var(--gn)">완료 1</span>
+    <span class="sep">·</span>
+    <span>계획 1</span>
+    <span class="sep">·</span>
+    <span class="blocker-alert">블로커 1건</span>
+  </div>
+
+  <!-- Plan Grid -->
+  <div class="b-grid">
+    <!-- Active Plan -->
+    <div class="b-card b-card-active">
+      <div class="b-card-head">
+        <span class="pill pill-active">활성</span>
+        <h3>실시간 시세 시스템</h3>
+      </div>
+      <div class="b-card-progress">
+        <div class="bar"><div class="bar-fill fill-active" style="width:62.5%"></div></div>
+        <div class="pct">62% · 5/8 완료</div>
+      </div>
+      <div class="b-card-goal">KIS API 기반 실시간 주식 시세 조회 + WebSocket 스트리밍</div>
+      <div class="b-status-bar">
+        <span class="s-item"><span class="status-dot dot-InProgress" style="width:6px;height:6px"></span> 진행 3</span>
+        <span class="s-item"><span class="status-dot dot-Review" style="width:6px;height:6px"></span> 리뷰 2</span>
+        <span class="s-item"><span class="status-dot dot-Done" style="width:6px;height:6px"></span> 완료 2</span>
+        <span class="s-item"><span class="status-dot dot-Todo" style="width:6px;height:6px"></span> 대기 1</span>
+      </div>
+      <div class="b-blocker-strip">
+        <div class="blk-title">BLOCKED — #7 WebSocket 실시간 시세 연동</div>
+        <div class="blk-desc">KIS 인증토큰 갱신 실패 · QA-FAIL ×2</div>
+      </div>
+      <div class="b-task-preview">
+        <div class="b-task-preview-row">
+          <span class="status-dot dot-InProgress"></span>
+          <span class="t-title">#7 WebSocket 실시간 시세 연동</span>
+          <span class="priority priority-CRIT">CRIT</span>
+          <span class="badge badge-block" style="font-size:9px">BLOCKED</span>
+          <span class="badge badge-qa" style="font-size:9px">QA ×2</span>
+        </div>
+        <div class="b-task-preview-row">
+          <span class="status-dot dot-InProgress"></span>
+          <span class="t-title">#12 차트 렌더링 최적화</span>
+          <span class="priority priority-HIGH">HIGH</span>
+        </div>
+        <div class="b-task-preview-row">
+          <span class="status-dot dot-Review"></span>
+          <span class="t-title">#9 포트폴리오 수익률 계산 API</span>
+          <span class="priority priority-HIGH">HIGH</span>
+        </div>
+      </div>
+      <div class="b-agents">
+        <span class="b-agent-chip"><span class="online-dot working"></span> 프론트 개발자 · 3 진행중</span>
+        <span class="b-agent-chip"><span class="online-dot idle"></span> 백엔드 개발자 · 대기</span>
+      </div>
+    </div>
+
+    <!-- Completed Plan -->
+    <div class="b-card b-card-completed">
+      <div class="b-card-head">
+        <span class="pill pill-completed">완료</span>
+        <h3>인증 및 기반 인프라</h3>
+      </div>
+      <div class="b-done-summary">
+        <span class="b-done-check">&#10003;</span>
+        <span>5/5 완료</span>
+        <span>·</span>
+        <span>3일 전 완료</span>
+        <span>·</span>
+        <span>소요 6일</span>
+        <span>·</span>
+        <span>PASS율 <strong style="color:var(--gn)">80%</strong></span>
+      </div>
+    </div>
+
+    <!-- Planned -->
+    <div class="b-card b-card-planned">
+      <div class="b-card-head">
+        <span class="pill pill-planned">계획</span>
+        <h3>UI 고도화</h3>
+      </div>
+      <div class="b-planned-info">3개 태스크 · 미착수</div>
+    </div>
+  </div>
+
+  <!-- Bottom: Retro & Lessons -->
+  <div class="b-bottom">
+    <div class="b-accordion" id="bRetroAcc">
+      <div class="b-accordion-head" onclick="toggleBAccordion('bRetroAcc')">
+        <span style="font-size:15px">↩</span>
+        <span>회고</span>
+        <span class="arr">▸</span>
+      </div>
+      <div class="b-accordion-body">
+        <div style="padding-top:4px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px">20260705 인증 및 기반 인프라</div>
+          <div style="display:flex;gap:16px;font-size:12px;color:var(--tx2)">
+            <span>PASS율 <strong style="color:var(--gn)">80%</strong></span>
+            <span>QA 실패 <strong style="color:var(--rd)">2회</strong></span>
+            <span>블로커 <strong>0건</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="b-accordion" id="bLessonAcc">
+      <div class="b-accordion-head" onclick="toggleBAccordion('bLessonAcc')">
+        <span style="font-size:15px">✦</span>
+        <span>교훈</span>
+        <span class="arr">▸</span>
+      </div>
+      <div class="b-accordion-body">
+        <ul style="list-style:none;padding-top:4px">
+          <li style="font-size:13px;color:var(--tx2);padding:4px 0;display:flex;align-items:baseline;gap:6px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--yw);flex-shrink:0;margin-top:4px;display:inline-block"></span>
+            SQLite WAL 모드 주의 — 동시 쓰기 시 SQLITE_BUSY 발생 가능
+          </li>
+          <li style="font-size:13px;color:var(--tx2);padding:4px 0;display:flex;align-items:baseline;gap:6px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--yw);flex-shrink:0;margin-top:4px;display:inline-block"></span>
+            vite dev는 타입 에러 안 잡음 — tsc --noEmit 별도 실행 필요
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejected -->
+  <div style="margin-top:4px">
+    <div class="a-rejected-card" style="background:var(--s1);border-radius:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <span class="status-dot dot-Rejected"></span>
+        <span style="font-weight:600;font-size:13px">#14 블록체인 지갑 연동</span>
+        <span class="pill pill-rejected">반려</span>
+      </div>
+      <div style="font-size:12px;color:var(--tx2)">scope 초과로 반려됨</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APPROACH C — Activity Stream
+     ═══════════════════════════════════════ -->
+<div class="approach-panel" id="panelC">
+<div class="c-wrap">
+  <div class="c-main">
+    <!-- Active plan thread (expanded) -->
+    <div class="c-thread expanded" id="cThread1">
+      <div class="c-thread-head" onclick="toggleCThread('cThread1')">
+        <span class="pill pill-active">활성</span>
+        <h3>실시간 시세 시스템</h3>
+        <span class="prog-text">5/8</span>
+        <div class="progress-bar" style="max-width:80px"><div class="progress-fill fill-active" style="width:62.5%"></div></div>
+        <span class="expand-icon">▸</span>
+      </div>
+      <div class="c-events">
+        <div class="c-event ev-fail">
+          <div class="ev-text">
+            <span class="ev-fail-text">QA 2회차 실패</span> —
+            <span class="ev-task-ref">#7 WebSocket 실시간 시세 연동</span>
+            <span class="badge badge-block" style="margin-left:4px">BLOCKED</span>
+          </div>
+          <div class="ev-time">KIS 인증토큰 갱신 실패 · 30분 전</div>
+        </div>
+        <div class="c-event ev-progress">
+          <div class="ev-text">
+            <span class="ev-highlight">프론트 개발자</span>가
+            <span class="ev-task-ref">#12 '차트 렌더링 최적화'</span>를 시작했습니다
+          </div>
+          <div class="ev-time">Canvas 기반 전환 검토 중 · 1시간 전</div>
+        </div>
+        <div class="c-event ev-progress">
+          <div class="ev-text">
+            <span class="ev-highlight">프론트 개발자</span>가
+            <span class="ev-task-ref">#15 '거래 내역 무한 스크롤'</span> 진행 중
+          </div>
+          <div class="ev-time">IO 적용완료, 테스트중 · 2시간 전</div>
+        </div>
+        <div class="c-event ev-review">
+          <div class="ev-text">
+            <span class="ev-highlight">백엔드 개발자</span>가
+            <span class="ev-task-ref">#9 '포트폴리오 수익률 계산 API'</span>를 리뷰 요청했습니다
+          </div>
+          <div class="ev-time">XIRR 구현완료, 리뷰대기 · 3시간 전</div>
+        </div>
+        <div class="c-event ev-wait">
+          <div class="ev-text">
+            <span class="ev-task-ref">#11 '종목 검색 자동완성'</span> —
+            <span class="badge badge-human" style="margin-left:2px">사람 대기</span>
+          </div>
+          <div class="ev-time">Trie+초성 검색 구현완료 · 리뷰 대기중 · 4시간 전</div>
+        </div>
+        <div class="c-event ev-done">
+          <div class="ev-text">
+            <span class="ev-done-text">&#10003;</span>
+            <span class="ev-task-ref">#3 주식 시세 API 연동</span> 완료
+          </div>
+          <div class="ev-time">Todo → InProgress → Review → Done (소요 2일) · 2일 전</div>
+        </div>
+        <div class="c-event ev-done">
+          <div class="ev-text">
+            <span class="ev-done-text">&#10003;</span>
+            <span class="ev-task-ref">#4 DB 스키마 설계</span> 완료
+          </div>
+          <div class="ev-time">Todo → InProgress → Done (소요 1일) · 3일 전</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed plan (collapsed summary) -->
+    <div class="c-thread-collapsed">
+      <span class="check">&#10003;</span>
+      <strong>인증 및 기반 인프라</strong>
+      <span>— 5/5 완료 (6일 소요, PASS율 80%)</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--dm)">3일 전</span>
+    </div>
+
+    <!-- Planned plan thread (collapsed) -->
+    <div class="c-thread" id="cThread3">
+      <div class="c-thread-head" onclick="toggleCThread('cThread3')">
+        <span class="pill pill-planned">계획</span>
+        <h3>UI 고도화</h3>
+        <span class="prog-text">0/3 · 미착수</span>
+        <span class="expand-icon">▸</span>
+      </div>
+      <div class="c-events">
+        <div class="c-event">
+          <div class="ev-text" style="color:var(--mt)">아직 활동 기록이 없습니다. 3개 태스크가 백로그에 있습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rejected -->
+    <div class="c-thread-collapsed" style="border-color:rgba(248,113,113,.15);background:rgba(248,113,113,.03)">
+      <span style="color:var(--rd);font-weight:700">✕</span>
+      <strong style="color:var(--rd)">#14 블록체인 지갑 연동</strong>
+      <span>— scope 초과로 반려</span>
+    </div>
+  </div>
+
+  <!-- Right sidebar -->
+  <aside class="c-sidebar-r">
+    <div class="c-sidebar-section">
+      <h4>프로젝트 진행률</h4>
+      <div class="c-health-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="var(--bd)" stroke-width="6"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="var(--ac)" stroke-width="6"
+                  stroke-dasharray="213.6" stroke-dashoffset="85.4" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-text">60%</div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--tx2)">10/16 완료 (반려 제외)</div>
+    </div>
+
+    <div class="c-sidebar-section">
+      <h4>에이전트 상태</h4>
+      <div class="c-agent-list">
+        <div class="c-agent-row">
+          <span class="avatar avatar-front" style="width:24px;height:24px">F</span>
+          <span>프론트 개발자</span>
+          <span class="agent-status status-working">작업중</span>
+        </div>
+        <div class="c-agent-row">
+          <span class="avatar avatar-back" style="width:24px;height:24px">B</span>
+          <span>백엔드 개발자</span>
+          <span class="agent-status status-idle">대기</span>
+        </div>
+        <div class="c-agent-row">
+          <span class="avatar avatar-design" style="width:24px;height:24px">D</span>
+          <span>디자인 리뷰어</span>
+          <span class="agent-status status-idle">대기</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="c-sidebar-section">
+      <h4>블로커</h4>
+      <div class="c-blocker-count">
+        <span style="font-size:18px">1</span>
+        <span style="font-weight:400;font-size:12px;color:var(--tx2)">활성 블로커 — #7 KIS 인증토큰</span>
+      </div>
+    </div>
+
+    <div class="c-sidebar-section">
+      <h4>바로가기</h4>
+      <div class="c-quick-links">
+        <div class="c-quick-link"><span style="font-size:14px">↩</span> 회고 — 인증 인프라 (PASS 80%)</div>
+        <div class="c-quick-link"><span style="font-size:14px">✦</span> 교훈 — 2건</div>
+      </div>
+    </div>
+  </aside>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APPROACH D — Focus / Document
+     ═══════════════════════════════════════ -->
+<div class="approach-panel" id="panelD">
+<div class="d-wrap">
+<div class="d-content">
+
+  <!-- Project Header -->
+  <div class="d-project-header">
+    <h1>Stock Diary Dev Team</h1>
+    <div class="d-project-stats">
+      <span class="d-stat-pill" style="border-color:var(--ac-bd);color:var(--ac)">활성 1</span>
+      <span class="d-stat-pill" style="border-color:rgba(74,222,128,.3);color:var(--gn)">완료 1</span>
+      <span class="d-stat-pill">계획 1</span>
+    </div>
+  </div>
+
+  <!-- Active Plans Section -->
+  <div class="d-section">
+    <div class="d-section-head">활성 플랜</div>
+
+    <div class="d-plan-block">
+      <h2>
+        <span class="pill pill-active">활성</span>
+        실시간 시세 시스템
+      </h2>
+      <div class="d-plan-progress">
+        <div class="bar"><div class="bar-fill fill-active" style="width:62.5%"></div></div>
+        <span class="pct">5/8 (62%)</span>
+        <span style="font-size:12px;color:var(--mt)">· 시작 5일 전</span>
+      </div>
+
+      <div class="d-plan-desc" id="dDesc1" onclick="this.classList.toggle('expanded')">
+        <div class="desc-head">
+          <span>KIS API 기반 실시간 주식 시세 조회 + WebSocket 스트리밍</span>
+          <span class="toggle">범위 보기 ▸</span>
+        </div>
+        <div class="desc-body">
+          <div style="margin-bottom:6px"><strong style="color:var(--mt);font-size:11px">포함:</strong> REST 시세 API, WebSocket 연동, 차트 렌더링</div>
+          <div><strong style="color:var(--mt);font-size:11px">제외:</strong> 알림, 자동매매</div>
+        </div>
+      </div>
+
+      <div class="d-blocker-callout">
+        <div class="callout-title">BLOCKED — #7 WebSocket 실시간 시세 연동</div>
+        <div class="callout-text">KIS 인증토큰 갱신 실패 · QA-FAIL ×2 · 프론트 개발자 배정</div>
+      </div>
+
+      <table class="d-task-table">
+        <thead>
+          <tr><th>상태</th><th>#</th><th>태스크</th><th>우선순위</th><th>담당</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="status-dot dot-InProgress"></span></td>
+            <td style="color:var(--mt)">7</td>
+            <td>WebSocket 실시간 시세 연동</td>
+            <td><span class="priority priority-CRIT">CRIT</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px">F</span></td>
+            <td><span class="badge badge-block">BLOCKED</span> <span class="badge badge-qa">QA ×2</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-dot dot-InProgress"></span></td>
+            <td style="color:var(--mt)">12</td>
+            <td>차트 렌더링 최적화</td>
+            <td><span class="priority priority-HIGH">HIGH</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px">F</span></td>
+            <td style="font-size:11px;color:var(--mt)">Canvas 전환 검토</td>
+          </tr>
+          <tr>
+            <td><span class="status-dot dot-InProgress"></span></td>
+            <td style="color:var(--mt)">15</td>
+            <td>거래 내역 무한 스크롤</td>
+            <td><span class="priority priority-MED">MED</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px">F</span></td>
+            <td style="font-size:11px;color:var(--mt)">IO 적용, 테스트중</td>
+          </tr>
+          <tr>
+            <td><span class="status-dot dot-Review"></span></td>
+            <td style="color:var(--mt)">9</td>
+            <td>포트폴리오 수익률 계산 API</td>
+            <td><span class="priority priority-HIGH">HIGH</span></td>
+            <td><span class="avatar avatar-back" style="width:20px;height:20px;font-size:9px">B</span></td>
+            <td style="font-size:11px;color:var(--mt)">XIRR 구현완료</td>
+          </tr>
+          <tr>
+            <td><span class="status-dot dot-Review"></span></td>
+            <td style="color:var(--mt)">11</td>
+            <td>종목 검색 자동완성</td>
+            <td><span class="priority priority-MED">MED</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px">F</span></td>
+            <td><span class="badge badge-human">사람 대기</span></td>
+          </tr>
+          <tr class="done">
+            <td><span class="status-dot dot-Done"></span></td>
+            <td>3</td>
+            <td>주식 시세 API 연동</td>
+            <td><span class="priority priority-HIGH" style="opacity:.4">HIGH</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px;opacity:.4">F</span></td>
+            <td style="font-size:11px">2일 전</td>
+          </tr>
+          <tr class="done">
+            <td><span class="status-dot dot-Done"></span></td>
+            <td>4</td>
+            <td>DB 스키마 설계</td>
+            <td><span class="priority priority-CRIT" style="opacity:.4">CRIT</span></td>
+            <td><span class="avatar avatar-back" style="width:20px;height:20px;font-size:9px;opacity:.4">B</span></td>
+            <td style="font-size:11px">3일 전</td>
+          </tr>
+          <tr>
+            <td><span class="status-dot dot-Todo"></span></td>
+            <td style="color:var(--mt)">16</td>
+            <td>알림 설정 페이지</td>
+            <td><span class="priority priority-MED">MED</span></td>
+            <td><span class="avatar avatar-front" style="width:20px;height:20px;font-size:9px">F</span></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="d-agent-chips">
+        <span class="d-agent-chip"><span class="chip-dot" style="background:var(--gn)"></span> 프론트 개발자 · 3 진행중</span>
+        <span class="d-agent-chip"><span class="chip-dot" style="background:var(--dm)"></span> 백엔드 개발자 · 대기</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Plans Section -->
+  <div class="d-section">
+    <div class="d-section-head">완료된 플랜</div>
+    <div class="d-completed-item" id="dComp1">
+      <div class="d-completed-head" onclick="toggleDCompleted('dComp1')">
+        <span class="check" style="color:var(--gn);font-weight:700">&#10003;</span>
+        <span style="font-weight:600">인증 및 기반 인프라</span>
+        <span style="font-size:12px;color:var(--mt)">5/5 · 3일 전 완료 · 소요 6일</span>
+        <span class="arr">▸</span>
+      </div>
+      <div class="d-completed-body">
+        <div class="d-completed-inner">
+          <div class="d-completed-stats">
+            <span>PASS율 <strong style="color:var(--gn)">80%</strong></span>
+            <span>QA 실패 <strong style="color:var(--rd)">2회</strong></span>
+            <span>블로커 <strong>0건</strong></span>
+          </div>
+          <table class="d-task-table">
+            <tbody>
+              <tr class="done"><td><span class="status-dot dot-Done"></span></td><td>#1</td><td>로그인/회원가입 UI</td><td><span class="priority priority-HIGH" style="opacity:.4">HIGH</span></td></tr>
+              <tr class="done"><td><span class="status-dot dot-Done"></span></td><td>#2</td><td>JWT 인증 미들웨어</td><td><span class="priority priority-CRIT" style="opacity:.4">CRIT</span></td></tr>
+              <tr class="done"><td><span class="status-dot dot-Done"></span></td><td>#5</td><td>포트폴리오 CRUD API</td><td><span class="priority priority-HIGH" style="opacity:.4">HIGH</span></td></tr>
+              <tr class="done"><td><span class="status-dot dot-Done"></span></td><td>#6</td><td>메인 대시보드 레이아웃</td><td><span class="priority priority-MED" style="opacity:.4">MED</span></td></tr>
+              <tr class="done"><td><span class="status-dot dot-Done"></span></td><td>#10</td><td>CI/CD 파이프라인</td><td><span class="priority priority-MED" style="opacity:.4">MED</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Planned Section -->
+  <div class="d-section">
+    <div class="d-section-head">계획된 플랜</div>
+    <div class="d-planned-list">
+      <div class="d-planned-item">
+        <span class="status-dot dot-Backlog" style="width:6px;height:6px"></span>
+        <span>UI 고도화</span>
+        <span style="font-size:12px;color:var(--mt)">다크모드, PWA, 종목 상세 페이지</span>
+        <span class="task-count">0/3 · 미착수</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejected -->
+  <div class="d-section">
+    <div class="d-section-head">반려됨</div>
+    <div class="a-rejected-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <span class="status-dot dot-Rejected"></span>
+        <span style="font-weight:600">#14 블록체인 지갑 연동</span>
+        <span class="pill pill-rejected">반려</span>
+      </div>
+      <div style="font-size:12px;color:var(--tx2)">사유: scope 초과</div>
+    </div>
+  </div>
+
+  <!-- Retro & Lessons Section -->
+  <div class="d-section">
+    <div class="d-section-head">회고 & 교훈</div>
+
+    <div class="d-retro-entry" id="dRetro1">
+      <div class="d-retro-head" onclick="toggleDRetro('dRetro1')">
+        <span style="font-size:14px">↩</span>
+        <span>20260705 인증 및 기반 인프라</span>
+        <span class="arr">▸</span>
+      </div>
+      <div class="d-retro-body">
+        <div class="d-retro-inner">
+          <div style="display:flex;gap:16px;margin-bottom:8px">
+            <span>PASS율 <strong style="color:var(--gn)">80%</strong></span>
+            <span>QA 실패 <strong style="color:var(--rd)">2회</strong></span>
+            <span>블로커 <strong>0건</strong></span>
+          </div>
+          <div style="color:var(--mt);font-size:12px">5개 태스크 전부 완료. 소요 기간 6일.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:14px">✦</span> 프로젝트 교훈
+      </h3>
+      <ul class="d-lesson-list">
+        <li>SQLite WAL 모드 주의 — 동시 쓰기 시 SQLITE_BUSY 발생 가능</li>
+        <li>vite dev는 타입 에러 안 잡음 — tsc --noEmit 별도 실행 필요</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+</div><!-- /main-wrap -->
+
+<!-- Footer Caption -->
+<div class="g-footer" id="gFooter">
+  <span class="f-label" id="footerLabel">A: 리니어</span>
+  <span id="footerDesc">Linear/Height 스타일 — 사이드바 플랜 탐색 + 클린 태스크 리스트</span>
+</div>
+
+<script>
+/* ─── Approach Data ─── */
+const approaches = {
+  A: { name: 'A: 리니어', desc: 'Linear/Height 스타일 — 사이드바 플랜 탐색 + 클린 태스크 리스트' },
+  B: { name: 'B: 카드 보드', desc: 'Vercel/Raycast 스타일 — 플랜 카드 그리드 대시보드' },
+  C: { name: 'C: 스트림', desc: 'GitHub/Slack 스타일 — 플랜별 활동 스트림 + 사이드바 상태' },
+  D: { name: 'D: 포커스', desc: 'Notion/Craft 스타일 — 문서형 단일 페이지 뷰' }
+};
+
+/* ─── Approach Switching ─── */
+document.getElementById('approachSel').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-approach]');
+  if (!btn) return;
+  const key = btn.dataset.approach;
+
+  document.querySelectorAll('.approach-sel button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.approach-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + key).classList.add('active');
+
+  const info = approaches[key];
+  document.getElementById('descLabel').textContent = info.name;
+  document.getElementById('descText').textContent = info.desc;
+  document.getElementById('footerLabel').textContent = info.name;
+  document.getElementById('footerDesc').textContent = info.desc;
+});
+
+/* ─── Theme Toggle ─── */
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+});
+
+/* ─── Approach A: Sidebar plan selection ─── */
+function selectPlanA(btn, planId) {
+  document.querySelectorAll('.a-plan-item, .a-nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.a-plan-view').forEach(v => v.style.display = 'none');
+  document.getElementById(planId).style.display = '';
+}
+
+function toggleSidebarA() {
+  document.getElementById('aSidebar').classList.toggle('collapsed');
+}
+
+/* ─── Approach B: Accordion ─── */
+function toggleBAccordion(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+/* ─── Approach C: Thread expand/collapse ─── */
+function toggleCThread(id) {
+  document.getElementById(id).classList.toggle('expanded');
+}
+
+/* ─── Approach D: Completed plan accordion ─── */
+function toggleDCompleted(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+/* ─── Approach D: Retro accordion ─── */
+function toggleDRetro(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+</script>
+</body>
+</html>

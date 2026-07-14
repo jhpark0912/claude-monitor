@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 보드 · V4 개선안 (상태 셀 클릭 + latest_note + WIP + 시간 확대)</title>
+<style>
+  :root, [data-theme="dark"] {
+    --bg:#08080a; --s1:#0f0f12; --s2:#141418; --s3:#1a1a20;
+    --bd:#1f1f28; --bd2:#2a2a35; --bd-h:#35354a;
+    --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --dm:#3a3a4a;
+    --ac:#818cf8; --ac-bg:rgba(129,140,248,.08); --ac-bd:rgba(129,140,248,.25);
+    --gn:#4ade80; --yw:#fbbf24; --rd:#f87171; --pr:#c084fc; --bl:#60a5fa;
+  }
+  [data-theme="light"] {
+    --bg:#f6f6f4; --s1:#ffffff; --s2:#faf9f7; --s3:#efeee9;
+    --bd:#e7e6e1; --bd2:#dcdbd5; --bd-h:#cbcac4;
+    --tx:#37352f; --tx2:#6b6b65; --mt:#9b9a97; --dm:#c4c3bf;
+    --ac:#5b5bd6; --ac-bg:rgba(91,91,214,.06); --ac-bd:rgba(91,91,214,.2);
+    --gn:#448361; --yw:#cf9f23; --rd:#c4554d; --pr:#9065b0; --bl:#2563eb;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; min-width:0; }
+  body { font-family:'Inter',-apple-system,'Segoe UI',sans-serif; background:var(--bg); color:var(--tx);
+    height:100vh; overflow:hidden; -webkit-font-smoothing:antialiased; }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:5px; }
+
+  header { height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    background:rgba(15,15,18,.8); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.06); }
+  .logo { font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px; letter-spacing:-.3px; }
+  .logo .mark { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#818cf8,#a78bfa);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff; }
+  nav { display:flex; }
+  .tab { padding:8px 18px; border:none; background:transparent; color:var(--mt); cursor:pointer;
+    font-size:13px; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; }
+  .tab:hover { color:var(--tx); }
+  .tab.active { color:var(--tx); font-weight:600; border-bottom-color:var(--ac); }
+
+  .controls { display:flex; align-items:center; gap:8px; }
+  .ibtn { width:32px; height:32px; border-radius:6px; border:1px solid var(--bd); background:transparent;
+    color:var(--mt); cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .ibtn:hover { background:var(--s2); color:var(--tx); }
+  .scenario-btn { padding:5px 12px; border-radius:6px; border:1px solid var(--bd); background:transparent;
+    color:var(--mt); cursor:pointer; font-size:11px; font-family:inherit; transition:all .15s; }
+  .scenario-btn:hover { background:var(--s2); color:var(--tx); }
+  .scenario-btn.on { background:var(--ac-bg); border-color:var(--ac-bd); color:var(--ac); }
+
+  main { height:calc(100vh - 52px); overflow-y:auto; padding:18px 20px 24px; }
+
+  .pagehead { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+  .ph-l { display:flex; align-items:baseline; gap:12px; }
+  .ph-l h1 { font-size:20px; font-weight:750; letter-spacing:-.4px; }
+  .team-sel { display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--tx2);
+    padding:4px 11px; background:var(--s2); border:1px solid var(--bd); border-radius:20px; cursor:pointer; }
+  .team-sel .dot { width:7px; height:7px; border-radius:50%; background:var(--ac); }
+  .ph-r { display:flex; gap:6px; flex-wrap:wrap; }
+  .fchip { padding:6px 13px; border-radius:8px; border:1px solid var(--bd); background:var(--s1);
+    color:var(--tx2); font-size:12px; cursor:pointer; font-family:inherit; font-weight:500; }
+  .fchip.on { background:var(--ac-bg); border-color:var(--ac-bd); color:var(--ac); }
+
+  .bento { display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .box { background:var(--s1); border:1px solid var(--bd); border-radius:16px; padding:16px; display:flex; flex-direction:column; }
+  .box-title { font-size:13px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .box-title .sub { margin-left:auto; font-size:11px; color:var(--mt); font-weight:400; }
+
+  /* ───── KPI ───── */
+  .kpi { grid-column:span 3; align-items:center; justify-content:center; gap:6px; transition:all .15s; }
+  .kpi .lbl { font-size:11px; color:var(--mt); font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
+  .kpi .val { font-size:30px; font-weight:750; letter-spacing:-1px; line-height:1; }
+  .kpi.warn .val { color:var(--rd); }
+  .kpi .filter-badge { display:none; font-size:9px; color:var(--ac); font-weight:600;
+    padding:2px 8px; border-radius:4px; background:var(--ac-bg); }
+  .kpi.filtered .filter-badge { display:inline-block; }
+  .kpi.filtered { border-color:var(--ac-bd); }
+
+  /* ───── 진행 상태 보드 ───── */
+  .board { grid-column:span 8; }
+  .pipe { display:flex; gap:8px; margin-bottom:16px; }
+  .stage { flex:1; padding:9px 10px; background:var(--s2); border:1px solid var(--bd); border-radius:10px;
+    text-align:center; cursor:pointer; transition:all .15s; user-select:none; position:relative; }
+  .stage:hover { border-color:var(--bd-h); }
+  .stage.selected { border-color:var(--ac-bd); background:var(--ac-bg); }
+  .stage .n { font-size:19px; font-weight:750; line-height:1; }
+  .stage .s { font-size:10px; color:var(--mt); margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .stage .s .sq { width:6px; height:6px; border-radius:2px; }
+  .stage .wip { font-size:9px; color:var(--mt); margin-top:3px; letter-spacing:.3px; }
+  .stage .wip.over { color:var(--rd); font-weight:700; }
+
+  .focus-label { font-size:11px; color:var(--mt); font-weight:600; letter-spacing:.3px; text-transform:uppercase;
+    margin-bottom:9px; display:flex; align-items:center; gap:8px; }
+  .focus-label .sel-hint { font-weight:400; font-size:10px; color:var(--dm); letter-spacing:0; text-transform:none; }
+  .tasklist { display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:340px; }
+  .trow { display:flex; align-items:flex-start; gap:11px; padding:10px 12px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:10px; cursor:pointer; transition:all .12s; }
+  .trow:hover { border-color:var(--bd-h); }
+  .trow.blk { border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.04); }
+  .trow .left { display:flex; flex-direction:column; flex:1; min-width:0; gap:3px; }
+  .trow .tt { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .trow .note-preview { font-size:11px; color:var(--mt); overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; line-height:1.3; }
+  .trow .right { display:flex; align-items:center; gap:8px; flex-shrink:0; padding-top:2px; }
+  .stlabel { font-size:10px; color:var(--mt); padding:2px 8px; background:var(--s3); border-radius:6px; white-space:nowrap; }
+  .pri { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .pri.crit{color:var(--rd);} .pri.high{color:#fb923c;} .pri.med{color:var(--bl);} .pri.low{color:var(--mt);}
+  .minibadge { font-size:8px; font-weight:800; padding:1px 6px; border-radius:5px; letter-spacing:.3px; white-space:nowrap; }
+  .mb-blk{background:rgba(248,113,113,.15);color:var(--rd);}
+  .av { width:20px; height:20px; border-radius:6px; color:#fff; font-size:8px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .trow .id { font-size:10px; color:var(--dm); }
+  .done-check { color:var(--gn); font-size:12px; flex-shrink:0; }
+
+  .empty { padding:28px 0; text-align:center; color:var(--mt); font-size:12px; }
+  .fallback-label { font-size:10px; color:var(--gn); font-weight:600; margin-bottom:8px;
+    display:flex; align-items:center; gap:5px; }
+
+  /* ───── 우측 열 ───── */
+  .side { grid-column:span 4; display:flex; flex-direction:column; gap:14px; }
+
+  .agents .primary { display:flex; align-items:center; gap:11px; padding:11px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:11px; margin-bottom:10px; cursor:pointer; transition:all .15s; }
+  .agents .primary:hover { border-color:var(--bd-h); }
+  .agents .primary .pav { width:36px; height:36px; border-radius:11px; color:#fff; font-size:12px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .agents .primary .nm { font-size:13.5px; font-weight:700; }
+  .agents .primary .rl { font-size:11px; color:var(--mt); }
+  .agents .primary .state { margin-left:auto; font-size:10px; padding:4px 9px; border-radius:20px;
+    display:flex; align-items:center; gap:5px; flex-shrink:0; }
+  .state.working { background:rgba(96,165,250,.12); color:var(--bl); }
+  .state.idle { background:var(--s3); color:var(--dm); }
+  .state .live { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .agents .rest { display:flex; flex-wrap:wrap; gap:7px; }
+  .achip { display:flex; align-items:center; gap:6px; padding:5px 10px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:20px; font-size:11px; color:var(--tx2); cursor:pointer; }
+  .achip:hover { border-color:var(--bd-h); }
+  .achip .mav { width:16px; height:16px; border-radius:5px; color:#fff; font-size:7px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; }
+  .achip .idle-t { color:var(--dm); font-size:9px; }
+
+  .blk-item { padding:11px 12px; border-radius:11px; background:rgba(248,113,113,.06);
+    border:1px solid rgba(248,113,113,.22); }
+  .blk-item .bt { font-size:12px; font-weight:600; margin-bottom:5px; }
+  .blk-item .br { font-size:11px; color:var(--tx2); line-height:1.4; }
+  .blk-item .bmeta { display:flex; align-items:center; gap:6px; margin-top:7px; font-size:10px; color:var(--mt); }
+
+  /* ───── 작업 기록 피드 ───── */
+  .feed { grid-column:span 12; }
+  .time-chips { display:flex; gap:4px; margin-left:auto; }
+  .tchip { padding:3px 10px; border-radius:5px; border:1px solid var(--bd); background:transparent;
+    color:var(--mt); font-size:10px; cursor:pointer; font-family:inherit; transition:all .12s; }
+  .tchip:hover { color:var(--tx); }
+  .tchip.on { background:var(--ac-bg); border-color:var(--ac-bd); color:var(--ac); }
+  .feed-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 28px; }
+  .fitem { display:flex; gap:11px; padding:10px 2px; }
+  .fitem .fav { width:26px; height:26px; border-radius:8px; color:#fff; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .fitem .fb { flex:1; min-width:0; }
+  .fitem .fm { display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+  .fitem .who { font-size:11.5px; font-weight:650; color:var(--tx2); }
+  .fitem .ntype { font-size:8px; font-weight:800; padding:1px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.3px; }
+  .nt-sc{background:rgba(96,165,250,.14);color:var(--bl);} .nt-up{background:var(--s3);color:var(--mt);}
+  .fitem .when { margin-left:auto; font-size:10px; color:var(--dm); white-space:nowrap; }
+  .fitem .txt { font-size:12px; color:var(--tx); line-height:1.4; }
+  .fitem .ref { font-size:10px; color:var(--mt); margin-top:2px; }
+
+  .caption { position:fixed; bottom:10px; right:16px; font-size:10.5px; color:var(--dm);
+    display:flex; align-items:center; gap:12px; }
+  .caption .change { color:var(--ac); font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="mark">C</div><span><span style="color:var(--ac)">Claude</span> Session Dashboard</span></div>
+  <nav>
+    <button class="tab">타임라인</button>
+    <button class="tab">분석</button>
+    <button class="tab">보고서</button>
+    <button class="tab">모니터링</button>
+    <button class="tab active">에이전트</button>
+  </nav>
+  <div class="controls">
+    <button class="scenario-btn on" onclick="setScenario('active')">활성 프로젝트</button>
+    <button class="scenario-btn" onclick="setScenario('alldone')">전체 완료 상태</button>
+    <button class="ibtn" onclick="tt()">◐</button>
+  </div>
+</header>
+
+<!-- ===== 시나리오 A: 활성 프로젝트 ===== -->
+<main id="scene-active">
+  <div class="pagehead">
+    <div class="ph-l">
+      <h1>에이전트 현황</h1>
+      <span class="team-sel"><span class="dot"></span> Stock Diary Dev Team <span style="font-size:11px;color:var(--mt)">▾</span></span>
+    </div>
+    <div class="ph-r">
+      <button class="fchip on">전체</button>
+      <button class="fchip">Critical</button>
+      <button class="fchip">High</button>
+      <button class="fchip">Medium</button>
+      <button class="fchip">Low</button>
+      <button class="fchip">담당자 ▾</button>
+      <button class="fchip">⚑ 블로커만</button>
+    </div>
+  </div>
+
+  <div class="bento">
+    <!-- KPI -->
+    <div class="box kpi"><div class="lbl">진행중</div><div class="val">3</div></div>
+    <div class="box kpi"><div class="lbl">리뷰 대기</div><div class="val">2</div></div>
+    <div class="box kpi warn"><div class="lbl">⚑ 블로커</div><div class="val">1</div></div>
+    <div class="box kpi"><div class="lbl">완료</div><div class="val">8</div></div>
+
+    <!-- 진행 상태 보드 -->
+    <div class="box board">
+      <div class="box-title">진행 상태</div>
+      <div class="pipe" id="pipe-active">
+        <div class="stage" data-status="Backlog" onclick="toggleStage(this,'active')">
+          <div class="n">2</div>
+          <div class="s"><span class="sq" style="background:var(--mt)"></span> 백로그</div>
+        </div>
+        <div class="stage" data-status="Todo" onclick="toggleStage(this,'active')">
+          <div class="n">1</div>
+          <div class="s"><span class="sq" style="background:var(--yw)"></span> 할 일</div>
+        </div>
+        <div class="stage selected" data-status="InProgress" onclick="toggleStage(this,'active')">
+          <div class="n">3</div>
+          <div class="s"><span class="sq" style="background:var(--bl)"></span> 진행 중</div>
+          <div class="wip">2 / 4</div>
+        </div>
+        <div class="stage selected" data-status="Review" onclick="toggleStage(this,'active')">
+          <div class="n">2</div>
+          <div class="s"><span class="sq" style="background:var(--pr)"></span> 리뷰</div>
+          <div class="wip">2 / 3</div>
+        </div>
+        <div class="stage" data-status="Done" onclick="toggleStage(this,'active')">
+          <div class="n">8</div>
+          <div class="s"><span class="sq" style="background:var(--gn)"></span> 완료</div>
+        </div>
+        <div class="stage" data-status="Rejected" onclick="toggleStage(this,'active')">
+          <div class="n">1</div>
+          <div class="s"><span class="sq" style="background:var(--rd)"></span> 거절</div>
+        </div>
+      </div>
+
+      <div class="focus-label">
+        <span id="focus-label-active">선택: 진행 중 · 리뷰</span>
+        <span class="sel-hint">(상태 셀을 클릭하여 전환)</span>
+      </div>
+      <div class="tasklist" id="tasklist-active">
+        <!-- JS가 채움 -->
+      </div>
+    </div>
+
+    <!-- 우측 -->
+    <div class="side">
+      <div class="box agents">
+        <div class="box-title">에이전트 현황</div>
+        <div class="primary" onclick="alert('→ 담당자 필터 + 상태 전체 확장')">
+          <span class="pav" style="background:linear-gradient(135deg,#f87171,#ef4444)">프론</span>
+          <div><div class="nm">프론트 개발자</div><div class="rl">주 담당 · 진행 14건 중 3건</div></div>
+          <span class="state working"><span class="live"></span> Working</span>
+        </div>
+        <div class="rest">
+          <span class="achip"><span class="mav" style="background:#c084fc">백엔</span> 백엔드 개발자 · 2</span>
+          <span class="achip"><span class="mav" style="background:#818cf8">디자</span> 디자인 리뷰어 <span class="idle-t">idle</span></span>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title" style="color:var(--rd)">⚑ 활성 블로커</div>
+        <div class="blk-item">
+          <div class="bt">WebSocket 실시간 시세 연동</div>
+          <div class="br">KIS API 웹소켓 인증 토큰 갱신 로직에서 간헐적 연결 끊김. 재연결 전략 필요.</div>
+          <div class="bmeta"><span class="av" style="width:16px;height:16px;font-size:7px;background:#f87171">프론</span> 프론트 개발자 · #7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 작업 기록 -->
+    <div class="box feed">
+      <div class="box-title">
+        ◷ 작업 기록
+        <div class="time-chips">
+          <button class="tchip" onclick="setTimeRange(this)">24h</button>
+          <button class="tchip on" onclick="setTimeRange(this)">72h</button>
+          <button class="tchip" onclick="setTimeRange(this)">7d</button>
+        </div>
+      </div>
+      <div class="feed-grid">
+        <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">42분 전</span></div><div class="txt">Status changed: Todo → InProgress</div><div class="ref">↳ 차트 렌더링 최적화</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#c084fc">백엔</span><div class="fb"><div class="fm"><span class="who">백엔드 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">1시간 전</span></div><div class="txt">Status changed: InProgress → Review</div><div class="ref">↳ 포트폴리오 수익률 계산 API</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-up">업데이트</span><span class="when">2시간 전</span></div><div class="txt">KIS API 연동 완료, 실시간 웹소켓 전환 검토 중</div><div class="ref">↳ 주식 시세 API 연동</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">3시간 전</span></div><div class="txt">Status changed: Review → Done</div><div class="ref">↳ 로그인/회원가입 UI</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#c084fc">백엔</span><div class="fb"><div class="fm"><span class="who">백엔드 개발자</span><span class="ntype nt-up">업데이트</span><span class="when">5시간 전</span></div><div class="txt">JPA Entity 매핑 완료, QueryDSL 설정 추가</div><div class="ref">↳ DB 스키마 설계</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">어제</span></div><div class="txt">Status changed: InProgress → Review</div><div class="ref">↳ 로그인/회원가입 UI</div></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== 시나리오 B: 전체 완료 (현실 재현) ===== -->
+<main id="scene-alldone" style="display:none">
+  <div class="pagehead">
+    <div class="ph-l">
+      <h1>에이전트 현황</h1>
+      <span class="team-sel"><span class="dot"></span> Stock Diary Dev Team <span style="font-size:11px;color:var(--mt)">▾</span></span>
+    </div>
+    <div class="ph-r">
+      <button class="fchip on">전체</button>
+      <button class="fchip">Critical</button>
+      <button class="fchip">High</button>
+      <button class="fchip">Medium</button>
+      <button class="fchip">Low</button>
+      <button class="fchip">담당자 ▾</button>
+      <button class="fchip">⚑ 블로커만</button>
+    </div>
+  </div>
+
+  <div class="bento">
+    <!-- KPI — 전부 0, 완료만 19 -->
+    <div class="box kpi"><div class="lbl">진행중</div><div class="val" style="color:var(--dm)">0</div></div>
+    <div class="box kpi"><div class="lbl">리뷰 대기</div><div class="val" style="color:var(--dm)">0</div></div>
+    <div class="box kpi"><div class="lbl">⚑ 블로커</div><div class="val" style="color:var(--dm)">0</div></div>
+    <div class="box kpi"><div class="lbl">완료</div><div class="val">19</div></div>
+
+    <!-- 진행 상태 보드 — 전부 Done -->
+    <div class="box board">
+      <div class="box-title">진행 상태</div>
+      <div class="pipe" id="pipe-alldone">
+        <div class="stage" data-status="Backlog" onclick="toggleStage(this,'alldone')">
+          <div class="n" style="color:var(--dm)">0</div>
+          <div class="s"><span class="sq" style="background:var(--mt)"></span> 백로그</div>
+        </div>
+        <div class="stage" data-status="Todo" onclick="toggleStage(this,'alldone')">
+          <div class="n" style="color:var(--dm)">0</div>
+          <div class="s"><span class="sq" style="background:var(--yw)"></span> 할 일</div>
+        </div>
+        <div class="stage" data-status="InProgress" onclick="toggleStage(this,'alldone')">
+          <div class="n" style="color:var(--dm)">0</div>
+          <div class="s"><span class="sq" style="background:var(--bl)"></span> 진행 중</div>
+        </div>
+        <div class="stage" data-status="Review" onclick="toggleStage(this,'alldone')">
+          <div class="n" style="color:var(--dm)">0</div>
+          <div class="s"><span class="sq" style="background:var(--pr)"></span> 리뷰</div>
+        </div>
+        <div class="stage selected" data-status="Done" onclick="toggleStage(this,'alldone')">
+          <div class="n">19</div>
+          <div class="s"><span class="sq" style="background:var(--gn)"></span> 완료</div>
+        </div>
+        <div class="stage" data-status="Rejected" onclick="toggleStage(this,'alldone')">
+          <div class="n" style="color:var(--dm)">0</div>
+          <div class="s"><span class="sq" style="background:var(--rd)"></span> 거절</div>
+        </div>
+      </div>
+
+      <div class="focus-label">
+        <span id="focus-label-alldone">선택: 완료</span>
+        <span class="sel-hint">(상태 셀을 클릭하여 전환)</span>
+      </div>
+
+      <!-- 기존: InProgress+Review 0건이면 빈 화면 → 개선: Done 자동 fallback -->
+      <div id="fallback-note" class="fallback-label">
+        ✓ 진행 중인 태스크가 없어 최근 완료 항목을 표시합니다
+      </div>
+      <div class="tasklist" id="tasklist-alldone">
+        <!-- JS가 채움 -->
+      </div>
+    </div>
+
+    <!-- 우측 -->
+    <div class="side">
+      <div class="box agents">
+        <div class="box-title">에이전트 현황</div>
+        <div class="primary">
+          <span class="pav" style="background:linear-gradient(135deg,#f87171,#ef4444)">프론</span>
+          <div><div class="nm">프론트 개발자</div><div class="rl">주 담당 · 진행 17건 중 0건</div></div>
+          <span class="state idle">Idle</span>
+        </div>
+        <div class="rest">
+          <span class="achip"><span class="mav" style="background:#c084fc">백엔</span> 백엔드 개발자 <span class="idle-t">idle</span></span>
+          <span class="achip"><span class="mav" style="background:#818cf8">디자</span> 디자인 리뷰어 <span class="idle-t">idle</span></span>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title" style="color:var(--rd)">⚑ 활성 블로커</div>
+        <p style="font-size:12px;color:var(--mt)">블로커 없음</p>
+      </div>
+    </div>
+
+    <!-- 작업 기록 — 24시간 내 없음 → 72h로 확대하면 보임 -->
+    <div class="box feed">
+      <div class="box-title">
+        ◷ 작업 기록
+        <div class="time-chips">
+          <button class="tchip" onclick="setTimeRangeB(this,'24h')">24h</button>
+          <button class="tchip" onclick="setTimeRangeB(this,'72h')">72h</button>
+          <button class="tchip on" onclick="setTimeRangeB(this,'7d')">7d</button>
+        </div>
+      </div>
+      <div id="feed-alldone">
+        <div class="feed-grid">
+          <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">2일 전</span></div><div class="txt">Status changed: Review → Done</div><div class="ref">↳ WebSocket 실시간 시세 연동</div></div></div>
+          <div class="fitem"><span class="fav" style="background:#c084fc">백엔</span><div class="fb"><div class="fm"><span class="who">백엔드 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">2일 전</span></div><div class="txt">Status changed: Review → Done</div><div class="ref">↳ 포트폴리오 수익률 계산 API</div></div></div>
+          <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">3일 전</span></div><div class="txt">Status changed: InProgress → Review</div><div class="ref">↳ WebSocket 실시간 시세 연동</div></div></div>
+          <div class="fitem"><span class="fav" style="background:#f87171">프론</span><div class="fb"><div class="fm"><span class="who">프론트 개발자</span><span class="ntype nt-sc">상태변경</span><span class="when">4일 전</span></div><div class="txt">Status changed: Todo → InProgress</div><div class="ref">↳ WebSocket 실시간 시세 연동</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="caption">
+  V4 개선안 목업 ·
+  <span class="change">변경: 상태 셀 클릭 · latest_note · WIP 제한 · 시간 범위 · 빈 상태 fallback · 제목 변경</span>
+</div>
+
+<script>
+// ── 태스크 데이터 ──
+const TASKS_ACTIVE = {
+  InProgress: [
+    { id:7, title:'WebSocket 실시간 시세 연동', note:'KIS API 웹소켓 인증 토큰 갱신 로직 작업 중', pri:'crit', priL:'CRIT', av:'프론', avBg:'#f87171', blocked:true },
+    { id:12, title:'차트 렌더링 최적화', note:'Canvas 기반 렌더링으로 전환 검토', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:15, title:'거래 내역 무한 스크롤', note:'Intersection Observer 적용 완료, 테스트 중', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+  ],
+  Review: [
+    { id:9, title:'포트폴리오 수익률 계산 API', note:'XIRR 알고리즘 구현 완료, 엣지케이스 리뷰 대기', pri:'high', priL:'HIGH', av:'백엔', avBg:'#c084fc' },
+    { id:11, title:'종목 검색 자동완성', note:'Trie 기반 검색 + 초성 검색 지원', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+  ],
+  Backlog: [
+    { id:18, title:'다크모드 테마 커스터마이징', note:null, pri:'low', priL:'LOW', av:'디자', avBg:'#818cf8' },
+    { id:19, title:'PWA 오프라인 지원', note:null, pri:'low', priL:'LOW', av:null },
+  ],
+  Todo: [
+    { id:16, title:'알림 설정 페이지', note:'목표가/손절가 알림 UI 설계 필요', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+  ],
+  Done: [
+    { id:1, title:'로그인/회원가입 UI', note:'소셜 로그인(카카오/네이버) 포함 완료', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:2, title:'JWT 인증 미들웨어', note:'Access/Refresh 토큰 로테이션 구현', pri:'crit', priL:'CRIT', av:'백엔', avBg:'#c084fc' },
+    { id:3, title:'주식 시세 API 연동', note:'KIS Open API REST 연동 완료', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:4, title:'DB 스키마 설계', note:'JPA Entity 매핑 + Flyway 마이그레이션', pri:'crit', priL:'CRIT', av:'백엔', avBg:'#c084fc' },
+    { id:5, title:'포트폴리오 CRUD API', note:'종목 추가/삭제/수정 + 벌크 입력', pri:'high', priL:'HIGH', av:'백엔', avBg:'#c084fc' },
+    { id:6, title:'메인 대시보드 레이아웃', note:'반응형 그리드 + 위젯 시스템', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:8, title:'종목 상세 페이지', note:'기본 정보 + 재무제표 탭 구성', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:10, title:'CI/CD 파이프라인', note:'GitHub Actions + Docker Compose', pri:'med', priL:'MED', av:'백엔', avBg:'#c084fc' },
+  ],
+  Rejected: [
+    { id:14, title:'블록체인 지갑 연동', note:'MVP 범위 초과로 거절', pri:'low', priL:'LOW', av:null },
+  ],
+};
+
+const TASKS_ALLDONE = {
+  Backlog:[], Todo:[], InProgress:[], Review:[], Rejected:[],
+  Done: [
+    { id:1, title:'프로젝트 초기 설정 (Vite + React)', note:'ESLint/Prettier 설정 포함', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:2, title:'Express 서버 기본 구조', note:'라우트/미들웨어/에러핸들링 구성', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:3, title:'JSONL 파서 구현', note:'멀티데이 세션 인덱싱 포함', pri:'crit', priL:'CRIT', av:'프론', avBg:'#f87171' },
+    { id:4, title:'타임라인 페이지 (일간)', note:'세션 카드 + 커밋 로그 통합', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:5, title:'타임라인 페이지 (주간/월간)', note:'캘린더 히트맵 뷰', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:6, title:'분석 페이지 — 캘린더', note:'일별 활동량 히트맵', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:7, title:'분석 페이지 — 비용', note:'토큰 소비량 + 비용 추정', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:8, title:'분석 페이지 — 도구 사용', note:'도구별 호출 빈도 차트', pri:'low', priL:'LOW', av:'프론', avBg:'#f87171' },
+    { id:9, title:'분석 페이지 — 이상치', note:'비정상 세션 감지 로직', pri:'low', priL:'LOW', av:'프론', avBg:'#f87171' },
+    { id:10, title:'일일보고 생성기', note:'Gemini 2.5 Flash JSON 구조화 출력', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:11, title:'주간회의록 생성기', note:'프로젝트별 집계 + 마크다운 편집', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:12, title:'모니터링 — SSE 실시간 감시', note:'chokidar 파일 감시 + EventSource', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:13, title:'다크/라이트 모드', note:'CSS 변수 기반 테마 시스템', pri:'low', priL:'LOW', av:'프론', avBg:'#f87171' },
+    { id:14, title:'세션 대화 모달', note:'턴별 마크다운 렌더링 + 도구 호출 표시', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:15, title:'중점추진과제 보고서', note:'프로젝트 단위 과제 목록 관리', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:16, title:'네비게이션 리팩토링 (6탭→4탭)', note:'타임라인 통합 + 서브뷰 구조', pri:'med', priL:'MED', av:'프론', avBg:'#f87171' },
+    { id:17, title:'칸반 DB 리더 서비스', note:'Postgres+SQLite 듀얼 지원', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:18, title:'칸반 읽기 라우트 5종', note:'/api/kanban/* REST 엔드포인트', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+    { id:19, title:'에이전트 보드 UI', note:'V3.1 벤토 레이아웃 + 네이티브 스타일', pri:'high', priL:'HIGH', av:'프론', avBg:'#f87171' },
+  ],
+};
+
+const STATUS_LABELS = { Backlog:'백로그', Todo:'할 일', InProgress:'진행 중', Review:'리뷰', Done:'완료', Rejected:'거절' };
+
+// ── 렌더링 ──
+function renderTaskList(containerEl, tasks, isDone) {
+  if (tasks.length === 0) {
+    containerEl.innerHTML = '<div class="empty">선택한 상태에 태스크가 없습니다</div>';
+    return;
+  }
+  containerEl.innerHTML = tasks.map(t => `
+    <div class="trow${t.blocked?' blk':''}">
+      <div class="left">
+        <span class="tt">${isDone?'<span class="done-check">✓</span> ':''}${t.title}</span>
+        ${t.note ? `<span class="note-preview">${t.note}</span>` : ''}
+      </div>
+      <div class="right">
+        ${t.blocked?'<span class="minibadge mb-blk">BLOCK</span>':''}
+        <span class="pri ${t.pri}">${t.priL}</span>
+        ${t.av ? `<span class="av" style="background:${t.avBg}">${t.av}</span>` : ''}
+        <span class="id">#${t.id}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateBoard(sceneId) {
+  const pipe = document.getElementById('pipe-' + sceneId);
+  const list = document.getElementById('tasklist-' + sceneId);
+  const label = document.getElementById('focus-label-' + sceneId);
+  const data = sceneId === 'active' ? TASKS_ACTIVE : TASKS_ALLDONE;
+
+  const selected = [];
+  pipe.querySelectorAll('.stage.selected').forEach(s => selected.push(s.dataset.status));
+
+  // 라벨 업데이트
+  if (selected.length === 0) {
+    label.textContent = '상태를 선택하세요';
+  } else {
+    label.textContent = '선택: ' + selected.map(s => STATUS_LABELS[s]).join(' · ');
+  }
+
+  // 태스크 합산
+  let tasks = [];
+  let allDone = true;
+  selected.forEach(s => {
+    tasks = tasks.concat(data[s] || []);
+    if (s !== 'Done') allDone = false;
+  });
+
+  // fallback 노트 표시 (alldone 시나리오)
+  const fallbackEl = document.getElementById('fallback-note');
+  if (fallbackEl) fallbackEl.style.display = (sceneId === 'alldone' && selected.includes('Done')) ? 'flex' : 'none';
+
+  renderTaskList(list, tasks, allDone || selected.every(s => s === 'Done'));
+}
+
+function toggleStage(el, sceneId) {
+  el.classList.toggle('selected');
+  updateBoard(sceneId);
+}
+
+// ── 시나리오 전환 ──
+function setScenario(name) {
+  document.getElementById('scene-active').style.display = name === 'active' ? '' : 'none';
+  document.getElementById('scene-alldone').style.display = name === 'alldone' ? '' : 'none';
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('on'));
+  event.target.classList.add('on');
+}
+
+// ── 시간 범위 ──
+function setTimeRange(el) {
+  el.parentElement.querySelectorAll('.tchip').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+function setTimeRangeB(el, range) {
+  el.parentElement.querySelectorAll('.tchip').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── 테마 토글 ──
+function tt() {
+  const e = document.documentElement;
+  e.dataset.theme = e.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+// ── 초기 렌더 ──
+updateBoard('active');
+updateBoard('alldone');
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 보드 · 목업 비교</title>
+<style>
+  :root {
+    --bg:#08080a; --s1:#0f0f12; --s2:#141418; --bd:#1f1f28; --bd-h:#35354a;
+    --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --ac:#818cf8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',-apple-system,'Segoe UI',sans-serif; background:var(--bg); color:var(--tx);
+    min-height:100vh; -webkit-font-smoothing:antialiased; padding:48px 32px; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:750; letter-spacing:-.6px; margin-bottom:8px; }
+  h1 .ac { background:linear-gradient(135deg,#818cf8,#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub { font-size:14px; color:var(--tx2); margin-bottom:36px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
+  a.card { display:block; background:var(--s1); border:1px solid var(--bd); border-radius:16px;
+    padding:24px; text-decoration:none; color:inherit; transition:all .18s; }
+  a.card:hover { border-color:var(--bd-h); transform:translateY(-3px); }
+  .card .tagrow { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .vnum { font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;
+    background:rgba(129,140,248,.12); color:var(--ac); letter-spacing:.5px; }
+  .trend { font-size:11px; color:var(--mt); }
+  .card h2 { font-size:17px; font-weight:700; margin-bottom:8px; }
+  .card p { font-size:12.5px; color:var(--tx2); line-height:1.55; }
+  .swatch { display:flex; gap:5px; margin-top:16px; }
+  .swatch span { width:26px; height:26px; border-radius:7px; }
+  .go { margin-top:16px; font-size:12px; color:var(--ac); font-weight:600; }
+  .note { margin-top:34px; font-size:12px; color:var(--mt); line-height:1.7; padding:16px 18px;
+    background:var(--s1); border:1px solid var(--bd); border-radius:12px; }
+  .note b { color:var(--tx2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="ac">에이전트 보드</span> 목업 비교</h1>
+  <div class="sub">기존 "칸반" 탭 재설계 · 데이터는 동일, 스타일만 다른 4가지 방향. 각 목업 우측 상단 ◐로 다크/라이트 전환 가능.</div>
+
+  <div class="grid">
+    <a class="card" href="agents-board-redesign.html">
+      <div class="tagrow"><span class="vnum">BASE</span><span class="trend">기존 디자인 언어 정합</span></div>
+      <h2>Baseline · 미니멀 정합</h2>
+      <p>기존 session_board 톤(인라인 CSS 변수, 서브헤더, 여닫는 우측 기록 패널)을 그대로 계승. 가장 안전하고 이질감 없는 선택.</p>
+      <div class="swatch"><span style="background:#0f0f12;border:1px solid #1f1f28"></span><span style="background:#818cf8"></span><span style="background:#4ade80"></span><span style="background:#f87171"></span></div>
+      <div class="go">목업 열기 →</div>
+    </a>
+
+    <a class="card" href="agents-v1-linear.html">
+      <div class="tagrow"><span class="vnum">V1</span><span class="trend">Linear / Vercel 트렌드</span></div>
+      <h2>Linear 리파인드</h2>
+      <p>헤어라인 보더 · 고밀도 레이아웃 · 모노스페이스 태스크 ID · 상단 그라디언트 글로우 · 키보드 단축키 힌트. 파워유저 프로덕티비티 톤.</p>
+      <div class="swatch"><span style="background:#08080a;border:1px solid #1f1f28"></span><span style="background:#818cf8"></span><span style="background:#60a5fa"></span><span style="background:#fb923c"></span></div>
+      <div class="go">목업 열기 →</div>
+    </a>
+
+    <a class="card" href="agents-v2-glass.html">
+      <div class="tagrow"><span class="vnum">V2</span><span class="trend">글래스모피즘 / 오로라</span></div>
+      <h2>글래스 + 오로라</h2>
+      <p>프로스티드 글래스 패널 · 오로라 그라디언트 배경 · 소프트 글로우 · 라운드-2xl. 화려하고 모던하지만 기존 화면과는 대비가 큼.</p>
+      <div class="swatch"><span style="background:linear-gradient(135deg,#6366f1,#a855f7)"></span><span style="background:#ec4899"></span><span style="background:#22d3ee"></span><span style="background:rgba(255,255,255,.1)"></span></div>
+      <div class="go">목업 열기 →</div>
+    </a>
+
+    <a class="card" href="agents-v3-bento.html">
+      <div class="tagrow"><span class="vnum">V3</span><span class="trend">벤토 그리드 / 에이전트 중심</span></div>
+      <h2>벤토 스윔레인</h2>
+      <p>상태 컬럼 대신 <b style="color:var(--tx2)">에이전트별 스윔레인</b> + KPI · 기록 피드 · 블로커를 벤토 그리드로 구성. <b style="color:var(--rd)">주의:</b> 에이전트 1인 편중 시 레인 불균형.</p>
+      <div class="swatch"><span style="background:#0f0f12;border:1px solid #1f1f28"></span><span style="background:#818cf8"></span><span style="background:#c084fc"></span><span style="background:#34d399"></span></div>
+      <div class="go">목업 열기 →</div>
+    </a>
+
+    <a class="card" href="agents-v3b-focus.html" style="grid-column:span 2;border-color:rgba(129,140,248,.4)">
+      <div class="tagrow"><span class="vnum" style="background:rgba(74,222,128,.14);color:#4ade80">V3.1 · 추천</span><span class="trend">벤토 유지 · 실사용 보정</span></div>
+      <h2>벤토 (태스크 · 기록 중심)</h2>
+      <p>V3의 벤토 룩은 유지하되 1차 축을 <b style="color:var(--tx2)">에이전트 → 태스크 상태 + 작업 기록</b>으로 전환. 에이전트는 "주 담당 1 + 나머지 칩" 소형 위젯으로 축소 → <b style="color:var(--tx2)">에이전트 소수·1인 편중 실사용에 맞춤</b>. 진행 상태 파이프라인 + 집중 태스크 리스트 + 전체 폭 작업 기록 피드.</p>
+      <div class="swatch"><span style="background:#0f0f12;border:1px solid #1f1f28"></span><span style="background:#60a5fa"></span><span style="background:#818cf8"></span><span style="background:#f87171"></span><span style="background:#4ade80"></span></div>
+      <div class="go">목업 열기 →</div>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>추천 관점</b> — 벤토 룩을 원하면서 <b>에이전트가 소수·1인 편중</b>인 실사용을 반영하려면 <b style="color:var(--tx2)">V3.1(태스크·기록 중심)</b>이 최적. V3(스윔레인)는 에이전트가 여럿·균등할 때만 유효. 기존 앱과의 <b>일관성</b>이 최우선이면 Baseline/V1(Linear), 시각적 <b>임팩트</b>가 목적이면 V2(글래스).
+  </div>
+</div>
+</body>
+</html>

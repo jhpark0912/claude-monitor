@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>칸반 · V6 (A미학 + D구조 합성)</title>
+<style>
+:root, [data-theme="dark"] {
+  --bg:#08080a; --s1:#0f0f12; --s2:#141418; --s3:#1a1a20;
+  --bd:#1f1f28; --bd2:#2a2a35; --bd-h:#35354a;
+  --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --dm:#3a3a4a;
+  --ac:#818cf8; --ac-bg:rgba(129,140,248,.08); --ac-bd:rgba(129,140,248,.25);
+  --gn:#4ade80; --yw:#fbbf24; --rd:#f87171; --pr:#c084fc; --bl:#60a5fa;
+}
+[data-theme="light"] {
+  --bg:#f6f6f4; --s1:#ffffff; --s2:#faf9f7; --s3:#efeee9;
+  --bd:#e7e6e1; --bd2:#dcdbd5; --bd-h:#cbcac4;
+  --tx:#37352f; --tx2:#6b6b65; --mt:#9b9a97; --dm:#c4c3bf;
+  --ac:#5b5bd6; --ac-bg:rgba(91,91,214,.06); --ac-bd:rgba(91,91,214,.2);
+  --gn:#448361; --yw:#cf9f23; --rd:#c4554d; --pr:#9065b0; --bl:#2563eb;
+}
+*{margin:0;padding:0;box-sizing:border-box;min-width:0}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);
+  height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:4px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ─── Header ─── */
+header{height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;
+  background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--ac),var(--pr));
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.site-name{font-size:14px;font-weight:600;color:var(--tx2);white-space:nowrap}
+.site-name b{color:var(--ac)}
+nav{display:flex;gap:2px;margin-left:12px}
+.tab{padding:8px 16px;font-size:12.5px;color:var(--mt);border-bottom:2px solid transparent;
+  margin-bottom:-1px;transition:all .15s}
+.tab:hover{color:var(--tx)}
+.tab.on{color:var(--tx);font-weight:600;border-bottom-color:var(--ac)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.ibtn{width:32px;height:32px;border-radius:6px;border:1px solid var(--bd);
+  color:var(--mt);font-size:15px;display:flex;align-items:center;justify-content:center}
+.ibtn:hover{background:var(--s2);color:var(--tx)}
+
+/* ─── Main scroll ─── */
+main{flex:1;overflow-y:auto;padding:20px 24px 40px}
+.content{max-width:960px;margin:0 auto}
+
+/* ─── Project header ─── */
+.proj-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.proj-head h1{font-size:20px;font-weight:750;letter-spacing:-.4px}
+.stat-pills{display:flex;gap:6px;margin-left:auto}
+.pill{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;
+  background:var(--s2);border:1px solid var(--bd);color:var(--tx2);display:flex;align-items:center;gap:5px}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.pill .ct{font-weight:750;color:var(--tx)}
+
+/* ─── Project selector ─── */
+.proj-sel{display:flex;align-items:center;gap:8px;padding:6px 14px;position:relative;
+  background:var(--s2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;
+  font-size:13px;font-weight:600;transition:all .15s}
+.proj-sel:hover{border-color:var(--bd-h)}
+.proj-sel .p-dot{width:8px;height:8px;border-radius:50%;background:var(--ac);flex-shrink:0}
+.proj-sel .p-chevron{font-size:11px;color:var(--mt);margin-left:4px}
+
+/* ─── Plan section ─── */
+.plan-section{margin-bottom:18px}
+
+.plan-header{display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--s1);border:1px solid var(--bd);border-radius:12px;cursor:pointer;
+  transition:all .15s;user-select:none}
+.plan-header:hover{border-color:var(--bd-h)}
+.plan-header.expanded{border-radius:12px 12px 0 0;border-bottom-color:transparent}
+
+.plan-chevron{font-size:10px;color:var(--dm);transition:transform .2s;flex-shrink:0;width:16px;text-align:center}
+.plan-header.expanded .plan-chevron{transform:rotate(90deg)}
+
+.plan-state{font-size:9px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.3px;
+  text-transform:uppercase;flex-shrink:0}
+.ps-active{background:rgba(96,165,250,.12);color:var(--bl)}
+.ps-completed{background:rgba(74,222,128,.1);color:var(--gn)}
+.ps-planned{background:var(--s3);color:var(--mt)}
+.ps-blocked{background:rgba(248,113,113,.12);color:var(--rd)}
+
+.plan-title{font-size:14px;font-weight:650;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.plan-progress{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.prog-bar{width:80px;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+.prog-text{font-size:11px;color:var(--mt);font-weight:600;min-width:32px;text-align:right}
+.plan-meta{font-size:11px;color:var(--dm);flex-shrink:0;white-space:nowrap}
+
+/* ─── Plan body (expanded) ─── */
+.plan-body{background:var(--s1);border:1px solid var(--bd);border-top:none;
+  border-radius:0 0 12px 12px;padding:0 16px 14px;overflow:hidden}
+
+.plan-goal{padding:10px 14px;margin:8px 0 12px;background:var(--s2);border-radius:8px;
+  font-size:12px;color:var(--tx2);line-height:1.5;cursor:pointer}
+.plan-goal .g-label{font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:4px}
+.plan-goal .scope{font-size:11px;color:var(--dm);margin-top:6px}
+.plan-goal .scope b{color:var(--mt);font-weight:600}
+
+/* ─── Blocker callout ─── */
+.blocker-callout{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+  margin-bottom:12px;border-radius:8px;border-left:3px solid var(--rd);
+  background:rgba(248,113,113,.04)}
+.blocker-callout .bc-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.blocker-callout .bc-body{flex:1;min-width:0}
+.blocker-callout .bc-task{font-size:12px;font-weight:600;margin-bottom:2px}
+.blocker-callout .bc-reason{font-size:11px;color:var(--tx2);line-height:1.4}
+
+/* ─── Status group ─── */
+.status-group{margin-bottom:10px}
+.sg-header{display:flex;align-items:center;gap:8px;padding:6px 0;margin-bottom:4px}
+.sg-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.sg-label{font-size:11px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.4px}
+.sg-count{font-size:10px;color:var(--dm)}
+.sg-done .task-row{opacity:.55}
+.sg-done .task-row:hover{opacity:.8}
+
+/* ─── Task row (Linear aesthetic) ─── */
+.task-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;
+  transition:all .1s;cursor:pointer}
+.task-row:hover{background:var(--s2)}
+
+.task-id{font-size:10px;color:var(--dm);font-family:'JetBrains Mono',monospace;min-width:28px}
+.task-title{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-note{font-size:11px;color:var(--mt);max-width:220px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;flex-shrink:0}
+
+/* Badges */
+.badge{font-size:8px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.3px;
+  flex-shrink:0;white-space:nowrap}
+.b-block{background:rgba(248,113,113,.15);color:var(--rd)}
+.b-qa{background:rgba(251,191,36,.12);color:var(--yw)}
+.b-human{background:rgba(192,132,252,.12);color:var(--pr)}
+.b-reject{background:rgba(248,113,113,.08);color:var(--rd)}
+
+.task-pri{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;min-width:32px;text-align:right}
+.p-crit{color:var(--rd)} .p-high{color:#fb923c} .p-med{color:var(--bl)} .p-low{color:var(--mt)}
+
+/* ─── Completed plan summary (collapsed) ─── */
+.completed-summary{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);
+  padding:2px 0 2px 26px}
+.cs-stat{font-size:10px;color:var(--mt)}
+
+/* ─── Activity feed ─── */
+.activity-box{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.activity-box .ab-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.activity-box .ab-title{font-size:13px;font-weight:700}
+.activity-box .ab-sub{margin-left:auto;font-size:11px;color:var(--mt);font-weight:400}
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.act-body{flex:1;min-width:0}
+.act-task{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act-detail{font-size:11px;color:var(--tx2);margin-top:1px}
+.act-time{font-size:10px;color:var(--dm);flex-shrink:0;white-space:nowrap;margin-top:2px}
+.act-badge{font-size:8px;font-weight:800;padding:1px 6px;border-radius:3px;flex-shrink:0;margin-top:2px}
+.ab-sc{background:rgba(96,165,250,.12);color:var(--bl)}
+.ab-up{background:var(--s3);color:var(--mt)}
+
+/* ─── Retro & Lessons ─── */
+.section-divider{display:flex;align-items:center;gap:10px;margin:28px 0 14px;
+  font-size:11px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+.retro-card{padding:12px 16px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;
+  margin-bottom:8px;cursor:pointer;transition:all .15s}
+.retro-card:hover{border-color:var(--bd-h)}
+.retro-head{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.retro-head .date{color:var(--mt);font-family:'JetBrains Mono',monospace;font-size:11px}
+.retro-head .name{font-weight:600;flex:1}
+.retro-stats{display:flex;gap:12px;font-size:11px;color:var(--mt)}
+.retro-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);
+  font-size:12px;color:var(--tx2);line-height:1.6}
+.retro-detail li{margin:3px 0;padding-left:4px}
+
+.lessons-box{padding:14px 16px;background:var(--s1);border:1px solid var(--bd);border-radius:10px}
+.lessons-box .lb-head{font-size:12.5px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.lessons-box .lb-head .lb-date{font-size:10px;color:var(--dm);font-weight:400}
+.lessons-box ul{list-style:none;padding:0}
+.lessons-box li{font-size:12px;color:var(--tx2);line-height:1.5;padding:5px 0;
+  border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:8px}
+.lessons-box li:last-child{border-bottom:none}
+.lessons-box li::before{content:'•';color:var(--ac);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* ─── Caption ─── */
+.caption{position:fixed;bottom:8px;right:16px;font-size:10px;color:var(--dm)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">C</div>
+  <span class="site-name"><b>Claude</b> Session Dashboard</span>
+  <nav>
+    <button class="tab">타임라인</button>
+    <button class="tab">분석</button>
+    <button class="tab">보고서</button>
+    <button class="tab">모니터링</button>
+    <button class="tab on">칸반</button>
+  </nav>
+  <div class="hdr-right">
+    <button class="ibtn" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">◐</button>
+  </div>
+</header>
+
+<main>
+<div class="content">
+
+  <!-- ═══ Project Header ═══ -->
+  <div class="proj-head">
+    <h1>칸반</h1>
+    <div class="proj-sel" onclick="this.querySelector('.p-dropdown').style.display=this.querySelector('.p-dropdown').style.display==='none'?'block':'none'">
+      <span class="p-dot"></span>
+      Stock Diary Dev
+      <span class="p-chevron">▾</span>
+      <div class="p-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:200;
+        background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:6px;min-width:200px;
+        box-shadow:0 8px 24px rgba(0,0,0,.3)">
+        <div style="padding:8px 12px;border-radius:6px;font-size:12px;color:var(--ac);background:var(--ac-bg);cursor:pointer">Stock Diary Dev</div>
+        <div style="padding:8px 12px;border-radius:6px;font-size:12px;color:var(--tx2);cursor:pointer"
+          onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background='transparent'">Session Dashboard</div>
+        <div style="padding:8px 12px;border-radius:6px;font-size:12px;color:var(--tx2);cursor:pointer"
+          onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background='transparent'">Commons Library</div>
+      </div>
+    </div>
+    <div class="stat-pills">
+      <div class="pill"><span class="dot" style="background:var(--bl)"></span>활성 <span class="ct">1</span></div>
+      <div class="pill"><span class="dot" style="background:var(--gn)"></span>완료 <span class="ct">1</span></div>
+      <div class="pill"><span class="dot" style="background:var(--mt)"></span>계획 <span class="ct">1</span></div>
+      <div class="pill"><span class="dot" style="background:var(--rd)"></span>블로커 <span class="ct">1</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ Plan 1: Active ═══ -->
+  <div class="plan-section">
+    <div class="plan-header expanded" onclick="togglePlan(this)">
+      <span class="plan-chevron">▶</span>
+      <span class="plan-state ps-active">활성</span>
+      <span class="plan-title">실시간 시세 시스템</span>
+      <div class="plan-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:62.5%;background:var(--bl)"></div></div>
+        <span class="prog-text">5/8</span>
+      </div>
+      <span class="plan-meta">5일째</span>
+    </div>
+    <div class="plan-body" id="plan-active">
+      <!-- Goal/Scope -->
+      <div class="plan-goal" onclick="this.classList.toggle('open')">
+        <div class="g-label">목표</div>
+        KIS API 기반 실시간 주식 시세 조회 + WebSocket 스트리밍
+        <div class="scope"><b>포함:</b> REST 시세 API, WebSocket 연동, 차트 렌더링 &nbsp;·&nbsp; <b>제외:</b> 알림, 자동매매</div>
+      </div>
+
+      <!-- Blocker callout -->
+      <div class="blocker-callout">
+        <span class="bc-icon">⛔</span>
+        <div class="bc-body">
+          <div class="bc-task">#7 WebSocket 실시간 시세 연동</div>
+          <div class="bc-reason">KIS API 웹소켓 인증 토큰 갱신 로직에서 간헐적 연결 끊김. 재연결 전략 필요.</div>
+        </div>
+      </div>
+
+      <!-- 진행 중 -->
+      <div class="status-group">
+        <div class="sg-header">
+          <span class="sg-dot" style="background:var(--bl)"></span>
+          <span class="sg-label">진행 중</span>
+          <span class="sg-count">3</span>
+        </div>
+        <div class="task-row">
+          <span class="task-id">#7</span>
+          <span class="task-title">WebSocket 실시간 시세 연동</span>
+          <span class="badge b-block">⛔ BLOCK</span>
+          <span class="badge b-qa">QA ×2</span>
+          <span class="task-pri p-crit">CRIT</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#12</span>
+          <span class="task-title">차트 렌더링 최적화</span>
+          <span class="task-note">Canvas 기반 전환 검토</span>
+          <span class="task-pri p-high">HIGH</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#15</span>
+          <span class="task-title">거래 내역 무한 스크롤</span>
+          <span class="task-note">IO 적용 완료, 테스트 중</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+      </div>
+
+      <!-- 리뷰 -->
+      <div class="status-group">
+        <div class="sg-header">
+          <span class="sg-dot" style="background:var(--pr)"></span>
+          <span class="sg-label">리뷰</span>
+          <span class="sg-count">2</span>
+        </div>
+        <div class="task-row">
+          <span class="task-id">#9</span>
+          <span class="task-title">포트폴리오 수익률 계산 API</span>
+          <span class="task-note">XIRR 구현 완료, 리뷰 대기</span>
+          <span class="task-pri p-high">HIGH</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#11</span>
+          <span class="task-title">종목 검색 자동완성</span>
+          <span class="badge b-human">👤 HUMAN</span>
+          <span class="task-note">Trie + 초성 검색</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+      </div>
+
+      <!-- 할 일 -->
+      <div class="status-group">
+        <div class="sg-header">
+          <span class="sg-dot" style="background:var(--yw)"></span>
+          <span class="sg-label">할 일</span>
+          <span class="sg-count">1</span>
+        </div>
+        <div class="task-row">
+          <span class="task-id">#16</span>
+          <span class="task-title">알림 설정 페이지</span>
+          <span class="task-note">목표가/손절가 알림 UI 설계 필요</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+      </div>
+
+      <!-- 완료 (dimmed) -->
+      <div class="status-group sg-done">
+        <div class="sg-header" style="cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+          <span class="sg-dot" style="background:var(--gn)"></span>
+          <span class="sg-label">완료</span>
+          <span class="sg-count">2</span>
+          <span style="font-size:9px;color:var(--dm);margin-left:4px">▾</span>
+        </div>
+        <div>
+          <div class="task-row">
+            <span class="task-id">#3</span>
+            <span class="task-title">주식 시세 API 연동</span>
+            <span class="task-note" style="color:var(--dm)">2일 전 완료</span>
+            <span class="task-pri p-high">HIGH</span>
+  
+          </div>
+          <div class="task-row">
+            <span class="task-id">#4</span>
+            <span class="task-title">DB 스키마 설계</span>
+            <span class="task-note" style="color:var(--dm)">3일 전 완료</span>
+            <span class="task-pri p-crit">CRIT</span>
+  
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Plan 2: Completed (with inline retro) ═══ -->
+  <div class="plan-section">
+    <div class="plan-header" onclick="togglePlan(this)">
+      <span class="plan-chevron">▶</span>
+      <span class="plan-state ps-completed">완료</span>
+      <span class="plan-title">인증 및 기반 인프라</span>
+      <div class="plan-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--gn)"></div></div>
+        <span class="prog-text">5/5</span>
+      </div>
+      <span class="plan-meta">3일 전 · 6일 소요</span>
+    </div>
+    <div class="plan-body" style="display:none" id="plan-completed">
+      <div class="plan-goal">
+        <div class="g-label">목표</div>
+        JWT 인증, CI/CD, 기본 레이아웃 구축
+      </div>
+      <div class="status-group sg-done">
+        <div class="sg-header">
+          <span class="sg-dot" style="background:var(--gn)"></span>
+          <span class="sg-label">완료</span>
+          <span class="sg-count">5</span>
+        </div>
+        <div class="task-row">
+          <span class="task-id">#1</span>
+          <span class="task-title">로그인/회원가입 UI</span>
+          <span class="task-note" style="color:var(--dm)">1일 전</span>
+          <span class="task-pri p-high">HIGH</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#2</span>
+          <span class="task-title">JWT 인증 미들웨어</span>
+          <span class="task-note" style="color:var(--dm)">1일 전</span>
+          <span class="task-pri p-crit">CRIT</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#5</span>
+          <span class="task-title">포트폴리오 CRUD API</span>
+          <span class="task-note" style="color:var(--dm)">4일 전</span>
+          <span class="task-pri p-high">HIGH</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#6</span>
+          <span class="task-title">메인 대시보드 레이아웃</span>
+          <span class="task-note" style="color:var(--dm)">5일 전</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#10</span>
+          <span class="task-title">CI/CD 파이프라인</span>
+          <span class="task-note" style="color:var(--dm)">7일 전</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Plan 3: Planned (collapsed) ═══ -->
+  <div class="plan-section">
+    <div class="plan-header" onclick="togglePlan(this)">
+      <span class="plan-chevron">▶</span>
+      <span class="plan-state ps-planned">계획</span>
+      <span class="plan-title">UI 고도화</span>
+      <div class="plan-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--mt)"></div></div>
+        <span class="prog-text">0/3</span>
+      </div>
+      <span class="plan-meta">미착수</span>
+    </div>
+    <div class="plan-body" style="display:none" id="plan-planned">
+      <div class="plan-goal">
+        <div class="g-label">목표</div>
+        다크모드, PWA, 종목 상세 페이지
+      </div>
+      <div class="status-group">
+        <div class="sg-header">
+          <span class="sg-dot" style="background:var(--mt)"></span>
+          <span class="sg-label">백로그</span>
+          <span class="sg-count">3</span>
+        </div>
+        <div class="task-row">
+          <span class="task-id">#8</span>
+          <span class="task-title">종목 상세 페이지</span>
+          <span class="task-pri p-med">MED</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#18</span>
+          <span class="task-title">다크모드 커스터마이징</span>
+          <span class="task-pri p-low">LOW</span>
+
+        </div>
+        <div class="task-row">
+          <span class="task-id">#19</span>
+          <span class="task-title">PWA 오프라인 지원</span>
+          <span class="task-pri p-low">LOW</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Rejected ═══ -->
+  <div class="plan-section">
+    <div class="plan-header" onclick="togglePlan(this)" style="opacity:.5">
+      <span class="plan-chevron">▶</span>
+      <span class="plan-state" style="background:rgba(248,113,113,.08);color:var(--rd)">거절</span>
+      <span class="plan-title" style="text-decoration:line-through;color:var(--mt)">#14 블록체인 지갑 연동</span>
+      <span class="plan-meta">scope 초과</span>
+    </div>
+  </div>
+
+  <!-- ═══ Recent Activity ═══ -->
+  <div class="activity-box">
+    <div class="ab-head">
+      <span class="ab-title">◷ 최근 활동</span>
+      <span class="ab-sub">24시간</span>
+    </div>
+    <div class="act-item">
+      <span class="act-dot" style="background:var(--bl)"></span>
+      <div class="act-body">
+        <div class="act-task">#12 차트 렌더링 최적화</div>
+        <div class="act-detail">Status changed: Todo → InProgress</div>
+      </div>
+      <span class="act-badge ab-sc">상태변경</span>
+      <span class="act-time">42분 전</span>
+    </div>
+    <div class="act-item">
+      <span class="act-dot" style="background:var(--bl)"></span>
+      <div class="act-body">
+        <div class="act-task">#9 포트폴리오 수익률 계산 API</div>
+        <div class="act-detail">Status changed: InProgress → Review</div>
+      </div>
+      <span class="act-badge ab-sc">상태변경</span>
+      <span class="act-time">1시간 전</span>
+    </div>
+    <div class="act-item">
+      <span class="act-dot" style="background:var(--rd)"></span>
+      <div class="act-body">
+        <div class="act-task">#7 WebSocket 실시간 시세 연동</div>
+        <div class="act-detail">Blocker set: KIS API 웹소켓 인증 토큰 갱신 실패</div>
+      </div>
+      <span class="act-badge ab-up">업데이트</span>
+      <span class="act-time">2시간 전</span>
+    </div>
+    <div class="act-item">
+      <span class="act-dot" style="background:var(--gn)"></span>
+      <div class="act-body">
+        <div class="act-task">#3 주식 시세 API 연동</div>
+        <div class="act-detail">Status changed: Review → Done</div>
+      </div>
+      <span class="act-badge ab-sc">상태변경</span>
+      <span class="act-time">3시간 전</span>
+    </div>
+    <div class="act-item">
+      <span class="act-dot" style="background:var(--bl)"></span>
+      <div class="act-body">
+        <div class="act-task">#15 거래 내역 무한 스크롤</div>
+        <div class="act-detail">Status changed: Todo → InProgress</div>
+      </div>
+      <span class="act-badge ab-sc">상태변경</span>
+      <span class="act-time">5시간 전</span>
+    </div>
+  </div>
+
+  <!-- ═══ Retro & Lessons ═══ -->
+  <div class="section-divider">회고 & 교훈</div>
+
+  <div class="retro-card" onclick="this.querySelector('.retro-detail').style.display=this.querySelector('.retro-detail').style.display==='none'?'block':'none'">
+    <div class="retro-head">
+      <span class="date">20260705</span>
+      <span class="name">인증 및 기반 인프라</span>
+      <div class="retro-stats">
+        <span>PASS율 80%</span>
+        <span>QA실패 2회</span>
+        <span>블로커 0</span>
+      </div>
+    </div>
+    <div class="retro-detail" style="display:none">
+      <ul>
+        <li>리뷰가 잡은 결함: 스코프 밖 변경 1건 (#5 CRUD API)</li>
+        <li>가장 자주 깨진 규칙: handoff '버린 접근' 누락 2회</li>
+        <li>튜닝 제안: MAX_QA_LOOP 3 유지, 불필요 반복 없었음</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="lessons-box" style="margin-top:8px">
+    <div class="lb-head">
+      프로젝트 교훈
+      <span class="lb-date">최신: 20260705</span>
+    </div>
+    <ul>
+      <li>SQLite WAL 모드 스키마 변경 시 -shm/-wal 잠금 확인</li>
+      <li>대시보드 빌드는 tsc 포함 npm run build로만 검증 (vite dev는 타입 에러를 안 잡음)</li>
+      <li>handoff 노트에 '버린 접근'은 필수 — 다음 세션에서 같은 실수 방지</li>
+    </ul>
+  </div>
+
+</div>
+</main>
+
+<div class="caption">V6 · Plan 중심 단일 컬럼 — agents 제거, activity에서 who→what 전환, retro는 하단 전용</div>
+
+<script>
+function togglePlan(header) {
+  const body = header.nextElementSibling;
+  if (!body || !body.classList.contains('plan-body')) return;
+  const isExpanded = header.classList.contains('expanded');
+  if (isExpanded) {
+    header.classList.remove('expanded');
+    body.style.display = 'none';
+  } else {
+    header.classList.add('expanded');
+    body.style.display = '';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 보드 · V3.1 벤토 (태스크·기록 중심)</title>
+<style>
+  :root, [data-theme="dark"] {
+    --bg:#08080a; --s1:#0f0f12; --s2:#141418; --s3:#1a1a20;
+    --bd:#1f1f28; --bd2:#2a2a35; --bd-h:#35354a;
+    --tx:#e8e8ee; --tx2:#a0a0b0; --mt:#5a5a70; --dm:#3a3a4a;
+    --ac:#818cf8; --gn:#4ade80; --yw:#fbbf24; --rd:#f87171; --pr:#c084fc; --bl:#60a5fa;
+    --glass:rgba(15,15,18,.8); --glass-bd:rgba(255,255,255,.06);
+  }
+  [data-theme="light"] {
+    --bg:#f6f6f4; --s1:#ffffff; --s2:#faf9f7; --s3:#efeee9;
+    --bd:#e7e6e1; --bd2:#dcdbd5; --bd-h:#cbcac4;
+    --tx:#37352f; --tx2:#6b6b65; --mt:#9b9a97; --dm:#c4c3bf;
+    --ac:#5b5bd6; --gn:#448361; --yw:#cf9f23; --rd:#c4554d; --pr:#9065b0; --bl:#2563eb;
+    --glass:rgba(255,255,255,.85); --glass-bd:rgba(55,53,47,.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; min-width:0; }
+  body { font-family:'Inter',-apple-system,'Segoe UI',sans-serif; background:var(--bg); color:var(--tx);
+    height:100vh; overflow:hidden; -webkit-font-smoothing:antialiased; }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:5px; }
+
+  header { height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    background:var(--glass); backdrop-filter:blur(16px); border-bottom:1px solid var(--glass-bd); }
+  .logo { font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px; letter-spacing:-.3px; }
+  .logo .mark { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#818cf8,#a78bfa);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff; }
+  .logo .ac { color:var(--ac); }
+  nav { display:flex; }
+  .tab { padding:8px 18px; border:none; background:transparent; color:var(--mt); cursor:pointer;
+    font-size:13px; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; }
+  .tab:hover { color:var(--tx); }
+  .tab.active { color:var(--tx); font-weight:600; border-bottom-color:var(--ac); }
+  .ibtn { width:32px; height:32px; border-radius:6px; border:1px solid var(--bd); background:transparent;
+    color:var(--mt); cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .ibtn:hover { background:var(--s2); color:var(--tx); }
+
+  main { height:calc(100vh - 52px); overflow-y:auto; padding:18px 20px 24px; }
+
+  .pagehead { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .ph-l { display:flex; align-items:baseline; gap:12px; }
+  .ph-l h1 { font-size:20px; font-weight:750; letter-spacing:-.4px; }
+  .ph-l .team { display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--tx2);
+    padding:4px 11px; background:var(--s1); border:1px solid var(--bd); border-radius:20px; }
+  .ph-l .team .dot { width:7px; height:7px; border-radius:50%; background:var(--gn); box-shadow:0 0 8px var(--gn); }
+  .ph-r { display:flex; gap:8px; }
+  .fchip { padding:6px 13px; border-radius:8px; border:1px solid var(--bd); background:var(--s1);
+    color:var(--tx2); font-size:12px; cursor:pointer; font-family:inherit; }
+  .fchip.on { background:rgba(129,140,248,.08); border-color:rgba(129,140,248,.25); color:var(--ac); }
+
+  .bento { display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .box { background:var(--s1); border:1px solid var(--bd); border-radius:16px; padding:16px; display:flex; flex-direction:column; }
+  .box:hover { border-color:var(--bd-h); }
+  .box-title { font-size:13px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .box-title .more { margin-left:auto; font-size:11px; color:var(--mt); font-weight:400; cursor:pointer; }
+
+  /* KPI 4칸 */
+  .kpi { grid-column:span 3; justify-content:center; gap:6px; }
+  .kpi .lbl { font-size:11px; color:var(--mt); font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
+  .kpi .val { font-size:30px; font-weight:750; letter-spacing:-1px; line-height:1; }
+  .kpi .trend { font-size:11px; color:var(--gn); }
+  .kpi.warn .val { color:var(--rd); }
+
+  /* 진행 상태 보드 (주인공, span 8) — 상태 파이프라인 + 현재 집중 태스크 리스트 */
+  .board { grid-column:span 8; }
+  .pipe { display:flex; gap:8px; margin-bottom:16px; }
+  .stage { flex:1; padding:9px 10px; background:var(--s2); border:1px solid var(--bd); border-radius:10px; text-align:center; }
+  .stage .n { font-size:19px; font-weight:750; line-height:1; }
+  .stage .s { font-size:10px; color:var(--mt); margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .stage .s .sq { width:6px; height:6px; border-radius:2px; }
+  .stage.hot { border-color:rgba(96,165,250,.35); background:rgba(96,165,250,.06); }
+
+  .focus-label { font-size:11px; color:var(--mt); font-weight:600; letter-spacing:.3px; text-transform:uppercase; margin-bottom:9px; }
+  .tasklist { display:flex; flex-direction:column; gap:8px; }
+  .trow { display:flex; align-items:center; gap:11px; padding:10px 12px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:10px; cursor:pointer; transition:all .12s; }
+  .trow:hover { border-color:var(--bd-h); }
+  .trow.blk { border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.04); }
+  .sdot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+  .trow .tt { font-size:13px; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stlabel { font-size:10px; color:var(--mt); padding:2px 8px; background:var(--s3); border-radius:6px; }
+  .trow .pri { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .pri.crit{color:var(--rd);} .pri.high{color:#fb923c;} .pri.med{color:var(--bl);} .pri.low{color:var(--mt);}
+  .minibadge { font-size:8px; font-weight:800; padding:1px 6px; border-radius:5px; letter-spacing:.3px; }
+  .mb-blk{background:rgba(248,113,113,.15);color:var(--rd);} .mb-hand{background:rgba(192,132,252,.15);color:var(--pr);}
+  .av { width:20px; height:20px; border-radius:6px; color:#fff; font-size:8px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .trow .id { font-size:10px; color:var(--dm); }
+
+  /* 우측 열: 에이전트(축소) + 블로커 스택 (span 4) */
+  .side { grid-column:span 4; display:flex; flex-direction:column; gap:14px; }
+
+  /* 에이전트 현황 — 소형: 주 담당 1 + 나머지 칩 */
+  .agents .primary { display:flex; align-items:center; gap:11px; padding:11px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:11px; margin-bottom:10px; }
+  .agents .primary .pav { width:36px; height:36px; border-radius:11px; color:#fff; font-size:12px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; }
+  .agents .primary .nm { font-size:13.5px; font-weight:700; }
+  .agents .primary .rl { font-size:11px; color:var(--mt); }
+  .agents .primary .state { margin-left:auto; font-size:10px; padding:4px 9px; border-radius:20px;
+    display:flex; align-items:center; gap:5px; background:rgba(96,165,250,.12); color:var(--bl); }
+  .agents .primary .state .live { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .agents .rest { display:flex; flex-wrap:wrap; gap:7px; }
+  .achip { display:flex; align-items:center; gap:6px; padding:5px 10px; background:var(--s2);
+    border:1px solid var(--bd); border-radius:20px; font-size:11px; color:var(--tx2); }
+  .achip .mav { width:16px; height:16px; border-radius:5px; color:#fff; font-size:7px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; }
+  .achip .idle { color:var(--dm); font-size:9px; }
+
+  /* 블로커 */
+  .blk-item { padding:11px 12px; border-radius:11px; background:rgba(248,113,113,.06);
+    border:1px solid rgba(248,113,113,.22); }
+  .blk-item .bt { font-size:12px; font-weight:600; margin-bottom:5px; }
+  .blk-item .br { font-size:11px; color:var(--tx2); line-height:1.4; }
+  .blk-item .bmeta { display:flex; align-items:center; gap:6px; margin-top:7px; font-size:10px; color:var(--mt); }
+
+  /* 작업 기록 피드 — 전체 폭 히어로 (span 12) */
+  .feed { grid-column:span 12; }
+  .feed-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 28px; }
+  .fitem { display:flex; gap:11px; padding:10px 2px; }
+  .fitem .fav { width:26px; height:26px; border-radius:8px; color:#fff; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .fitem .fb { flex:1; }
+  .fitem .fm { display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+  .fitem .who { font-size:11.5px; font-weight:650; color:var(--tx2); }
+  .fitem .ntype { font-size:8px; font-weight:800; padding:1px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.3px; }
+  .nt-prog{background:rgba(96,165,250,.14);color:var(--bl);} .nt-blk{background:rgba(248,113,113,.14);color:var(--rd);}
+  .nt-hand{background:rgba(192,132,252,.14);color:var(--pr);} .nt-rev{background:rgba(74,222,128,.14);color:var(--gn);}
+  .nt-sys{background:var(--s3);color:var(--mt);}
+  .fitem .when { margin-left:auto; font-size:10px; color:var(--dm); }
+  .fitem .txt { font-size:12px; color:var(--tx); line-height:1.4; }
+  .fitem .ref { font-size:10px; color:var(--mt); margin-top:2px; }
+
+  .caption { position:fixed; bottom:10px; right:16px; font-size:10.5px; color:var(--dm); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="mark">C</div><span><span class="ac">Claude</span> Session Dashboard</span></div>
+  <nav>
+    <button class="tab">타임라인</button>
+    <button class="tab">분석</button>
+    <button class="tab">보고서</button>
+    <button class="tab">모니터링</button>
+    <button class="tab active">에이전트</button>
+  </nav>
+  <button class="ibtn" onclick="tt()">◐</button>
+</header>
+
+<main>
+  <div class="pagehead">
+    <div class="ph-l">
+      <h1>에이전트 기록</h1>
+      <span class="team"><span class="dot"></span> migration-squad</span>
+    </div>
+    <div class="ph-r">
+      <button class="fchip on">전체</button>
+      <button class="fchip">진행중</button>
+      <button class="fchip">⚑ 블로커</button>
+      <button class="fchip">⌕ 검색</button>
+    </div>
+  </div>
+
+  <div class="bento">
+    <!-- KPI -->
+    <div class="box kpi"><div class="lbl">진행중</div><div class="val">3</div><div class="trend">▲ 어제 대비 +1</div></div>
+    <div class="box kpi"><div class="lbl">리뷰 대기</div><div class="val">2</div><div class="trend" style="color:var(--mt)">핸드오프 1건 포함</div></div>
+    <div class="box kpi warn"><div class="lbl">⚑ 블로커</div><div class="val">1</div><div class="trend" style="color:var(--rd)">즉시 조치 필요</div></div>
+    <div class="box kpi"><div class="lbl">오늘 완료</div><div class="val">5</div><div class="trend">▲ 처리량 양호</div></div>
+
+    <!-- 진행 상태 보드 (주인공) -->
+    <div class="box board">
+      <div class="box-title">진행 상태 <span class="more">보드 전체 보기 →</span></div>
+      <div class="pipe">
+        <div class="stage"><div class="n">3</div><div class="s"><span class="sq" style="background:var(--mt)"></span>Backlog</div></div>
+        <div class="stage"><div class="n">2</div><div class="s"><span class="sq" style="background:var(--yw)"></span>Todo</div></div>
+        <div class="stage hot"><div class="n">3</div><div class="s"><span class="sq" style="background:var(--bl)"></span>InProgress</div></div>
+        <div class="stage"><div class="n">2</div><div class="s"><span class="sq" style="background:var(--pr)"></span>Review</div></div>
+        <div class="stage"><div class="n">5</div><div class="s"><span class="sq" style="background:var(--gn)"></span>Done</div></div>
+        <div class="stage"><div class="n">1</div><div class="s"><span class="sq" style="background:var(--rd)"></span>Rejected</div></div>
+      </div>
+
+      <div class="focus-label">지금 집중 · 진행중 · 리뷰</div>
+      <div class="tasklist">
+        <div class="trow blk"><span class="sdot" style="background:var(--bl)"></span><span class="tt">결제 SP → Service 이관 (트랜잭션 경계)</span><span class="minibadge mb-blk">BLOCK</span><span class="stlabel">InProgress</span><span class="pri crit">crit</span><span class="av" style="background:#f87171">IM</span><span class="id">T-071</span></div>
+        <div class="trow"><span class="sdot" style="background:var(--bl)"></span><span class="tt">Enum 변환 및 Converter 생성 (4/7)</span><span class="stlabel">InProgress</span><span class="pri high">high</span><span class="av" style="background:#34d399">IM</span><span class="id">T-083</span></div>
+        <div class="trow"><span class="sdot" style="background:var(--bl)"></span><span class="tt">Repository 커스텀 쿼리 이식</span><span class="stlabel">InProgress</span><span class="pri med">med</span><span class="av" style="background:#818cf8">IM</span><span class="id">T-088</span></div>
+        <div class="trow"><span class="sdot" style="background:var(--pr)"></span><span class="tt">Product 도메인 Controller 검증</span><span class="minibadge mb-hand">HAND</span><span class="stlabel">Review</span><span class="pri high">high</span><span class="av" style="background:#c084fc">RV</span><span class="id">T-064</span></div>
+        <div class="trow"><span class="sdot" style="background:var(--pr)"></span><span class="tt">DTO 매핑 정합성 리뷰</span><span class="stlabel">Review</span><span class="pri med">med</span><span class="av" style="background:#c084fc">RV</span><span class="id">T-069</span></div>
+      </div>
+    </div>
+
+    <!-- 우측: 에이전트(축소) + 블로커 -->
+    <div class="side">
+      <div class="box agents">
+        <div class="box-title">에이전트 현황</div>
+        <div class="primary">
+          <span class="pav" style="background:linear-gradient(135deg,#f87171,#ef4444)">IM</span>
+          <div><div class="nm">implementer</div><div class="rl">주 담당 · 진행 5건 중 3건</div></div>
+          <span class="state"><span class="live"></span> Working</span>
+        </div>
+        <div class="rest">
+          <span class="achip"><span class="mav" style="background:#c084fc">RV</span> reviewer · 2</span>
+          <span class="achip"><span class="mav" style="background:#818cf8">AN</span> analyzer · 1</span>
+          <span class="achip"><span class="mav" style="background:#a78bfa">PL</span> planner <span class="idle">idle</span></span>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title" style="color:var(--rd)">⚑ 활성 블로커</div>
+        <div class="blk-item">
+          <div class="bt">결제 SP → Service 이관</div>
+          <div class="br">DB 커넥션 풀 설정이 없어 통합 테스트가 실패합니다. 인프라팀 조치 대기.</div>
+          <div class="bmeta"><span class="av" style="width:16px;height:16px;font-size:7px;background:#f87171">IM</span> implementer · 3분 전 · T-071</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 작업 기록 피드 (전체 폭 히어로) -->
+    <div class="box feed">
+      <div class="box-title">◷ 작업 기록 <span class="more">최근 8시간 · progress · blocker · handoff · review · 전체 보기 →</span></div>
+      <div class="feed-grid">
+        <div class="fitem"><span class="fav" style="background:#f87171">IM</span><div class="fb"><div class="fm"><span class="who">implementer</span><span class="ntype nt-blk">blocker</span><span class="when">3분 전</span></div><div class="txt">결제 SP 이관 중 커넥션 풀 부족으로 통합 테스트 실패. 인프라 설정 필요.</div><div class="ref">↳ T-071 결제 SP → Service 이관</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#c084fc">RV</span><div class="fb"><div class="fm"><span class="who">reviewer</span><span class="ntype nt-hand">handoff</span><span class="when">21분 전</span></div><div class="txt">Product Controller 검증 완료 → implementer에게 DTO 매핑 재확인 요청.</div><div class="ref">↳ T-064 Product 도메인 Controller 검증</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#34d399">IM</span><div class="fb"><div class="fm"><span class="who">implementer</span><span class="ntype nt-prog">progress</span><span class="when">42분 전</span></div><div class="txt">Enum 4/7 변환 완료. OrderStatus·PayType Converter 등록.</div><div class="ref">↳ T-083 Enum 변환 및 Converter 생성</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#818cf8">AN</span><div class="fb"><div class="fm"><span class="who">analyzer</span><span class="ntype nt-rev">review</span><span class="when">1시간 전</span></div><div class="txt">User 도메인 상속 구조 분석 완료. 검증 매트릭스 12건 생성.</div><div class="ref">↳ T-092 User 도메인 Entity 상속 구조 변환</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#34d399">IM</span><div class="fb"><div class="fm"><span class="who">implementer</span><span class="ntype nt-prog">progress</span><span class="when">1시간 전</span></div><div class="txt">QueryDSL 전환 착수. 커스텀 Repository 3종 시그니처 정의.</div><div class="ref">↳ T-088 Repository 커스텀 쿼리 이식</div></div></div>
+        <div class="fitem"><span class="fav" style="background:#a78bfa">PL</span><div class="fb"><div class="fm"><span class="who">planner</span><span class="ntype nt-sys">system</span><span class="when">2시간 전</span></div><div class="txt">migration-squad 팀에 태스크 6건 배정. 우선순위 재조정.</div><div class="ref">↳ 팀 전체</div></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="caption">V3.1 · 벤토(태스크·기록 중심) — 에이전트는 소형 위젯으로 축소</div>
+<script>function tt(){const e=document.documentElement;e.dataset.theme=e.dataset.theme==='dark'?'light':'dark';}</script>
+</body>
+</html>

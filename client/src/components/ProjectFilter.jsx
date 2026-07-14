@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchProjects } from '../api/client';
 import { getProjectColor } from '../utils/colors';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 export default function ProjectFilter({ value, onChange }) {
   const [projects, setProjects] = useState([]);
@@ -11,13 +12,7 @@ export default function ProjectFilter({ value, onChange }) {
     fetchProjects().then(setProjects).catch(console.error);
   }, []);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, []);
+  useClickOutside(wrapRef, useCallback(() => setOpen(false), []));
 
   const selected = projects.find((p) => p.id === value);
   const selectedColor = selected ? getProjectColor(selected.label) : null;

@@ -10,7 +10,6 @@ import { useKanbanAvailable } from './hooks/useKanban';
 
 export default function App() {
   const today = dayjs().format('YYYY-MM-DD');
-  // SPEC §2.2 게이트: 칸반 DB 도달 가능할 때만 탭/라우트 노출 (fail-closed).
   const { available: showKanban } = useKanbanAvailable();
 
   return (
@@ -23,13 +22,13 @@ export default function App() {
             <Route path="/analytics" element={<AnalyticsPage project={project} />} />
             <Route path="/reports/:type?/:param?" element={<ReportsPage project={project} />} />
             <Route path="/monitor" element={<MonitorPage project={project} />} />
-            {/* 게이트2: available=true일 때만 /kanban 라우트 등록. false면 미등록 → 레거시 리다이렉트로 흐름 */}
             {showKanban && <Route path="/kanban" element={<KanbanPage />} />}
 
             {/* 레거시 리다이렉트 */}
             <Route path="/daily/:date" element={<LegacyRedirect to="/timeline" />} />
             <Route path="/daybook/:date?" element={<LegacyRedirect to="/timeline" />} />
             <Route path="/weekly-report" element={<Navigate to="/reports/weekly" replace />} />
+            <Route path="/agents" element={<Navigate to="/kanban" replace />} />
           </Routes>
         )}
       </Layout>

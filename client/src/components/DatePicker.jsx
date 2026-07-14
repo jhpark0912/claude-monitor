@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import dayjs from 'dayjs';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -12,11 +13,7 @@ export default function DatePicker({ value, onChange, reportDates }) {
     if (value) setViewMonth(dayjs(value).format('YYYY-MM'));
   }, [value]);
 
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  useClickOutside(ref, useCallback(() => setOpen(false), []));
 
   const target = dayjs(viewMonth + '-01');
   const daysInMonth = target.daysInMonth();

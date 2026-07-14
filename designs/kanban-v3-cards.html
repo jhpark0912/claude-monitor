@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>칸반 개선 · V3 프로젝트 카드 + 상태 매트릭스</title>
+<link rel="stylesheet" href="_kanban-mock-base.css">
+<style>
+  .wrap { max-width:960px; margin:0 auto; }
+  .head { display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap; }
+  .head h1 { font-size:20px; font-weight:750; letter-spacing:-.4px; }
+  .pills { display:flex; gap:6px; margin-left:auto; }
+  .pill { padding:4px 12px; border-radius:6px; font-size:11px; font-weight:600;
+    background:var(--s2); border:1px solid var(--bd); color:var(--tx2); display:flex; align-items:center; gap:5px; }
+  .pill i { width:6px; height:6px; border-radius:50%; }
+  .pill b { color:var(--tx); font-weight:750; }
+
+  /* 개선 1) 프로젝트 카드 행 — 모니터링 그룹 카드 톤 (항상 노출) */
+  .prow { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; margin-bottom:24px; }
+  .pcard { display:flex; align-items:center; gap:11px; padding:12px 14px; border-radius:12px;
+    background:var(--s1); border:1px solid var(--bd); cursor:pointer; transition:all .15s; }
+  .pcard:hover { border-color:var(--bd-h); transform:translateY(-2px); }
+  .pcard.on { border-color:var(--ac); background:var(--ac-bg); box-shadow:0 0 0 1px var(--ac); }
+  .pcard .sq { width:12px; height:12px; border-radius:4px; flex-shrink:0; }
+  .pcard .info { flex:1; min-width:0; }
+  .pcard .nm { font-size:13.5px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pcard .sub { font-size:10.5px; color:var(--mt); margin-top:2px; }
+  .pcard .sub b { color:var(--bl); font-weight:700; }
+  .livedot { width:7px; height:7px; border-radius:50%; background:var(--gn); flex-shrink:0;
+    animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.4)} 50%{box-shadow:0 0 0 4px rgba(74,222,128,0)} }
+
+  /* 플랜 카드 */
+  details.plan { margin-bottom:14px; border:1px solid var(--bd); border-radius:12px;
+    border-left:3px solid var(--pstate); background:var(--s1); overflow:hidden; }
+  details.plan[open] .chev { transform:rotate(90deg); }
+  summary { list-style:none; cursor:pointer; padding:13px 16px; user-select:none;
+    display:flex; align-items:center; gap:12px; }
+  summary::-webkit-details-marker { display:none; }
+  .chev { font-size:10px; color:var(--dm); width:12px; text-align:center; transition:transform .2s; }
+  .lead { flex:1; min-width:0; }
+  .lead .top { display:flex; align-items:center; gap:9px; }
+  .stbadge { font-size:9px; font-weight:700; padding:3px 9px; border-radius:5px;
+    letter-spacing:.3px; text-transform:uppercase; background:var(--pbg); color:var(--pstate); }
+  .ptitle { font-size:14.5px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .meta { font-size:11px; color:var(--dm); white-space:nowrap; }
+  .now { display:flex; align-items:center; gap:6px; margin-top:7px; font-size:11.5px; color:var(--tx2); }
+  .now i { width:6px; height:6px; border-radius:50%; background:var(--bl); flex-shrink:0; }
+  .now .lbl { font-size:9px; font-weight:800; color:var(--mt); text-transform:uppercase; letter-spacing:.4px; }
+  .now.blk i { background:var(--rd); } .now.blk { color:var(--rd); }
+
+  /* 개선 2) 상태 매트릭스 — 6칸 미니 그리드, 한눈에 구성 */
+  .matrix { display:grid; grid-template-columns:repeat(6,34px); gap:4px; flex-shrink:0; }
+  .cell { text-align:center; padding:5px 0; border-radius:7px; background:var(--s2);
+    border:1px solid var(--bd); border-top:2px solid var(--sc); }
+  .cell b { display:block; font-size:14px; font-weight:750; color:var(--tx); line-height:1; }
+  .cell.z b { color:var(--dm); }
+  .cell span { display:block; font-size:8px; color:var(--mt); margin-top:3px; }
+
+  .body { padding:2px 16px 14px; border-top:1px solid var(--bd); }
+  .grp { margin:8px 0; }
+  .grphd { display:flex; align-items:center; gap:8px; padding:6px 0; }
+  .grphd i { width:7px; height:7px; border-radius:2px; background:var(--sc); }
+  .grphd s { text-decoration:none; font-size:11px; font-weight:700; color:var(--mt); text-transform:uppercase; letter-spacing:.4px; }
+  .grphd em { font-size:10px; color:var(--dm); font-style:normal; }
+  .task { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; }
+  .task:hover { background:var(--s2); }
+  .task .id { font-size:10px; color:var(--dm); font-family:'JetBrains Mono',monospace; min-width:34px; }
+  .task .tt { font-size:13px; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .task .pr { font-size:9px; font-weight:700; text-transform:uppercase; }
+  .block { font-size:8px; font-weight:800; padding:2px 7px; border-radius:4px; background:rgba(248,113,113,.15); color:var(--rd); }
+  @media (max-width:640px){ .matrix{display:none} }
+</style>
+</head>
+<body>
+<div class="mockbar">
+  <a href="kanban-index.html"><button>← 비교</button></a>
+  <button onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">◐ 테마</button>
+</div>
+
+<div class="page"><div class="wrap">
+
+  <div class="head">
+    <h1>칸반</h1>
+    <div class="pills">
+      <div class="pill"><i style="background:var(--bl)"></i>활성 <b>1</b></div>
+      <div class="pill"><i style="background:var(--gn)"></i>완료 <b>1</b></div>
+      <div class="pill"><i style="background:var(--mt)"></i>계획 <b>1</b></div>
+      <div class="pill"><i style="background:var(--rd)"></i>블로커 <b style="color:var(--rd)">1</b></div>
+    </div>
+  </div>
+
+  <!-- 개선 1: 프로젝트 카드 행 (모니터링 그룹 카드 톤) -->
+  <div class="prow">
+    <div class="pcard on">
+      <span class="sq c-indigo"></span>
+      <div class="info"><div class="nm">session-board</div><div class="sub">플랜 4 · <b>진행 3</b></div></div>
+      <span class="livedot"></span>
+    </div>
+    <div class="pcard">
+      <span class="sq c-emerald"></span>
+      <div class="info"><div class="nm">commons</div><div class="sub">플랜 2 · 진행 0</div></div>
+    </div>
+    <div class="pcard">
+      <span class="sq c-amber"></span>
+      <div class="info"><div class="nm">mis-spring</div><div class="sub">플랜 1 · <b>진행 1</b></div></div>
+      <span class="livedot"></span>
+    </div>
+    <div class="pcard">
+      <span class="sq c-cyan"></span>
+      <div class="info"><div class="nm">ai-board</div><div class="sub">플랜 3 · 진행 0</div></div>
+    </div>
+  </div>
+
+  <!-- 플랜: 칸반 통합 (active) -->
+  <details class="plan" open style="--pstate:var(--bl);--pbg:rgba(96,165,250,.12)">
+    <summary>
+      <span class="chev">▶</span>
+      <div class="lead">
+        <div class="top">
+          <span class="stbadge">활성</span>
+          <span class="ptitle">칸반 통합</span>
+          <span class="meta">· 6일째 · 4/10</span>
+        </div>
+        <div class="now"><span class="lbl">지금</span><i></i>프로젝트 선택 UI 개선 · 칸반 읽기 라우트 5종</div>
+      </div>
+      <div class="matrix">
+        <div class="cell z st-Backlog"><b>1</b><span>백로그</span></div>
+        <div class="cell st-Todo"><b>2</b><span>할일</span></div>
+        <div class="cell st-InProgress"><b>2</b><span>진행</span></div>
+        <div class="cell st-Review"><b>1</b><span>리뷰</span></div>
+        <div class="cell st-Done"><b>4</b><span>완료</span></div>
+        <div class="cell z st-Rejected"><b>0</b><span>거절</span></div>
+      </div>
+    </summary>
+    <div class="body">
+      <div class="grp st-InProgress"><div class="grphd"><i></i><s>진행 중</s><em>2</em></div>
+        <div class="task"><span class="id">#46</span><span class="tt">프로젝트 선택 UI 개선</span><span class="pr" style="color:var(--rd)">CRIT</span></div>
+        <div class="task"><span class="id">#41</span><span class="tt">칸반 읽기 라우트 5종</span><span class="pr" style="color:#fb923c">HIGH</span></div>
+      </div>
+      <div class="grp st-Review"><div class="grphd"><i></i><s>리뷰</s><em>1</em></div>
+        <div class="task"><span class="id">#38</span><span class="tt">DB 리더 서비스 (Postgres+SQLite)</span><span class="pr" style="color:var(--bl)">MED</span></div>
+      </div>
+      <div class="grp st-Todo"><div class="grphd"><i></i><s>할 일</s><em>2</em></div>
+        <div class="task"><span class="id">#48</span><span class="tt">플랜 상태 분포 시각화</span><span class="pr" style="color:var(--bl)">MED</span></div>
+        <div class="task"><span class="id">#49</span><span class="tt">태스크 상세 모달 탭 정리</span><span class="pr" style="color:var(--mt)">LOW</span></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- 플랜: 분석 리팩터 (blocked) -->
+  <details class="plan" open style="--pstate:var(--rd);--pbg:rgba(248,113,113,.12)">
+    <summary>
+      <span class="chev">▶</span>
+      <div class="lead">
+        <div class="top">
+          <span class="stbadge">블로커</span>
+          <span class="ptitle">분석 리팩터</span>
+          <span class="meta">· 3일째 · 1/4</span>
+        </div>
+        <div class="now blk"><span class="lbl">막힘</span><i></i>⛔ 이상치 탐지 쿼리 최적화</div>
+      </div>
+      <div class="matrix">
+        <div class="cell z st-Backlog"><b>0</b><span>백로그</span></div>
+        <div class="cell st-Todo"><b>2</b><span>할일</span></div>
+        <div class="cell st-InProgress"><b>1</b><span>진행</span></div>
+        <div class="cell z st-Review"><b>0</b><span>리뷰</span></div>
+        <div class="cell st-Done"><b>1</b><span>완료</span></div>
+        <div class="cell z st-Rejected"><b>0</b><span>거절</span></div>
+      </div>
+    </summary>
+    <div class="body">
+      <div class="grp st-InProgress"><div class="grphd"><i></i><s>진행 중</s><em>1</em></div>
+        <div class="task"><span class="id">#52</span><span class="tt">이상치 탐지 쿼리 최적화</span><span class="block">⛔ BLOCK</span><span class="pr" style="color:var(--rd)">CRIT</span></div>
+      </div>
+      <div class="grp st-Todo"><div class="grphd"><i></i><s>할 일</s><em>2</em></div>
+        <div class="task"><span class="id">#53</span><span class="tt">비용 집계 캐싱</span><span class="pr" style="color:var(--bl)">MED</span></div>
+        <div class="task"><span class="id">#54</span><span class="tt">도구 사용 통계 뷰</span><span class="pr" style="color:var(--mt)">LOW</span></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- 플랜: 성능 최적화 (planned) -->
+  <details class="plan" style="--pstate:var(--mt);--pbg:var(--s3)">
+    <summary>
+      <span class="chev">▶</span>
+      <div class="lead">
+        <div class="top">
+          <span class="stbadge">계획</span>
+          <span class="ptitle">성능 최적화</span>
+          <span class="meta">· 미착수 · 0/3</span>
+        </div>
+      </div>
+      <div class="matrix">
+        <div class="cell st-Backlog"><b>3</b><span>백로그</span></div>
+        <div class="cell z st-Todo"><b>0</b><span>할일</span></div>
+        <div class="cell z st-InProgress"><b>0</b><span>진행</span></div>
+        <div class="cell z st-Review"><b>0</b><span>리뷰</span></div>
+        <div class="cell z st-Done"><b>0</b><span>완료</span></div>
+        <div class="cell z st-Rejected"><b>0</b><span>거절</span></div>
+      </div>
+    </summary>
+    <div class="body"><div style="padding:12px 0;text-align:center;color:var(--mt);font-size:12px">백로그 3건 · 미착수</div></div>
+  </details>
+
+  <!-- 플랜: 타임라인 재구조화 (completed) -->
+  <details class="plan" style="--pstate:var(--gn);--pbg:rgba(74,222,128,.1)">
+    <summary>
+      <span class="chev">▶</span>
+      <div class="lead">
+        <div class="top">
+          <span class="stbadge">완료</span>
+          <span class="ptitle">타임라인 재구조화</span>
+          <span class="meta">· 2일 전 · 8/8</span>
+        </div>
+      </div>
+      <div class="matrix">
+        <div class="cell z st-Backlog"><b>0</b><span>백로그</span></div>
+        <div class="cell z st-Todo"><b>0</b><span>할일</span></div>
+        <div class="cell z st-InProgress"><b>0</b><span>진행</span></div>
+        <div class="cell z st-Review"><b>0</b><span>리뷰</span></div>
+        <div class="cell st-Done"><b>8</b><span>완료</span></div>
+        <div class="cell z st-Rejected"><b>0</b><span>거절</span></div>
+      </div>
+    </summary>
+    <div class="body"><div style="padding:12px 0;text-align:center;color:var(--mt);font-size:12px">완료 8건</div></div>
+  </details>
+
+</div></div>
+</body>
+</html>

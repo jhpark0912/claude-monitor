@@ -50,7 +50,6 @@ export default function Layout({ children, showKanban = false }) {
           <NavTab active={isMonitor} onClick={() => navigate('/monitor')}>
             모니터링
           </NavTab>
-          {/* 게이트1: available=true 확정 시에만 렌더 (로딩 중 미렌더 → 깜빡임 방지) */}
           {showKanban && (
             <NavTab active={isKanban} onClick={() => navigate('/kanban')}>
               칸반

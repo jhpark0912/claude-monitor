@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchConversation } from '../api/client';
 import { formatTokens, TOOL_ICONS } from '../utils/colors';
+import { formatTime } from '../utils/datetime';
+import { MD_COMPONENTS } from './MarkdownComponents';
+import ModalShell from './ModalShell';
 
 export default function ConversationModal({ session, onClose }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedField, setCopiedField] = useState(null);
-  const backdropRef = useRef(null);
 
   useEffect(() => {
     if (!session) return;
@@ -19,16 +21,6 @@ export default function ConversationModal({ session, onClose }) {
       .catch(() => setData({ sessionId: session.sessionId, turns: [] }))
       .finally(() => setLoading(false));
   }, [session]);
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  const handleBackdropClick = useCallback((e) => {
-    if (e.target === backdropRef.current) onClose();
-  }, [onClose]);
 
   const copyText = useCallback((text, field) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -44,18 +36,7 @@ export default function ConversationModal({ session, onClose }) {
   const totalTokens = (session.tokens?.totalInput || 0) + (session.tokens?.totalOutput || 0);
 
   return (
-    <div ref={backdropRef} onClick={handleBackdropClick} style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      animation: 'fadeIn .2s ease',
-    }}>
-      <div style={{
-        width: 'min(88vw, 920px)', height: '85vh',
-        background: 'var(--s1)', borderRadius: 'var(--r)', border: '1px solid var(--bd)',
-        boxShadow: 'var(--shadow-h)', display: 'flex', flexDirection: 'column',
-        overflow: 'hidden', animation: 'slideUp .25s ease',
-      }}>
+    <ModalShell onClose={onClose} panelStyle={{ width: 'min(88vw, 920px)', height: '85vh' }}>
         {/* Header */}
         <div style={{
           padding: '14px 20px', borderBottom: '1px solid var(--bd)',
@@ -117,11 +98,8 @@ export default function ConversationModal({ session, onClose }) {
             <Turn key={i} turn={turn} />
           ))}
         </div>
-      </div>
 
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .turn-claude h1, .turn-claude h2, .turn-claude h3, .turn-claude h4 {
           color: var(--tx); margin: 12px 0 6px; line-height: 1.4;
         }
@@ -143,57 +121,22 @@ export default function ConversationModal({ session, onClose }) {
         .turn-claude > :first-child { margin-top: 0; }
         .turn-claude > :last-child { margin-bottom: 0; }
       `}</style>
-    </div>
+    </ModalShell>
   );
 }
 
-const MD_COMPONENTS = {
-  pre({ children }) {
-    return (
-      <pre style={{
-        background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: 'var(--rx)',
-        padding: '12px 14px', overflow: 'auto', fontSize: 12, lineHeight: 1.6,
-        fontFamily: "'JetBrains Mono', monospace", margin: '8px 0',
-      }}>
-        {children}
-      </pre>
-    );
-  },
-  code({ className, children, ...props }) {
-    if (className) {
-      return <code style={{ fontFamily: "'JetBrains Mono', monospace" }} {...props}>{children}</code>;
-    }
-    return <code style={{
-      background: 'var(--bg)', padding: '2px 6px', borderRadius: 4,
-      fontSize: '0.9em', fontFamily: "'JetBrains Mono', monospace",
-      border: '1px solid var(--bd)',
-    }} {...props}>{children}</code>;
-  },
-  table({ children }) {
-    return (
-      <div style={{ overflow: 'auto', margin: '8px 0' }}>
-        <table style={{
-          borderCollapse: 'collapse', width: '100%', fontSize: 12,
-          fontFamily: "'JetBrains Mono', monospace",
-        }}>{children}</table>
-      </div>
-    );
-  },
-  th({ children }) {
-    return <th style={{
-      border: '1px solid var(--bd)', padding: '6px 10px', textAlign: 'left',
-      background: 'var(--bg)', fontWeight: 600, fontSize: 11,
-    }}>{children}</th>;
-  },
-  td({ children }) {
-    return <td style={{
-      border: '1px solid var(--bd)', padding: '6px 10px', fontSize: 12,
-    }}>{children}</td>;
-  },
-};
-
 function Turn({ turn }) {
   const isUser = turn.role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!turn.text) return;
+    navigator.clipboard.writeText(turn.text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 12 }}>
@@ -208,7 +151,7 @@ function Turn({ turn }) {
         </div>
         <span style={{ fontWeight: 600 }}>{isUser ? 'User' : 'Claude'}</span>
         <span style={{ color: 'var(--dm)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}>
-          {turn.timestamp ? new Date(turn.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}
+          {turn.timestamp ? formatTime(turn.timestamp) : ''}
           {!isUser && turn.tokens ? ` · ${formatTokens(turn.tokens)}` : ''}
         </span>
       </div>
@@ -219,8 +162,26 @@ function Turn({ turn }) {
         background: isUser ? 'rgba(129,140,248,.08)' : 'var(--s2)',
         border: `1px solid ${isUser ? 'rgba(129,140,248,.15)' : 'var(--bd)'}`,
         color: 'var(--tx2)',
+        position: 'relative',
         ...(isUser ? { whiteSpace: 'pre-wrap' } : {}),
       }}>
+        {turn.text && (
+          <button onClick={handleCopy} style={{
+            position: 'absolute', top: 8, right: 8, padding: '3px 8px',
+            borderRadius: 4, fontSize: 10, fontWeight: 500, cursor: 'pointer',
+            border: '1px solid', transition: 'all .15s',
+            background: copied ? 'rgba(74,222,128,.1)' : 'transparent',
+            color: copied ? 'var(--gn)' : 'var(--dm)',
+            borderColor: copied ? 'rgba(74,222,128,.3)' : 'transparent',
+            opacity: copied ? 1 : 0.4,
+          }}
+            onMouseEnter={e => { if (!copied) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--ac)'; e.currentTarget.style.borderColor = 'var(--ac-bd)'; }}}
+            onMouseLeave={e => { if (!copied) { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.color = 'var(--dm)'; e.currentTarget.style.borderColor = 'transparent'; }}}
+          >
+            {copied ? '✓' : '복사'}
+          </button>
+        )}
+
         {isUser ? turn.text : <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{turn.text || ''}</ReactMarkdown>}
 
         {turn.tools?.length > 0 && (

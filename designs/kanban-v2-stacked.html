@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>칸반 개선 · V2 스택바 + 진행중 프리뷰</title>
+<link rel="stylesheet" href="_kanban-mock-base.css">
+<style>
+  .wrap { max-width:960px; margin:0 auto; }
+  .head { display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap; }
+  .head h1 { font-size:20px; font-weight:750; letter-spacing:-.4px; }
+  .pills { display:flex; gap:6px; margin-left:auto; }
+  .pill { padding:4px 12px; border-radius:6px; font-size:11px; font-weight:600;
+    background:var(--s2); border:1px solid var(--bd); color:var(--tx2); display:flex; align-items:center; gap:5px; }
+  .pill i { width:6px; height:6px; border-radius:50%; }
+  .pill b { color:var(--tx); font-weight:750; }
+
+  /* 개선 1) 프로젝트 — 활성 우선 정렬 · 활성은 항상 노출 · 나머지는 여닫기 */
+  .projectbar { margin-bottom:22px; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .chip { display:flex; align-items:center; gap:8px; padding:8px 15px; border-radius:24px;
+    background:var(--s2); border:1px solid var(--bd); color:var(--tx2);
+    font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+  .chip:hover { border-color:var(--bd-h); color:var(--tx); }
+  .chip.on { background:var(--ac); border-color:var(--ac); color:#fff; }
+  .chip .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .chip.on .dot { box-shadow:0 0 0 2px rgba(255,255,255,.35); }
+  .chip .live { width:6px; height:6px; border-radius:50%; background:var(--gn); animation:pulse 2s infinite; }
+  .chip.on .live { background:#fff; }
+  .chip .cnt { font-size:10.5px; font-weight:600; opacity:.78; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.4)} 50%{box-shadow:0 0 0 4px rgba(74,222,128,0)} }
+  /* 더보기 토글 */
+  .more-btn { background:transparent; border:1px dashed var(--bd2); color:var(--mt); }
+  .more-btn:hover { color:var(--tx2); border-color:var(--bd-h); }
+  .more-btn b { color:var(--tx2); }
+  .more-btn.open { border-style:solid; }
+  /* 진행 없는 프로젝트 — 여닫기 패널 */
+  .more { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:11px;
+    padding:12px 2px 2px; border-top:1px dashed var(--bd); }
+  .morelabel { font-size:9px; font-weight:800; color:var(--mt); text-transform:uppercase; letter-spacing:.4px; }
+  .chip.mut { background:transparent; border-color:var(--bd); color:var(--tx2); font-weight:500; }
+
+  /* 플랜 카드 */
+  details.plan { margin-bottom:14px; border:1px solid var(--bd); border-radius:12px;
+    background:var(--s1); overflow:hidden; transition:border-color .15s; }
+  details.plan:hover { border-color:var(--bd-h); }
+  details.plan[open] .chev { transform:rotate(90deg); }
+  summary { list-style:none; cursor:pointer; padding:14px 16px 12px; user-select:none; }
+  summary::-webkit-details-marker { display:none; }
+  .row1 { display:flex; align-items:center; gap:10px; }
+  .chev { font-size:10px; color:var(--dm); width:12px; text-align:center; transition:transform .2s; }
+  .stbadge { font-size:9px; font-weight:700; padding:3px 9px; border-radius:5px;
+    letter-spacing:.3px; text-transform:uppercase; background:var(--pbg); color:var(--pstate); }
+  .ptitle { font-size:14.5px; font-weight:650; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pcount { font-size:11px; color:var(--mt); font-weight:600; }
+  .meta { font-size:11px; color:var(--dm); white-space:nowrap; }
+
+  /* 개선 2a) 스택 세그먼트 바 — 상태 구성 한눈에 */
+  .stack { display:flex; height:8px; border-radius:5px; overflow:hidden; margin-top:11px; background:var(--s3); }
+  .stack > i { display:block; height:100%; }
+  .legend { display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
+  .lg { display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--tx2); font-weight:600; }
+  .lg i { width:8px; height:8px; border-radius:2px; background:var(--sc); }
+
+  /* 개선 2b) 진행중 프리뷰 칩 — 접힌 상태에서도 노출 */
+  .preview { display:flex; align-items:center; gap:7px; margin-top:11px; flex-wrap:wrap; }
+  .plabel { font-size:9px; font-weight:800; color:var(--mt); text-transform:uppercase; letter-spacing:.4px; }
+  .pvchip { display:flex; align-items:center; gap:6px; padding:4px 10px; border-radius:14px;
+    background:var(--s2); border:1px solid var(--bd); font-size:11.5px; color:var(--tx); font-weight:500; max-width:240px; }
+  .pvchip i { width:6px; height:6px; border-radius:50%; background:var(--sc); flex-shrink:0; }
+  .pvchip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pvchip.blk { border-color:rgba(248,113,113,.4); background:rgba(248,113,113,.06); }
+
+  .body { padding:2px 16px 14px; border-top:1px solid var(--bd); margin-top:2px; }
+  .grp { margin:8px 0; }
+  .grphd { display:flex; align-items:center; gap:8px; padding:6px 0; }
+  .grphd i { width:7px; height:7px; border-radius:2px; background:var(--sc); }
+  .grphd span { font-size:11px; font-weight:700; color:var(--mt); text-transform:uppercase; letter-spacing:.4px; }
+  .grphd em { font-size:10px; color:var(--dm); font-style:normal; }
+  .task { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; }
+  .task:hover { background:var(--s2); }
+  .task .id { font-size:10px; color:var(--dm); font-family:'JetBrains Mono',monospace; min-width:34px; }
+  .task .tt { font-size:13px; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .task .pr { font-size:9px; font-weight:700; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<div class="mockbar">
+  <a href="kanban-index.html"><button>← 비교</button></a>
+  <button onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">◐ 테마</button>
+</div>
+
+<div class="page"><div class="wrap">
+
+  <div class="head">
+    <h1>칸반</h1>
+    <div class="pills">
+      <div class="pill"><i style="background:var(--bl)"></i>활성 <b>1</b></div>
+      <div class="pill"><i style="background:var(--gn)"></i>완료 <b>1</b></div>
+      <div class="pill"><i style="background:var(--mt)"></i>계획 <b>1</b></div>
+      <div class="pill"><i style="background:var(--rd)"></i>블로커 <b style="color:var(--rd)">1</b></div>
+    </div>
+  </div>
+
+  <!-- 개선 1: 활성 우선 정렬 · 활성 프로젝트는 항상 노출 · 진행 없는 것은 여닫기 -->
+  <div class="projectbar">
+    <div class="chips">
+      <div class="chip on"><span class="dot c-indigo"></span>session-board<span class="live"></span><span class="cnt">진행 3</span></div>
+      <div class="chip"><span class="dot c-amber"></span>mis-spring<span class="live"></span><span class="cnt">진행 1</span></div>
+      <button class="chip more-btn" id="moreBtn" onclick="toggleMore()">더보기 <b id="moreN">4</b>&nbsp;<span id="moreArrow">▾</span></button>
+    </div>
+    <div class="more" id="morePanel" hidden>
+      <span class="morelabel">진행 없음</span>
+      <div class="chip mut"><span class="dot c-cyan"></span>ai-board</div>
+      <div class="chip mut"><span class="dot c-emerald"></span>commons</div>
+      <div class="chip mut"><span class="dot c-rose"></span>legacy-batch</div>
+      <div class="chip mut"><span class="dot c-violet"></span>docs-site</div>
+    </div>
+  </div>
+
+  <!-- 플랜: 칸반 통합 (active) -->
+  <details class="plan" open style="--pstate:var(--bl);--pbg:rgba(96,165,250,.12)">
+    <summary>
+      <div class="row1">
+        <span class="chev">▶</span>
+        <span class="stbadge">활성</span>
+        <span class="ptitle">칸반 통합</span>
+        <span class="pcount">4/10</span>
+        <span class="meta">6일째</span>
+      </div>
+      <div class="stack">
+        <i class="st-Todo" style="width:20%;background:var(--sc)"></i>
+        <i class="st-InProgress" style="width:20%;background:var(--sc)"></i>
+        <i class="st-Review" style="width:10%;background:var(--sc)"></i>
+        <i class="st-Done" style="width:40%;background:var(--sc)"></i>
+        <i class="st-Backlog" style="width:10%;background:var(--sc)"></i>
+      </div>
+      <div class="legend">
+        <span class="lg st-InProgress"><i></i>진행 2</span>
+        <span class="lg st-Review"><i></i>리뷰 1</span>
+        <span class="lg st-Todo"><i></i>할일 2</span>
+        <span class="lg st-Backlog"><i></i>백로그 1</span>
+        <span class="lg st-Done"><i></i>완료 4</span>
+      </div>
+      <div class="preview">
+        <span class="plabel">지금</span>
+        <span class="pvchip st-InProgress"><i></i><span>프로젝트 선택 UI 개선</span></span>
+        <span class="pvchip st-InProgress"><i></i><span>칸반 읽기 라우트 5종</span></span>
+        <span class="pvchip st-Review"><i></i><span>DB 리더 서비스</span></span>
+      </div>
+    </summary>
+    <div class="body">
+      <div class="grp st-InProgress"><div class="grphd"><i></i><span>진행 중</span><em>2</em></div>
+        <div class="task"><span class="id">#46</span><span class="tt">프로젝트 선택 UI 개선</span><span class="pr" style="color:var(--rd)">CRIT</span></div>
+        <div class="task"><span class="id">#41</span><span class="tt">칸반 읽기 라우트 5종</span><span class="pr" style="color:#fb923c">HIGH</span></div>
+      </div>
+      <div class="grp st-Review"><div class="grphd"><i></i><span>리뷰</span><em>1</em></div>
+        <div class="task"><span class="id">#38</span><span class="tt">DB 리더 서비스 (Postgres+SQLite)</span><span class="pr" style="color:var(--bl)">MED</span></div>
+      </div>
+      <div class="grp st-Todo"><div class="grphd"><i></i><span>할 일</span><em>2</em></div>
+        <div class="task"><span class="id">#48</span><span class="tt">플랜 상태 분포 시각화</span><span class="pr" style="color:var(--bl)">MED</span></div>
+        <div class="task"><span class="id">#49</span><span class="tt">태스크 상세 모달 탭 정리</span><span class="pr" style="color:var(--mt)">LOW</span></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- 플랜: 분석 리팩터 (blocked) -->
+  <details class="plan" open style="--pstate:var(--rd);--pbg:rgba(248,113,113,.12)">
+    <summary>
+      <div class="row1">
+        <span class="chev">▶</span>
+        <span class="stbadge">블로커</span>
+        <span class="ptitle">분석 리팩터</span>
+        <span class="pcount">1/4</span>
+        <span class="meta">3일째</span>
+      </div>
+      <div class="stack">
+        <i class="st-InProgress" style="width:25%;background:var(--sc)"></i>
+        <i class="st-Todo" style="width:50%;background:var(--sc)"></i>
+        <i class="st-Done" style="width:25%;background:var(--sc)"></i>
+      </div>
+      <div class="legend">
+        <span class="lg st-InProgress"><i></i>진행 1</span>
+        <span class="lg st-Todo"><i></i>할일 2</span>
+        <span class="lg st-Done"><i></i>완료 1</span>
+      </div>
+      <div class="preview">
+        <span class="plabel">지금</span>
+        <span class="pvchip blk st-InProgress"><i style="background:var(--rd)"></i><span>⛔ 이상치 탐지 쿼리 최적화</span></span>
+      </div>
+    </summary>
+    <div class="body">
+      <div class="grp st-InProgress"><div class="grphd"><i></i><span>진행 중</span><em>1</em></div>
+        <div class="task"><span class="id">#52</span><span class="tt">이상치 탐지 쿼리 최적화</span><span class="pr" style="color:var(--rd)">CRIT</span></div>
+      </div>
+      <div class="grp st-Todo"><div class="grphd"><i></i><span>할 일</span><em>2</em></div>
+        <div class="task"><span class="id">#53</span><span class="tt">비용 집계 캐싱</span><span class="pr" style="color:var(--bl)">MED</span></div>
+        <div class="task"><span class="id">#54</span><span class="tt">도구 사용 통계 뷰</span><span class="pr" style="color:var(--mt)">LOW</span></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- 플랜: 성능 최적화 (planned) -->
+  <details class="plan" style="--pstate:var(--mt);--pbg:var(--s3)">
+    <summary>
+      <div class="row1">
+        <span class="chev">▶</span>
+        <span class="stbadge">계획</span>
+        <span class="ptitle">성능 최적화</span>
+        <span class="pcount">0/3</span>
+        <span class="meta">미착수</span>
+      </div>
+      <div class="stack"><i class="st-Backlog" style="width:100%;background:var(--sc)"></i></div>
+      <div class="legend"><span class="lg st-Backlog"><i></i>백로그 3</span></div>
+    </summary>
+    <div class="body"><div style="padding:12px 0;text-align:center;color:var(--mt);font-size:12px">백로그 3건 · 미착수</div></div>
+  </details>
+
+  <!-- 플랜: 타임라인 재구조화 (completed) -->
+  <details class="plan" style="--pstate:var(--gn);--pbg:rgba(74,222,128,.1)">
+    <summary>
+      <div class="row1">
+        <span class="chev">▶</span>
+        <span class="stbadge">완료</span>
+        <span class="ptitle">타임라인 재구조화</span>
+        <span class="pcount">8/8</span>
+        <span class="meta">2일 전 · 5일 소요</span>
+      </div>
+      <div class="stack"><i class="st-Done" style="width:100%;background:var(--sc)"></i></div>
+      <div class="legend"><span class="lg st-Done"><i></i>완료 8</span></div>
+    </summary>
+    <div class="body"><div style="padding:12px 0;text-align:center;color:var(--mt);font-size:12px">완료 8건</div></div>
+  </details>
+
+</div></div>
+<script>
+  function toggleMore(){
+    const p=document.getElementById('morePanel');
+    const btn=document.getElementById('moreBtn');
+    const arr=document.getElementById('moreArrow');
+    if(p.hasAttribute('hidden')){ p.removeAttribute('hidden'); btn.classList.add('open'); arr.textContent='▴'; }
+    else{ p.setAttribute('hidden',''); btn.classList.remove('open'); arr.textContent='▾'; }
+  }
+</script>
+</body>
+</html>
